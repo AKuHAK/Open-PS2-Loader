@@ -9,7 +9,7 @@ IOP_BIN = smap.irx
 IOP_OBJS = main.o smap.o xfer.o imports.o
 
 IOP_INCS += -I$(PS2SDK)/iop/include -I../../iopcore/common -I../common
-IOP_CFLAGS += -Wall -fno-builtin -D_IOP -Os -mgpopt -G8192
+IOP_CFLAGS += -Wall -fno-builtin -D_IOP -Os -mgpopt -G8192 -std=c99
 IOP_LDFLAGS += -s
 
 all: $(IOP_BIN)
