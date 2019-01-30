@@ -6,16 +6,13 @@ services:
 sudo: required
 
 env:
-  - MATRIX_EVAL="PS2DOCKER=akuhak/ps2toolchain PS2FORK=ps2dev PS2BRANCH=master"
   - MATRIX_EVAL="PS2DOCKER=ps2homebrew/ps2toolchain PS2FORK=ps2homebrew PS2BRANCH=test1"
 
 matrix:
   fast_finish: false
   include:
     - env:
-      - MATRIX_FAILURE="FAILURE=test"
-    # - env:
-      # - MATRIX_EVAL="PS2DOCKER=ps2homebrew/ps2toolchain PS2FORK=ps2homebrew PS2BRANCH=test1"
+      - MATRIX_EVAL="PS2DOCKER=akuhak/ps2toolchain PS2FORK=ps2dev PS2BRANCH=master"
   allow_failures:
     - env:
       - MATRIX_EVAL="PS2DOCKER=akuhak/ps2toolchain PS2FORK=ps2dev PS2BRANCH=master"
@@ -51,4 +48,4 @@ script:
 
 after_success:
   - docker cp $(cat container_id):/Open-PS2-Loader/opl.elf $TRAVIS_BUILD_DIR/.
-  - curl --upload-file opl.elf https://transfer.sh/opl_$TRAVIS_COMMIT.elf | grep transfer
+  # - curl --upload-file opl.elf https://transfer.sh/opl_$TRAVIS_COMMIT.elf | grep transfer
