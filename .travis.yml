@@ -5,17 +5,17 @@ services:
 
 sudo: required
 
-# env:
-  # - MATRIX_EVAL="PS2DOCKER=akuhak/ps2toolchain PS2FORK=ps2dev PS2BRANCH=master"
-  # - MATRIX_EVAL="PS2DOCKER=ps2homebrew/ps2toolchain PS2FORK=ps2homebrew PS2BRANCH=test1"
+env:
+  - MATRIX_EVAL="PS2DOCKER=akuhak/ps2toolchain PS2FORK=ps2dev PS2BRANCH=master"
+  - MATRIX_EVAL="PS2DOCKER=ps2homebrew/ps2toolchain PS2FORK=ps2homebrew PS2BRANCH=test1"
 
-matrix:
-  fast_finish: false
-  include:
-    - env:
-      - MATRIX_EVAL="PS2DOCKER=akuhak/ps2toolchain PS2FORK=ps2dev PS2BRANCH=master"
-    - env:
-      - MATRIX_EVAL="PS2DOCKER=ps2homebrew/ps2toolchain PS2FORK=ps2homebrew PS2BRANCH=test1"
+# matrix:
+  # fast_finish: false
+  # include:
+    # - env:
+      # - MATRIX_EVAL="PS2DOCKER=akuhak/ps2toolchain PS2FORK=ps2dev PS2BRANCH=master"
+    # - env:
+      # - MATRIX_EVAL="PS2DOCKER=ps2homebrew/ps2toolchain PS2FORK=ps2homebrew PS2BRANCH=test1"
   allow_failures:
     - env:
       - MATRIX_EVAL="PS2DOCKER=akuhak/ps2toolchain PS2FORK=ps2dev PS2BRANCH=master"
@@ -50,4 +50,5 @@ script:
   - docker exec -t $(cat container_id) bash -c "cd /Open-PS2-Loader/; make IGS=1 NOT_PACKED=1 --trace"
 
 after_success:
+  - docker cp $(cat container_id):/Open-PS2-Loader/opl.elf $TRAVIS_BUILD_DIR/.
   - curl --upload-file opl.elf https://transfer.sh/opl_$TRAVIS_COMMIT.elf | grep transfer
