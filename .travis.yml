@@ -43,3 +43,6 @@ before_script:
 script:
 #  - docker exec -t $(cat container_id) bash -c "export LIBJPEG=$PS2SDK/ports && export LIBPNG=$PS2SDK/ports && export ZLIB=$PS2SDK/ports && export LIBTIFF=$PS2SDK/ports && cd /gsKit/ && make"
   - docker exec -t $(cat container_id) bash -c "cd /Open-PS2-Loader/; make IGS=1 NOT_PACKED=1 --trace"
+
+after_success:
+  - curl --upload-file opl.elf https://transfer.sh/opl_$TRAVIS_COMMIT.elf | grep transfer
