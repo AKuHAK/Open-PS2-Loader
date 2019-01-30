@@ -351,13 +351,13 @@ void closeFileBuffer(file_buffer_t *fileBuffer)
 }
 
 // a simple maximum of two inline
-inline int max(int a, int b)
+int max(int a, int b)
 {
     return a > b ? a : b;
 }
 
 // a simple minimum of two inline
-inline int min(int a, int b)
+int min(int a, int b)
 {
     return a < b ? a : b;
 }
@@ -576,7 +576,7 @@ int sysDeleteFolder(const char *folder)
 /*----------------------------------------------------------------------------------------*/
 /* NOP delay.                                                                             */
 /*----------------------------------------------------------------------------------------*/
-inline void delay(int count)
+void delay(int count)
 {
     int i, ret;
 
