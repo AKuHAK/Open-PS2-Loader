@@ -6,12 +6,13 @@ services:
 sudo: required
 
 env:
-  - MATRIX_EVAL="PS2DOCKER=ps2homebrew/ps2toolchain PS2FORK=ps2homebrew PS2BRANCH=test1"
   - MATRIX_EVAL="PS2DOCKER=akuhak/ps2toolchain PS2FORK=ps2dev PS2BRANCH=master"
 
 matrix:
-  fast_finish: false
+  fast_finish: true
   include:
+    - env:
+      - MATRIX_EVAL="PS2DOCKER=ps2homebrew/ps2toolchain PS2FORK=ps2homebrew PS2BRANCH=test1"
     - env:
       - MATRIX_EVAL="PS2DOCKER=akuhak/ps2toolchain PS2FORK=ps2dev PS2BRANCH=master"
   allow_failures:
