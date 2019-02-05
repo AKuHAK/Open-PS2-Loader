@@ -50,4 +50,4 @@ script:
 
 after_success:
   - docker cp $(cat container_id):/Open-PS2-Loader/opl.elf $TRAVIS_BUILD_DIR/.
-  # - curl --upload-file opl.elf https://transfer.sh/opl_$TRAVIS_COMMIT.elf | grep transfer
+  - curl --upload-file opl.elf https://transfer.sh/opl_$TRAVIS_COMMIT.elf | grep transfer
