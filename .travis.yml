@@ -46,7 +46,7 @@ before_script:
 
 script:
 #  - docker exec -t $(cat container_id) bash -c "export LIBJPEG=$PS2SDK/ports && export LIBPNG=$PS2SDK/ports && export ZLIB=$PS2SDK/ports && export LIBTIFF=$PS2SDK/ports && cd /gsKit/ && make"
-  - docker exec -t $(cat container_id) bash -c "cd /Open-PS2-Loader/; make IGS=1 NOT_PACKED=1 --trace"
+  - docker exec -t $(cat container_id) bash -c "cd /Open-PS2-Loader/; make PADEMU=1 IGS=1 NOT_PACKED=1 --trace"
 
 after_success:
   - docker cp $(cat container_id):/Open-PS2-Loader/opl.elf $TRAVIS_BUILD_DIR/.
