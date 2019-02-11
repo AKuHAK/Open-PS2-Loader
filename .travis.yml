@@ -35,18 +35,18 @@ before_script:
   - docker exec -t $(cat container_id) bash -c "cd /; git clone https://github.com/${PS2FORK}/ps2sdk -b ${PS2BRANCH}"
   - docker exec -t $(cat container_id) bash -c "cd /ps2sdk/; make install --silent"
 
-  # installing ports
-  - docker exec -t $(cat container_id) bash -c "cd /; git clone https://github.com/ps2dev/ps2sdk-ports; cd /ps2sdk-ports/; make libpng libjpeg freetype2"
 
   # installing gsKit
-  - docker exec -t $(cat container_id) bash -c "cd /; git clone https://github.com/akuhak/gsKit -b patch-5; cd /gsKit/; make && make install"
+ # - docker exec -t $(cat container_id) bash -c "cd /; git clone https://github.com/akuhak/gsKit -b patch-5; cd /gsKit/; make && make install"
 
-  - docker exec -t $(cat container_id) bash -c "mkdir -p /Open-PS2-Loader/;"
-  - docker cp $TRAVIS_BUILD_DIR/. $(cat container_id):/Open-PS2-Loader/
+ # - docker exec -t $(cat container_id) bash -c "mkdir -p /Open-PS2-Loader/;"
+ # - docker cp $TRAVIS_BUILD_DIR/. $(cat container_id):/Open-PS2-Loader/
 
 script:
+  # installing ports
+  - docker exec -t $(cat container_id) bash -c "cd /; git clone https://github.com/ps2dev/ps2sdk-ports; cd /ps2sdk-ports/; make sdl"
 #  - docker exec -t $(cat container_id) bash -c "export LIBJPEG=$PS2SDK/ports && export LIBPNG=$PS2SDK/ports && export ZLIB=$PS2SDK/ports && export LIBTIFF=$PS2SDK/ports && cd /gsKit/ && make"
-  - docker exec -t $(cat container_id) bash -c "cd /Open-PS2-Loader/; make PADEMU=1 IGS=1 NOT_PACKED=1 --trace"
+#  - docker exec -t $(cat container_id) bash -c "cd /Open-PS2-Loader/; make PADEMU=1 IGS=1 NOT_PACKED=1 --trace"
 
 after_success:
   - docker cp $(cat container_id):/Open-PS2-Loader/opl.elf $TRAVIS_BUILD_DIR/.
