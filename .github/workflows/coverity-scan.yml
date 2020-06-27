@@ -45,8 +45,8 @@ jobs:
         COV_BUILD_OPTIONS=""
         RESULTS_DIR="cov-int"
         eval "${COVERITY_SCAN_BUILD_COMMAND_PREPEND}"
-        COVERITY_UNSUPPORTED=1 cov-build --dir $RESULTS_DIR $COV_BUILD_OPTIONS $COVERITY_SCAN_BUILD_COMMAND
-        cov-import-scm --dir $RESULTS_DIR --scm git --log $RESULTS_DIR/scm_log.txt 2>&1
+        COVERITY_UNSUPPORTED=1 $TOOL_DIR/bin/cov-build --dir $RESULTS_DIR $COV_BUILD_OPTIONS $COVERITY_SCAN_BUILD_COMMAND
+        $TOOL_DIR/bin/cov-import-scm --dir $RESULTS_DIR --scm git --log $RESULTS_DIR/scm_log.txt 2>&1
         RESULTS_ARCHIVE=analysis-results.tgz
         tar czf $RESULTS_ARCHIVE $RESULTS_DIR
         SHA=`git rev-parse --short HEAD`
