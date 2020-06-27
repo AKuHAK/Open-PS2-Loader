@@ -35,9 +35,9 @@ jobs:
         SCAN_URL="https://scan.coverity.com"
         wget -nv -O $TOOL_ARCHIVE $TOOL_URL --post-data "project=$COVERITY_SCAN_PROJECT_NAME&token=$COVERITY_SCAN_TOKEN"
         mkdir -p $TOOL_BASE
-        pushd $TOOL_BASE
+        cd $TOOL_BASE
         tar xzf $TOOL_ARCHIVE --warning=none
-        popd
+        cd $GITHUB_WORKSPACE
         TOOL_DIR=`find $TOOL_BASE -type d -name 'cov-analysis*'`
         export PATH=$TOOL_DIR/bin:$PATH
         echo -e "echo 3"
