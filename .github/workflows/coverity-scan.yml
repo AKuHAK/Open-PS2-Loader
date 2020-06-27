@@ -21,7 +21,7 @@ jobs:
 
     - name: Checkout ruby/ruby
       run: |
-        git clone --depth=1 https://github.com/ruby/ruby .
+        git clone --depth=1 https://github.com/ruby/ruby
 
     - name: Download Coverity Build Tool
       run: |
