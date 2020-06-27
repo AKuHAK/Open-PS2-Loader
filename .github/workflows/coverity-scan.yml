@@ -36,10 +36,11 @@ jobs:
         wget -nv -O $TOOL_ARCHIVE $TOOL_URL --post-data "project=$COVERITY_SCAN_PROJECT_NAME&token=$COVERITY_SCAN_TOKEN"
         mkdir -p $TOOL_BASE
         cd $TOOL_BASE
-        tar xzf $TOOL_ARCHIVE
+        tar xvzf $TOOL_ARCHIVE
         cd $GITHUB_WORKSPACE
         TOOL_DIR=`find $TOOL_BASE -type d -name 'cov-analysis*'`
         export PATH=$TOOL_DIR/bin:$PATH
+        echo -e "$TOOL_DIR"
         echo -e "echo 3"
         echo -e "\033[33;1mRunning Coverity Scan Analysis Tool...\033[0m"
         COV_BUILD_OPTIONS=""
