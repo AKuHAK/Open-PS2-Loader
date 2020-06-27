@@ -26,7 +26,7 @@ jobs:
         COVERITY_SCAN_BRANCH_PATTERN="master"
         COVERITY_SCAN_BUILD_COMMAND_PREPEND="make"
         COVERITY_SCAN_BUILD_COMMAND="make"
-        COVERITY_SCAN_TOKEN=$COVTOKEN
+        COVERITY_SCAN_TOKEN=${{ secrets.COVTOKEN }}
         PLATFORM=`uname`
         TOOL_ARCHIVE=/tmp/cov-analysis-${PLATFORM}.tgz
         TOOL_URL=https://scan.coverity.com/download/${PLATFORM}
