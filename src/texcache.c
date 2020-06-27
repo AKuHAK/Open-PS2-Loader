@@ -38,6 +38,8 @@ static void cacheLoadImage(void *data)
         free(texture->Mem);
         texture->Mem = NULL;
         texture->ClutPSM = 0;
+        if (texture->Clut != NULL)
+            free(texture->Clut);
         texture->Clut = NULL;
         texture->Vram = 0;
         texture->VramClut = 0;
@@ -68,12 +70,14 @@ static void cacheClearItem(cache_entry_t *item, int freeTxt)
     if (freeTxt && item->texture.Mem) {
         rmUnloadTexture(&item->texture);
         free(item->texture.Mem);
+        if (item->texture.Clut)
+            free(item->texture.Clut);
     }
 
     memset(item, 0, sizeof(cache_entry_t));
     item->texture.Mem = NULL;
     item->texture.Vram = 0;
-    item->texture.Clut = 0;
+    item->texture.Clut = NULL;
     item->texture.VramClut = 0;
     item->qr = NULL;
     item->lastUsed = -1;
@@ -85,9 +89,13 @@ image_cache_t *cacheInitCache(int userId, const char *prefix, int isPrefixRelati
     image_cache_t *cache = (image_cache_t *)malloc(sizeof(image_cache_t));
     cache->userId = userId;
     cache->count = count;
-    int length = strlen(prefix) + 1;
-    cache->prefix = (char *)malloc(length * sizeof(char));
-    memcpy(cache->prefix, prefix, length);
+    cache->prefix = NULL;
+    int length;
+    if (prefix) {
+        length = strlen(prefix) + 1;
+        cache->prefix = (char *)malloc(length * sizeof(char));
+        memcpy(cache->prefix, prefix, length);
+    }
     cache->isPrefixRelative = isPrefixRelative;
     length = strlen(suffix) + 1;
     cache->suffix = (char *)malloc(length * sizeof(char));

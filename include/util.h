@@ -3,7 +3,9 @@
 
 #include <gsToolkit.h>
 
+int getmcID(void);
 int getFileSize(int fd);
+void checkMCFolder(void);
 int openFile(char *path, int mode);
 void *readFile(char *path, int align, int *size);
 int listDir(char *path, const char *separator, int maxElem,
@@ -26,8 +28,8 @@ int readFileBuffer(file_buffer_t *readContext, char **outBuf);
 void writeFileBuffer(file_buffer_t *fileBuffer, char *inBuf, int size);
 void closeFileBuffer(file_buffer_t *fileBuffer);
 
-inline int max(int a, int b);
-inline int min(int a, int b);
+int max(int a, int b);
+int min(int a, int b);
 int fromHex(char digit);
 char toHex(int digit);
 
@@ -44,9 +46,10 @@ enum CONSOLE_REGIONS {
 int InitConsoleRegionData(void);
 const char *GetSystemDataPath(void);
 char GetSystemFolderLetter(void);
+int sysDeleteFolder(const char *folder);
 
 int CheckPS2Logo(int fd, u32 lba);
 
-inline void delay(int count);
+void delay(int count);
 
 #endif

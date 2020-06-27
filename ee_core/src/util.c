@@ -17,15 +17,16 @@ extern int size_cdvdman_irx;
 extern void *cdvdfsv_irx;
 extern int size_cdvdfsv_irx;
 
+extern void *_end;
 
 /* Do not link to strcpy() from libc */
-inline void _strcpy(char *dst, const char *src)
+void _strcpy(char *dst, const char *src)
 {
     strncpy(dst, src, strlen(src) + 1);
 }
 
 /* Do not link to strcat() from libc */
-inline void _strcat(char *dst, const char *src)
+void _strcat(char *dst, const char *src)
 {
     _strcpy(&dst[strlen(dst)], src);
 }
@@ -176,7 +177,7 @@ char *_strstr(const char *string, const char *substring)
 }
 
 /* Do not link to islower() from libc */
-inline int _islower(int c)
+int _islower(int c)
 {
     if ((c < 'a') || (c > 'z'))
         return 0;
@@ -187,7 +188,7 @@ inline int _islower(int c)
 }
 
 /* Do not link to toupper() from libc */
-inline int _toupper(int c)
+int _toupper(int c)
 {
     if (_islower(c))
         c -= 32;
@@ -361,9 +362,25 @@ void CopyToIop(void *eedata, unsigned int size, void *iopptr)
 }
 
 /*----------------------------------------------------------------------------------------*/
+/* Initialize User Memory.                                                                */
+/*----------------------------------------------------------------------------------------*/
+void WipeUserMemory(void *start, void *end)
+{
+    unsigned int i;
+
+    for (i = (unsigned int)start; i < (unsigned int)end; i += 64) {
+        __asm__ __volatile__(
+            "\tsq $0, 0(%0) \n"
+            "\tsq $0, 16(%0) \n"
+            "\tsq $0, 32(%0) \n"
+            "\tsq $0, 48(%0) \n" ::"r"(i));
+    }
+}
+
+/*----------------------------------------------------------------------------------------*/
 /* NOP delay.                                                                             */
 /*----------------------------------------------------------------------------------------*/
-inline void delay(int count)
+void delay(int count)
 {
     int i, ret;
 

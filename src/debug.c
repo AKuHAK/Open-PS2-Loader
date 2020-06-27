@@ -8,33 +8,9 @@
 #include "include/ethsupport.h"
 #include "include/system.h"
 #include "include/ioman.h"
+#include "include/extern_irx.h"
 
-extern void *netman_irx;
-extern int size_netman_irx;
-
-extern void *dns_irx;
-extern int size_dns_irx;
-
-extern void *ps2ips_irx;
-extern int size_ps2ips_irx;
-
-extern void *ps2ip_irx;
-extern int size_ps2ip_irx;
-
-extern void *smap_irx;
-extern int size_smap_irx;
-
-extern void *udptty_irx;
-extern int size_udptty_irx;
-
-extern void *ioptrap_irx;
-extern int size_ioptrap_irx;
-
-extern void *ps2link_irx;
-extern int size_ps2link_irx;
-
-extern void *smsutils_irx;
-extern int size_smsutils_irx;
+static u8 modulesLoaded = 0;
 
 int debugSetActive(void)
 {
@@ -44,6 +20,15 @@ int debugSetActive(void)
     if ((ret = ethLoadInitModules()) != 0)
         return -1;
 
+#ifdef __DECI2_DEBUG
+    ret = sysLoadModuleBuffer(&drvtif_irx, size_drvtif_irx, 0, NULL);
+    if (ret < 0)
+        return -8;
+
+    ret = sysLoadModuleBuffer(&tifinet_irx, size_tifinet_irx, 0, NULL);
+    if (ret < 0)
+        return -9;
+#else
     ret = sysLoadModuleBuffer(&udptty_irx, size_udptty_irx, 0, NULL);
     if (ret < 0)
         return -8;
@@ -56,6 +41,18 @@ int debugSetActive(void)
     if (ret < 0)
         return -10;
 #endif
+#endif
+
+    modulesLoaded = 1;
 
     return 0;
 }
+
+void debugApplyConfig(void)
+{
+#ifndef _DTL_T10000
+    if (modulesLoaded)
+        ethApplyConfig();
+#endif
+}
+

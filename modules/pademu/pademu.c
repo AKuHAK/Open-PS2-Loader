@@ -93,9 +93,9 @@ extern struct irx_export_table _exp_pademu;
 
 int _start(int argc, char *argv[])
 {
-    u8 pad_vibration = 0xFF;
+    u8 pad_vibration = 0x03;
 
-    pad_enable = 0xFF;
+    pad_enable = 0x03;
 
     if (argc > 1) {
         pad_enable = argv[1][0];
@@ -111,16 +111,15 @@ int _start(int argc, char *argv[])
 
     SetRebootTimeLibraryHandlingMode(&_exp_pademu, 2);
 
-#ifdef VMC
     u8 vmc = 0;
 
     if (argc > 1)
         vmc = argv[1][3];
 
-    if (!vmc)
-#endif
+    if (!vmc) {
         if (!install_sio2hook())
             return MODULE_NO_RESIDENT_END;
+    }
 
     pademu_setup(pad_enable, pad_vibration);
 
@@ -215,6 +214,7 @@ void pademu_hookSio2man(sio2_transfer_data_t *td, Sio2McProc sio2proc)
             if (port2 == 1) { //2 sio cmds
                 if (mtap_inited) {
                     if (pad[0].enabled) {
+                        td->in[0] = 0x00;
                         sio2proc(td);
                         sio2proc = pademu;
                     }
@@ -222,7 +222,24 @@ void pademu_hookSio2man(sio2_transfer_data_t *td, Sio2McProc sio2proc)
                     if (pad[0].enabled && pad[1].enabled) { //emulating 2 pads
                         sio2proc = pademu;
                     } else if (pad[0].enabled || pad[1].enabled) { //only one
+                        if (pad[0].enabled) {
+                            ctrl = 0;
+                        } else if (pad[1].enabled) {
+                            for (ctrl = 5; ctrl < td->in_size - 3; ctrl++) {
+                                if (td->in[ctrl] == 0x01 && (td->in[ctrl + 1] & 0xF0) == 0x40 && td->in[ctrl + 2] == 0x00) {
+                                    if (ctrl != 5 && ctrl != 9 && ctrl != 21)
+                                        continue;
+                                    else
+                                        break;
+                                }
+                            }
+                            if (ctrl + 3 == td->in_size) {
+                                return;
+                            }
+                        }
+                        td->in[ctrl] = 0x00;
                         sio2proc(td);
+                        td->in[ctrl] = 0x01;
                         sio2proc = pademu;
                     }
                 }

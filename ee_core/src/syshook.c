@@ -12,7 +12,6 @@
 #include "iopmgr.h"
 #include "modmgr.h"
 #include "util.h"
-#include "spu.h"
 #include "patches.h"
 #include "padhook.h"
 #include "syshook.h"
@@ -20,11 +19,6 @@
 #include <syscallnr.h>
 #include <ee_regs.h>
 #include <ps2_reg_defs.h>
-
-#define MAX_ARGS 15
-
-int g_argc;
-char *g_argv[1 + MAX_ARGS];
 
 int set_reg_hook;
 int set_reg_disabled;
@@ -34,6 +28,8 @@ int padOpen_hooked = 0;
 int disable_padOpen_hook = 1;
 
 extern void *ModStorageStart, *ModStorageEnd;
+extern void *eeloadCopy, *initUserMemory;
+extern void *_end;
 
 /*----------------------------------------------------------------------------------------*/
 /* This function is called when SifSetDma catches a reboot request.                       */
@@ -42,7 +38,10 @@ u32 New_SifSetDma(SifDmaTransfer_t *sdd, s32 len)
 {
     // Hook padOpen function to install In Game Reset
     if (!(g_compat_mask & COMPAT_MODE_6) && padOpen_hooked == 0)
+    {
+        Install_IGR();
         padOpen_hooked = Install_PadOpen_Hook(0x00100000, 0x01ff0000, PADOPEN_HOOK);
+    }
 
     struct _iop_reset_pkt *reset_pkt = (struct _iop_reset_pkt *)sdd->src;
 
@@ -57,32 +56,14 @@ u32 New_SifSetDma(SifDmaTransfer_t *sdd, s32 len)
 }
 
 // ------------------------------------------------------------------------
-extern void *_end;
-
-static void WipeUserMemory(void *start, void *end)
-{
-    unsigned int i;
-
-    for (i = (unsigned int)start; i < (unsigned int)end; i += 64) {
-        if (i == (unsigned int)ModStorageStart)
-            i = (unsigned int)ModStorageEnd;
-
-        __asm__ __volatile__(
-            "\tsq $0, 0(%0) \n"
-            "\tsq $0, 16(%0) \n"
-            "\tsq $0, 32(%0) \n"
-            "\tsq $0, 48(%0) \n" ::"r"(i));
-    }
-}
-
-void t_loadElf(void)
+void sysLoadElf(char *filename, int argc, char **argv)
 {
     int r;
     t_ExecData elf;
 
-    DPRINTF("t_loadElf()\n");
+    SifInitRpc(0);
 
-    ResetSPU();
+    DPRINTF("t_loadElf()\n");
 
     DPRINTF("t_loadElf: Resetting IOP...\n");
 
@@ -95,7 +76,7 @@ void t_loadElf(void)
     SifInitRpc(0);
     LoadFileInit();
 
-    DPRINTF("t_loadElf: elf path = '%s'\n", g_argv[0]);
+    DPRINTF("t_loadElf: elf path = '%s'\n", filename);
 
     if (!DisableDebug)
         GS_BGCOLOUR = 0x00ff00; //Green
@@ -104,22 +85,22 @@ void t_loadElf(void)
 
     // wipe user memory
     WipeUserMemory((void *)&_end, (void *)ModStorageStart);
-    WipeUserMemory((void *)ModStorageEnd, (void *)GetMemorySize());
+    //The upper half (from ModStorageEnd to GetMemorySize()) is taken care of by LoadExecPS2().
+    //WipeUserMemory((void *)ModStorageEnd, (void *)GetMemorySize());
 
     FlushCache(0);
-    FlushCache(2);
 
     DPRINTF(" done\n");
 
     DPRINTF("t_loadElf: loading elf...");
-    r = LoadElf(g_argv[0], &elf);
+    r = LoadElf(filename, &elf);
 
-    if ((!r) && (elf.epc)) {
+    if (!r) {
         DPRINTF(" done\n");
 
         DPRINTF("t_loadElf: trying to apply patches...\n");
         // applying needed patches
-        apply_patches();
+        apply_patches(filename);
 
         FlushCache(0);
         FlushCache(2);
@@ -133,7 +114,7 @@ void t_loadElf(void)
         disable_padOpen_hook = 0;
 
         DPRINTF("t_loadElf: executing...\n");
-        ExecPS2((void *)elf.epc, (void *)elf.gp, g_argc, g_argv);
+        CleanExecPS2((void *)elf.epc, (void *)elf.gp, argc, argv);
     }
 
     DPRINTF(" failed\n");
@@ -141,6 +122,35 @@ void t_loadElf(void)
     //Error
     GS_BGCOLOUR = 0xffffff; //White	- shouldn't happen.
     SleepThread();
+}
+
+static void unpatchEELOADCopy(void)
+{
+   vu32 *p = (vu32*)eeloadCopy;
+
+   p[1] = 0x0240302D; /* daddu    a2, s2, zero */
+   p[2] = 0x8FA50014; /* lw       a1, 0x0014(sp) */
+   p[3] = 0x8C67000C; /* lw       a3, 0x000C(v1) */
+}
+
+static void unpatchInitUserMemory(void)
+{
+    vu16 *p = (vu16*)initUserMemory;
+
+    /*
+     * Reset the start of user memory to 0x00082000, by changing the immediate value being loaded into $a0.
+     *  lui  $a0, 0x0008
+     *  jal  InitializeUserMemory
+     *  ori  $a0, $a0, 0x2000
+     */
+    p[0] = 0x0008;
+    p[4] = 0x2000;
+}
+
+void sysExit(s32 exit_code)
+{
+    Remove_Kernel_Hooks();
+    IGR_Exit(exit_code);
 }
 
 /*----------------------------------------------------------------------------------------*/
@@ -155,9 +165,6 @@ void Install_Kernel_Hooks(void)
     Old_SifSetReg = GetSyscallHandler(__NR_SifSetReg);
     SetSyscall(__NR_SifSetReg, &Hook_SifSetReg);
 
-    Old_LoadExecPS2 = GetSyscallHandler(__NR__LoadExecPS2);
-    SetSyscall(__NR__LoadExecPS2, &Hook_LoadExecPS2);
-
     // If IGR is enabled hook ExecPS2 & CreateThread syscalls
     if (!(g_compat_mask & COMPAT_MODE_6)) {
         Old_CreateThread = GetSyscallHandler(__NR_CreateThread);
@@ -166,21 +173,37 @@ void Install_Kernel_Hooks(void)
         Old_ExecPS2 = GetSyscallHandler(__NR__ExecPS2);
         SetSyscall(__NR__ExecPS2, &Hook_ExecPS2);
     }
+
+    Old_Exit = GetSyscallHandler(__NR__Exit);
+    SetSyscall(__NR__Exit, &Hook_Exit);
 }
 
-/*----------------------------------------------------------------------------------------*/
-/* Restore original SifSetDma, SifSetReg, LoadExecPS2 syscalls in kernel. (Game loader)   */
-/* Restore original CreateThread and ExecPS2 syscalls in kernel. (In Game Reset)          */
-/*----------------------------------------------------------------------------------------*/
+/*----------------------------------------------------------------------------------------------*/
+/* Restore original SifSetDma, SifSetReg, LoadExecPS2, Exit syscalls in kernel. (Game loader)   */
+/* Restore original CreateThread and ExecPS2 syscalls in kernel. (In Game Reset)                */
+/*----------------------------------------------------------------------------------------------*/
 void Remove_Kernel_Hooks(void)
 {
     SetSyscall(__NR_SifSetDma, Old_SifSetDma);
     SetSyscall(__NR_SifSetReg, Old_SifSetReg);
-    SetSyscall(__NR__LoadExecPS2, Old_LoadExecPS2);
+    SetSyscall(__NR__Exit, Old_Exit);
+
+    DI();
+    ee_kmode_enter();
+
+    unpatchEELOADCopy();
+    unpatchInitUserMemory();
+
+    ee_kmode_exit();
+    EI();
 
     // If IGR is enabled unhook ExecPS2 & CreateThread syscalls
     if (!(g_compat_mask & COMPAT_MODE_6)) {
         SetSyscall(__NR_CreateThread, Old_CreateThread);
         SetSyscall(__NR__ExecPS2, Old_ExecPS2);
     }
+
+    FlushCache(0);
+    FlushCache(2);
 }
+

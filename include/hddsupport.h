@@ -20,8 +20,8 @@ typedef struct
     u8 ops2l_compat_flags;
     u8 dma_type;
     u8 dma_mode;
+    u8 disctype;
     u32 layer_break;
-    int disctype;
     u32 start_sector;
     u32 total_size_in_kb;
 } hdl_game_info_t;
@@ -38,7 +38,6 @@ typedef struct
     u32 length;
 } apa_subs;
 
-#ifdef VMC
 #include "include/mcemu.h"
 typedef struct
 {
@@ -48,13 +47,13 @@ typedef struct
     int flags;                  /* Card flag */
     vmc_spec_t specs;           /* Card specifications */
 } hdd_vmc_infos_t;
-#endif
 
 int hddCheck(void);
 u32 hddGetTotalSectors(void);
 int hddIs48bit(void);
 int hddSetTransferMode(int type, int mode);
-int hddSetIdleTimeout(int timeout);
+void hddSetIdleTimeout(int timeout);
+void hddSetIdleImmediate(void);
 int hddGetHDLGamelist(hdl_games_list_t *game_list);
 void hddFreeHDLGamelist(hdl_games_list_t *game_list);
 int hddSetHDLGameInfo(hdl_game_info_t *ginfo);

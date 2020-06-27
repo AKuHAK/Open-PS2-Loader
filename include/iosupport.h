@@ -3,6 +3,9 @@
 
 #include "include/config.h"
 
+#define IO_MODE_SELECTED_NONE -1
+#define IO_MODE_SELECTED_ALL MODE_COUNT
+
 enum IO_MODES {
     USB_MODE = 0,
     ETH_MODE,
@@ -59,23 +62,25 @@ enum ERROR_CODE {
 #define COMPAT_MODE_4 0x08 // Skip Videos: Apply 0 (zero) file size to PSS videos and also skip Bink (.BIK) ones
 #define COMPAT_MODE_5 0x10 // Emulate DVD-DL
 #define COMPAT_MODE_6 0x20 // Disable IGR
-#define COMPAT_MODE_7 0x40 // High Module Storage
-#define COMPAT_MODE_8 0x80 // Hide DEV9 module
+#define COMPAT_MODE_7 0x40 // Unused
+#define COMPAT_MODE_8 0x80 // Unused
 
-#define COMPAT_MODE_COUNT 8
+#define COMPAT_MODE_COUNT 6 // only count modes in use
 
 #define OPL_MOD_STORAGE 0x00097000    //(default) Address of the module storage region
-#define OPL_MOD_STORAGE_HI 0x01C00000 //Alternate address of the module storage region
 
 // minimal inactive frames for cover display, can be pretty low since it means no button is pressed :)
 #define MENU_MIN_INACTIVE_FRAMES 8
 
-#define MENU_UPD_DELAY_NOUPDATE -1  //Menu won't be ever be updated, even if the user triggers a refresh.
-#define MENU_UPD_DELAY_GENREFRESH 0 //Menu will be refreshed every MENU_GENERAL_UPDATE_DELAY frames, regardless of whether automatic refresh is enabled or not.
+#define MENU_UPD_DELAY_NOUPDATE -1  //Auto refresh is disabled for the item. The refresh button may be used to manually refresh the item.
+#define MENU_UPD_DELAY_GENREFRESH 0 //The item will be refreshed every MENU_GENERAL_UPDATE_DELAY frames, regardless of whether automatic refresh is enabled or not.
 
 typedef struct
 {
     short int mode;
+
+    /// Device priority when it comes to locating art assets for apps. Higher value = lower priority. (< 0) means no support for art assets.
+    char appsPriority;
 
     char enabled;
 
@@ -93,6 +98,9 @@ typedef struct
 
     /// item description in localised form (used if value is not negative)
     int textId;
+
+    /// @return path to applications storage on the device (set callback to NULL if not applicable).
+    void (*itemGetAppsPath)(char *path, int max);
 
     void (*itemInit)(void);
 
@@ -124,9 +132,9 @@ typedef struct
 
     void (*itemCleanUp)(int exception);
 
-#ifdef VMC
+    void (*itemShutdown)(void);
+
     int (*itemCheckVMC)(char *name, int createSize);
-#endif
 
     int iconId;
 } item_list_t;

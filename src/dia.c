@@ -13,6 +13,7 @@
 #include "include/fntsys.h"
 #include "include/themes.h"
 #include "include/util.h"
+#include "include/sound.h"
 
 // UI spacing of the dialogues (pixels between consecutive items)
 #define UI_SPACING_H 10
@@ -47,7 +48,7 @@ static void diaDrawBoundingBox(int x, int y, int w, int h, int focus)
     rmDrawRect(x - 5, y, w + 10, h + 10, color);
 }
 
-int diaShowKeyb(char *text, int maxLen, int hide_text)
+int diaShowKeyb(char *text, int maxLen, int hide_text, const char *title)
 {
     int i, j, len = strlen(text), selkeyb = 0, x, w;
     int selchar = 0, selcommand = -1;
@@ -90,6 +91,13 @@ int diaShowKeyb(char *text, int maxLen, int hide_text)
         guiDrawBGPlasma();
         rmDrawRect(0, 0, screenWidth, screenHeight, gColDarker);
 
+        //Title
+        if (title != NULL) {
+          fntRenderString(gTheme->fonts[0], 25, 20, ALIGN_NONE, 0, 0, title, gTheme->textColor);
+          // separating line
+          rmDrawLine(25, 38, 615, 38, gColWhite);
+        }
+
         //Text
         fntRenderString(gTheme->fonts[0], 50, 120, ALIGN_NONE, 0, 0, hide_text ? mask_buffer : text, gTheme->textColor);
 
@@ -109,8 +117,11 @@ int diaShowKeyb(char *text, int maxLen, int hide_text)
 
         // Commands
         for (i = 0; i < KEYB_HEIGHT; i++) {
-            if (cmdicons[i])
-                rmDrawPixmap(cmdicons[i], 436, 170 + 3 * UI_SPACING_H * i, ALIGN_NONE, cmdicons[i]->Width, cmdicons[i]->Height, SCALING_RATIO, gDefaultCol);
+            if (cmdicons[i]) {
+                int w = (cmdicons[i]->Width * 20) / cmdicons[i]->Height;
+                int h = 20;
+                rmDrawPixmap(cmdicons[i], 436, 170 + 3 * UI_SPACING_H * i, ALIGN_NONE, w, h, SCALING_RATIO, gDefaultCol);
+            }
 
             x = 477;
             w = fntRenderString(gTheme->fonts[0], x, 170 + 3 * UI_SPACING_H * i, ALIGN_NONE, 0, 0, commands[i], gTheme->uiTextColor) - x;
@@ -123,6 +134,7 @@ int diaShowKeyb(char *text, int maxLen, int hide_text)
         rmEndFrame();
 
         if (getKey(KEY_LEFT)) {
+            sfxPlay(SFX_CURSOR);
             if (selchar > -1) {
                 if (selchar % KEYB_WIDTH)
                     selchar--;
@@ -135,6 +147,7 @@ int diaShowKeyb(char *text, int maxLen, int hide_text)
                 selcommand = -1;
             }
         } else if (getKey(KEY_RIGHT)) {
+            sfxPlay(SFX_CURSOR);
             if (selchar > -1) {
                 if ((selchar + 1) % KEYB_WIDTH)
                     selchar++;
@@ -147,17 +160,20 @@ int diaShowKeyb(char *text, int maxLen, int hide_text)
                 selcommand = -1;
             }
         } else if (getKey(KEY_UP)) {
+            sfxPlay(SFX_CURSOR);
             if (selchar > -1)
                 selchar = (selchar + KEYB_ITEMS - KEYB_WIDTH) % KEYB_ITEMS;
             else
                 selcommand = (selcommand + KEYB_HEIGHT - 1) % KEYB_HEIGHT;
         } else if (getKey(KEY_DOWN)) {
+            sfxPlay(SFX_CURSOR);
             if (selchar > -1)
                 selchar = (selchar + KEYB_WIDTH) % KEYB_ITEMS;
             else
                 selcommand = (selcommand + 1) % KEYB_HEIGHT;
         } else if (getKeyOn(gSelectButton)) {
             if (len < (maxLen - 1) && selchar > -1) {
+                sfxPlay(SFX_CONFIRM);
                 if (mask_buffer != NULL) {
                     mask_buffer[len] = '*';
                     mask_buffer[len + 1] = '\0';
@@ -167,6 +183,7 @@ int diaShowKeyb(char *text, int maxLen, int hide_text)
                 c[0] = keyb[selchar];
                 strcat(text, c);
             } else if (selcommand == 0) {
+                sfxPlay(SFX_CANCEL);
                 if (len > 0) { // BACKSPACE
                     len--;
                     text[len] = 0;
@@ -174,6 +191,7 @@ int diaShowKeyb(char *text, int maxLen, int hide_text)
                         mask_buffer[len] = '\0';
                 }
             } else if (selcommand == 1) {
+                sfxPlay(SFX_CONFIRM);
                 if (len < (maxLen - 1)) { // SPACE
                     if (mask_buffer != NULL) {
                         mask_buffer[len] = '*';
@@ -185,10 +203,12 @@ int diaShowKeyb(char *text, int maxLen, int hide_text)
                     strcat(text, c);
                 }
             } else if (selcommand == 2) {
+                sfxPlay(SFX_CONFIRM);
                 if (mask_buffer != NULL)
                     free(mask_buffer);
                 return 1; //ENTER
             } else if (selcommand == 3) {
+                sfxPlay(SFX_CONFIRM);
                 selkeyb = (selkeyb + 1) % KEYB_MODE; // MODE
                 if (selkeyb == 0)
                     keyb = keyb0;
@@ -197,6 +217,7 @@ int diaShowKeyb(char *text, int maxLen, int hide_text)
             }
         } else if (getKey(KEY_SQUARE)) {
             if (len > 0) { // BACKSPACE
+                sfxPlay(SFX_CANCEL);
                 len--;
                 text[len] = 0;
                 if (mask_buffer != NULL)
@@ -204,6 +225,7 @@ int diaShowKeyb(char *text, int maxLen, int hide_text)
             }
         } else if (getKey(KEY_TRIANGLE)) {
             if (len < (maxLen - 1) && selchar > -1) { // SPACE
+                sfxPlay(SFX_CONFIRM);
                 if (mask_buffer != NULL) {
                     mask_buffer[len] = '*';
                     mask_buffer[len + 1] = '\0';
@@ -214,19 +236,23 @@ int diaShowKeyb(char *text, int maxLen, int hide_text)
                 strcat(text, c);
             }
         } else if (getKeyOn(KEY_START)) {
+            sfxPlay(SFX_CONFIRM);
             if (mask_buffer != NULL)
                 free(mask_buffer);
             return 1; //ENTER
         } else if (getKeyOn(KEY_SELECT)) {
             selkeyb = (selkeyb + 1) % KEYB_MODE; // MODE
+            sfxPlay(SFX_CONFIRM);
             if (selkeyb == 0)
                 keyb = keyb0;
             if (selkeyb == 1)
                 keyb = keyb1;
         }
 
-        if (getKey(gSelectButton == KEY_CIRCLE ? KEY_CROSS : KEY_CIRCLE))
+        if (getKey(gSelectButton == KEY_CIRCLE ? KEY_CROSS : KEY_CIRCLE)) {
+            sfxPlay(SFX_CANCEL);
             break;
+        }
     }
 
 
@@ -298,24 +324,34 @@ static int diaShowColSel(unsigned char *r, unsigned char *g, unsigned char *b)
         rmEndFrame();
 
         if (getKey(KEY_LEFT)) {
-            if (col[selc] > 0)
+            if (col[selc] > 0) {
                 col[selc]--;
+                sfxPlay(SFX_CURSOR);
+            }
         } else if (getKey(KEY_RIGHT)) {
-            if (col[selc] < 255)
+            if (col[selc] < 255) {
                 col[selc]++;
+                sfxPlay(SFX_CURSOR);
+            }
         } else if (getKey(KEY_UP)) {
-            if (selc > 0)
+            if (selc > 0) {
                 selc--;
+                sfxPlay(SFX_CURSOR);
+            }
         } else if (getKey(KEY_DOWN)) {
-            if (selc < 2)
+            if (selc < 2) {
                 selc++;
+                sfxPlay(SFX_CURSOR);
+            }
         } else if (getKeyOn(gSelectButton)) {
+            sfxPlay(SFX_CONFIRM);
             *r = col[0];
             *g = col[1];
             *b = col[2];
             ret = 1;
             break;
         } else if (getKeyOn(gSelectButton == KEY_CIRCLE ? KEY_CROSS : KEY_CIRCLE)) {
+            sfxPlay(SFX_CANCEL);
             ret = 0;
             break;
         }
@@ -359,11 +395,10 @@ static int diaShouldBreakLineAfter(struct UIItem *ui)
 static void diaDrawHint(int text_id)
 {
     int x, y;
-
     char *text = _l(text_id);
 
-    x = screenWidth - fntCalcDimensions(gTheme->fonts[0], text) - 10;
-    y = gTheme->usedHeight - 40;
+    x = screenWidth - rmUnScaleX(fntCalcDimensions(gTheme->fonts[0], text)) - 10;
+    y = gTheme->usedHeight - 62;
 
     // render hint on the lower side of the screen.
     rmDrawRect(x, y, screenWidth - x, MENU_ITEM_HEIGHT + 10, gColDarker);
@@ -459,13 +494,17 @@ static void diaRenderItem(int x, int y, struct UIItem *item, int selected, int h
         case UI_PASSWORD: {
             char stars[32];
             int i;
+            int len;
 
-            int len = min(strlen(item->stringvalue.text), sizeof(stars) - 1);
-            for (i = 0; i < len; ++i)
-                stars[i] = '*';
+            if (strlen(item->stringvalue.text)) {
+                len = min(strlen(item->stringvalue.text), sizeof(stars) - 1);
+                for (i = 0; i < len; ++i)
+                   stars[i] = '*';
 
-            stars[i] = '\0';
-            *w = fntRenderString(gTheme->fonts[0], x, y, ALIGN_NONE, 0, 0, stars, txtcol) - x;
+                stars[i] = '\0';
+                *w = fntRenderString(gTheme->fonts[0], x, y, ALIGN_NONE, 0, 0, stars, txtcol) - x;
+            } else
+                *w = fntRenderString(gTheme->fonts[0], x, y, ALIGN_NONE, 0, 0, _l(_STR_NOT_SET), txtcol) - x;
             break;
         }
 
@@ -571,8 +610,14 @@ void diaRenderUI(struct UIItem *ui, short inMenu, struct UIItem *cur, int haveFo
         diaDrawHint(cur->hintId);
     }
 
-    guiDrawIconAndText(gSelectButton == KEY_CIRCLE ? CIRCLE_ICON : CROSS_ICON, _STR_SELECT, gTheme->fonts[0], 420, 417, gTheme->selTextColor);
-    guiDrawIconAndText(gSelectButton == KEY_CIRCLE ? CROSS_ICON : CIRCLE_ICON, _STR_BACK, gTheme->fonts[0], 500, 417, gTheme->selTextColor);
+    int uiHints[2] = {_STR_SELECT, _STR_BACK};
+    int uiIcons[2] = {CIRCLE_ICON, CROSS_ICON};
+    int uiY = gTheme->usedHeight - 32;
+    int uiX = guiAlignSubMenuHints(2, uiHints, uiIcons, gTheme->fonts[0], 12, 2);
+
+    uiX = guiDrawIconAndText(gSelectButton == KEY_CIRCLE ? uiIcons[0] : uiIcons[1], uiHints[0], gTheme->fonts[0], uiX, uiY, gTheme->textColor);
+    uiX += 12;
+    uiX = guiDrawIconAndText(gSelectButton == KEY_CIRCLE ? uiIcons[1] : uiIcons[0], uiHints[1], gTheme->fonts[0], uiX, uiY, gTheme->textColor);
 }
 
 /// sets the ui item value to the default again
@@ -597,11 +642,13 @@ static int diaHandleInput(struct UIItem *item, int *modified)
     // circle loses focus, sets old values first
     if (getKeyOn(gSelectButton == KEY_CIRCLE ? KEY_CROSS : KEY_CIRCLE)) {
         diaResetValue(item);
+        sfxPlay(SFX_CONFIRM);
         return 0;
     }
 
     // cross loses focus without setting default
     if (getKeyOn(gSelectButton)) {
+        sfxPlay(SFX_CONFIRM);
         *modified = 0;
         return 0;
     }
@@ -619,15 +666,21 @@ static int diaHandleInput(struct UIItem *item, int *modified)
 
         // up and down
         if (getKey(KEY_UP)) {
-            if (item->intvalue.current < item->intvalue.max)
+            sfxPlay(SFX_CURSOR);
+            if (item->intvalue.current < item->intvalue.max) {
                 item->intvalue.current++;
-            else
+            }
+            else {
                 item->intvalue.current = item->intvalue.min; //was "= 0;"
+            }
         } else if (getKey(KEY_DOWN)) {
-            if (item->intvalue.current > item->intvalue.min)
+            sfxPlay(SFX_CURSOR);
+            if (item->intvalue.current > item->intvalue.min) {
                 item->intvalue.current--;
-            else
+            }
+            else {
                 item->intvalue.current = item->intvalue.max;
+            }
         } else
             *modified = 0;
     } else if ((item->type == UI_STRING) || (item->type == UI_PASSWORD)) {
@@ -638,7 +691,7 @@ static int diaHandleInput(struct UIItem *item, int *modified)
             if (item->stringvalue.handler(tmp, sizeof(tmp)))
                 strncpy(item->stringvalue.text, tmp, sizeof(item->stringvalue.text));
         } else {
-            if (diaShowKeyb(tmp, sizeof(tmp), item->type == UI_PASSWORD))
+            if (diaShowKeyb(tmp, sizeof(tmp), item->type == UI_PASSWORD, NULL))
                 strncpy(item->stringvalue.text, tmp, sizeof(item->stringvalue.text));
         }
 
@@ -653,12 +706,19 @@ static int diaHandleInput(struct UIItem *item, int *modified)
                 return 0;
         }
 
-        if (getKey(KEY_UP) && (item->intvalue.current > 0))
+        if (getKey(KEY_UP) && (item->intvalue.current > 0)) {
             item->intvalue.current--;
-        else if (getKey(KEY_DOWN) && (item->intvalue.enumvalues[item->intvalue.current + 1] != NULL))
+            sfxPlay(SFX_CURSOR);
+        }
+        else if (getKey(KEY_DOWN) && (item->intvalue.enumvalues[item->intvalue.current + 1] != NULL)) {
             item->intvalue.current++;
-        else
+            sfxPlay(SFX_CURSOR);
+        }
+
+        else {
             *modified = 0;
+        }
+
     } else if (item->type == UI_COLOUR) {
         if (!diaShowColSel(&item->colourvalue.r, &item->colourvalue.g, &item->colourvalue.b))
             *modified = 0;
@@ -842,50 +902,76 @@ int diaExecuteDialog(struct UIItem *ui, int uiId, short inMenu, int (*updater)(i
             if (getKey(KEY_LEFT)) {
                 struct UIItem *newf = diaGetPrevControl(cur, ui);
 
-                if (newf == cur)
+                if (!toggleSfx) {
+                    sfxPlay(SFX_CURSOR);
+                }
+
+                if (newf == cur) {
                     cur = diaGetLastControl(ui);
-                else
+                }
+                else {
                     cur = newf;
+                }
             }
 
             if (getKey(KEY_RIGHT)) {
                 struct UIItem *newf = diaGetNextControl(cur, cur);
 
-                if (newf == cur)
+                if (!toggleSfx) {
+                    sfxPlay(SFX_CURSOR);
+                }
+
+                if (newf == cur) {
                     cur = diaGetFirstControl(ui);
-                else
+                }
+                else {
                     cur = newf;
+                }
             }
 
             if (getKey(KEY_UP)) {
                 // find
                 struct UIItem *newf = diaGetPrevLine(cur, ui);
 
-                if (newf == cur)
+                if (!toggleSfx) {
+                    sfxPlay(SFX_CURSOR);
+                }
+
+                if (newf == cur) {
                     cur = diaGetLastControl(ui);
-                else
+                }
+                else {
                     cur = newf;
+                }
             }
 
             if (getKey(KEY_DOWN)) {
                 // find
                 struct UIItem *newf = diaGetNextLine(cur, ui);
 
-                if (newf == cur)
+                if (!toggleSfx) {
+                    sfxPlay(SFX_CURSOR);
+                }
+
+                if (newf == cur) {
                     cur = diaGetFirstControl(ui);
-                else
+                }
+                else {
                     cur = newf;
+                }
             }
 
             // Cancel button breaks focus or exits with false result
             if (getKeyOn(gSelectButton == KEY_CIRCLE ? KEY_CROSS : KEY_CIRCLE)) {
                 diaRestoreScrollSpeed();
+                sfxPlay(SFX_CANCEL);
                 return UIID_BTN_CANCEL;
             }
 
             // see what key events we have
             if (getKeyOn(gSelectButton)) {
                 haveFocus = 1;
+                sfxPlay(SFX_CONFIRM);
 
                 if (cur->type == UI_BUTTON) {
                     diaRestoreScrollSpeed();

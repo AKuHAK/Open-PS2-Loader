@@ -1,5 +1,5 @@
 # Arabic Translation by LightWave - @http://psx-scene.com/forums/members/lightwave/
-# For Open PS2 Loader 0.9.3+ betas - Official OPL Beta thread @http://psx-scene.com/forums/f150/open-ps2-loader-official-beta-revisions-releases-156209/
+# For Open PS2 Loader 0.9.3+ betas - Official OPL Beta thread @https://www.psx-place.com/threads/open-ps2-loader-official-beta-releases.21573/
 Arabic
 Open PS2 Loader %s
 تثبيت التغييرات
@@ -7,7 +7,7 @@ Open PS2 Loader %s
 تثبيت و اعداد الشبكة
 اعدادات متقدمة
 <لا يوجد قيم>
-حفظت التغييرات بنجاح...
+Settings saved to %s
 هناك مشكلة في حفظ التغييرات
 الخروج
 الاعدادات
@@ -19,7 +19,7 @@ Open PS2 Loader %s
 تيمات
 لغات
 سيتم ايقاف تشغيل النظام
-Exit to Browser/OSDSYS?
+Exit to Browser?
 الغاء التحديث ?
 %d: لم يتم العثور على القرص الصلب
 %d: القرص المضغوط غير منسق
@@ -41,7 +41,7 @@ Exit to Browser/OSDSYS?
 ضرب
 قائمة الالعاب 
 اعدادات اللعبة
-حذف كل الاعدادات 
+Remove Settings
 تم حذف كل مفاتيح لللعبة
 التمرير
 ثقيل 
@@ -106,7 +106,7 @@ NetBIOS
 زر الاختيار
 اللعبة مجزئة
 غير ممكن تشغيل العنوان
-قتجريب
+Test Changes
 ترك الفراغ لGUEST
 قراءة دقيقة
 الطريقة المتزامنة
@@ -114,8 +114,8 @@ NetBIOS
 Skip videos
 تقليد DVD-DL
 الغاء IGR
-High module storage
-اخفاء بيانات  DEV9
+Unused
+Unused
 تغيير الحجم يؤدي الى حذف ال VMC 
 صنع
 بدء
@@ -131,7 +131,7 @@ High module storage
 ملف VMC موجود
  ملف فاسد , حجمه غير صحيح
 يجب صنع ملف VMC
-هنالك مشكلة مع ال VMC %s, هل تريد الاكمال مع بطاقة الظاكرة الحقيقية ? (slot %d) ?
+Error accessing VMC %s. Continue with the Memory Card in slot %d?
 تحديث اوتوماتيكي
 معلومات حول ...
 المبرمجون
@@ -143,7 +143,7 @@ Boots Custom ELF after an IGR
 طريقة الفيديو
 لون الكتابة
 اللون المختار
-عرض صفحة المعلومات
+Reset Colors
 المعلومات
 تخصيص ELF
 اختيار الالوان
@@ -182,6 +182,8 @@ DMA طريقة
 تعديل افقي
 موضع عمودي
 تعديل عمودي
+Overscan
+Overscan Adjustment
 تخطي FMV
 بتخطى FMV
 اعدادات قائمة الغش
@@ -195,7 +197,7 @@ PS2RD
 لا يوجد قائمة الغش لهذه اللعبة
 تحميل الافتراضيات
 التحديث عن طريق الشبكة
-اعادة تحميل التسجيلات الموجودة ?
+Overwrite Existing Records
 فشل التحديث
 فشل في الاتصال بسيرفر التحديث
 انتهى التحديث
@@ -207,15 +209,15 @@ PS2RD
 البدء الاوتوماتيكي
 النسبة في الدقيقة, 0 للالغاء التدوير باستمرار
 PS2 Logo
-Only displayed for a valid disc logo which matches the console's region
+(Only displayed for a valid disc logo which matches the console's region)
 Configure PADEMU
 Pad Emulator Settings
-Enable Pad Emulator
+Enable PadEmulator
 Turns on/off PadEmulator for selected game.
 Pad Emulator mode
 Select Pad Emulator mode.
-DualShock3 USB
-DualShock3 BT
+DualShock3/4 USB
+DualShock3/4 BT
 Settings for port:
 Select Pad Emulator port for settings.
 Enable emulation
@@ -223,8 +225,59 @@ Turns on/off Pad Emulator for selected port.
 Enable vibration
 Turns on/off vibration for Pad Emulator selected port.
 Usb bluetooth adapter mac address:
-DS3 Controller paired to mac address:
+DS Controller paired to mac address:
 Pair
-Pair DS3 controller
-Pair DS3 controller with bluetooth adapter mac address.
+Pair DS Controller
+Pair DS Controller with bluetooth adapter mac address.
 Not connected
+Bluetooth adapter information
+Shows more information and supported features
+HCI Version:
+LMP Version:
+Manufacturer ID:
+Support features:
+Yes
+No
+Bluetooth adapter should be fully compatible with DS3/DS4 controllers.
+Bluetooth adapter may not work correctly with DS3/DS4 controllers.
+Enable Multitap emulation
+Turns on/off Multitap emulation for selected game.
+Multitap emulator on port
+Select port for Multitap emulation.
+Disable workaround for fake ds3
+Some fake ds3s need workaround, this option will disable it.
+Emulate FIELD flipping
+Fix for games that glitch under progressive video modes.
+Parental Lock Settings
+Parental Lock Password
+Leave blank to disable the parental lock.
+Enter Parental Lock Password
+Parental lock password incorrect.
+Parental lock disabled.
+Build Options:
+Error - this password cannot be used.
+VMC %s file is fragmented. Continue with Memory Card in slot %d?
+Audio Settings
+Enable Sound Effects
+Enable Boot Sound
+Sound Effects Volume
+Boot Sound Volume
+Confirm video mode change?
+Cache Game List (HDD)
+Enable Notifications
+%s loaded from %s
+Game Menu
+Game settings saved.
+%s settings removed.
+Overwrites existing game compatibility settings when enabled.
+Settings Mode
+Global
+Per Game
+All
+Select settings to remove.
+Support Forums:
+Title
+Genre
+Release
+Developer
+Description

@@ -5,7 +5,6 @@
 
 #define USB_MODE_UPDATE_DELAY MENU_UPD_DELAY_GENREFRESH
 
-#ifdef VMC
 #include "include/mcemu.h"
 
 typedef struct
@@ -15,11 +14,12 @@ typedef struct
     int flags;        /* Card flag */
     vmc_spec_t specs; /* Card specifications */
 } usb_vmc_infos_t;
-#endif
+
+#define MAX_USB_DEVICES 5
 
 void usbInit();
 item_list_t *usbGetObject(int initOnly);
-int usbFindPartition(char *target, char *name);
+int usbFindPartition(char *target, const char *name, int write);
 void usbLoadModules(void);
 
 #endif

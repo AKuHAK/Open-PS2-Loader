@@ -1,5 +1,5 @@
 # Danish translation by BongKris
-# For Open PS2 Loader 0.9.3+ betas - Official OPL Beta thread @http://psx-scene.com/forums/f150/open-ps2-loader-official-beta-revisions-releases-156209/
+# For Open PS2 Loader 0.9.3+ betas - Official OPL Beta thread @https://www.psx-place.com/threads/open-ps2-loader-official-beta-releases.21573/
 Danish
 Open PS2 Loader %s
 Gem indstillinger
@@ -7,7 +7,7 @@ Tilbage
 Netværksindstillinger
 Avancerede indstillinger
 <ingen værdi>
-Indstillinger gemt...
+Settings saved to %s
 Fejl ved lagering af indstillinger!
 Afslut
 Indstillinger
@@ -19,7 +19,7 @@ Programmer
 Tema
 Sprog
 Systemet slukkes.
-Vend tilbage til Browser/OSDSYS?
+Vend tilbage til Browser?
 Annuller opdatering?
 %d: Inget harddisk drev fundet
 %d: Harddisk drevet er ikke formateret
@@ -41,7 +41,7 @@ Cirkel
 Kryds
 Spil liste
 Spil indst.
-Nulstil alle indstillinger
+Remove Settings
 Spil indstillinger nulstillet
 Scrolling
 Langsom
@@ -106,7 +106,7 @@ Husk sidst spillede spil
 Vælgeknap
 Fejl: spillet er fragmenteret
 Fejl: kunne ikke køre elementet
-Test
+Test Changes
 Efterlad tom for gæste konto
 Korrekt læsning
 Synkroniseringstilstand
@@ -114,8 +114,8 @@ Frigiv syscalls
 Skip videoer
 Emulere DVD-DL
 Deaktivere IGR
-High module lagering
-Skjul DEV9-modul
+Unused
+Unused
 Ændring af størrelsen vil omformatere VMC
 Opret
 Start
@@ -131,7 +131,7 @@ Fremskridt
 VMC-fil eksisterer allerede
 Ugyldig VMC-fil, størrelse er ukorrekt
 VMC-fil skal oprettes
-Fejl med VMC %s, fortsæt med fysisk MC (port %d) ?
+Fejl med VMC %s, fortsæt med fysisk MC (port %d)?
 Automatisk opdatering
 Om
 Kodere
@@ -143,7 +143,7 @@ Automatisk harddisk spindown
 Videotilstand
 Dialogfarve
 Markeringsfarve
-Vis infoside
+Reset Colors
 Info
 Brugerdefinerede ELF
 Farvevalg
@@ -182,6 +182,8 @@ Horisontal position
 Horisontal justering
 Vertikal position
 Vertikal justering
+Overscan
+Overscan Justering
 Vis ikke FMV
 Springer over Full Motion Videos
 Snydeindstillinger
@@ -195,7 +197,7 @@ Fejl: kunne ikke indlæses fil med snydekoder
 Ingen snydekoder fundet
 Hent standardindstillinger
 Netværksopdatering
-Hent eksisterende arkiv?
+Overwrite Existing Records
 Opdatering mislykkedes.
 Kan ikke oprette forbindes til server.
 Opdatering fuldendt.
@@ -214,8 +216,8 @@ Aktivér Pad Emulator
 Slå Pad Emulator Til/Fra for valgte spil.
 Pad Emulator tilstand
 Vælg Pad Emulator tilstand.
-DualShock 3 USB
-DualShock 3 BT
+DualShock3/4 USB
+DualShock3/4 BT
 indstillinger for port:
 Vælg Pad Emulator port for indstillinger.
 Aktivér emulering
@@ -223,8 +225,59 @@ Slå Pad Emulator Til/Fra for valgte port.
 Aktivér vibration
 Slå vibration Til/Fra for valgte Pad Emulator port.
 USB-bluetooth adapter MAC-adresse:
-DS3-controller parret til MAC-adresse:
+DS controller parret med MAC-adresse:
 Parring
-Pardan DS3 controller
-Pardan DS3 controller med bluetooth adapters MAC-adresse.
+Pardan DS controller
+Pardan DS controller med bluetooth-adapters MAC-adresse.
 Ikke tilsluttet
+Bluetooth-adapteroplysninger
+Viser mere information og understøttede funktioner
+HCI Version:
+LMP Version:
+Fabrikant ID:
+Understøttede funktioner:
+Ja
+Nej
+Bluetooth-adapter skal være fuldt kompatibel med DS3/DS4 controllere.
+Bluetooth-adapter fungerer muligvis ikke korrekt med DS3/DS4 controllere.
+Aktivér Multitap-emulering
+Slå Multitap-emulering Til/Fra for valgte spil.
+Multitap Emulator på port
+Vælg port til Multitap-emulering.
+Deaktiver løsning for falsk DS3
+Nogle falske DS3'er har brug for en løsning, dette deaktivere den.
+Emulate FIELD flipping
+Fix for games that glitch under progressive video modes.
+Parental Lock Settings
+Parental Lock Password
+Leave blank to disable the parental lock.
+Enter Parental Lock Password
+Parental lock password incorrect.
+Parental lock disabled.
+Build Options:
+Error - this password cannot be used.
+VMC %s file is fragmented. Continue with Memory Card in slot %d?
+Audio Settings
+Enable Sound Effects
+Enable Boot Sound
+Sound Effects Volume
+Boot Sound Volume
+Confirm video mode change?
+Cache Game List (HDD)
+Enable Notifications
+%s loaded from %s
+Game Menu
+Game settings saved.
+%s settings removed.
+Overwrites existing game compatibility settings when enabled.
+Settings Mode
+Global
+Per Game
+All
+Select settings to remove.
+Support Forums:
+Title
+Genre
+Release
+Developer
+Description

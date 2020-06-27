@@ -1,5 +1,5 @@
 # Swedish translation by Flaya
-# For Open PS2 Loader 0.9.3+ betas - Official OPL Beta thread @http://psx-scene.com/forums/f150/open-ps2-loader-official-beta-revisions-releases-156209/
+# For Open PS2 Loader 0.9.3+ betas - Official OPL Beta thread @https://www.psx-place.com/threads/open-ps2-loader-official-beta-releases.21573/
 Swedish
 Open PS2 Loader %s
 Spara ändringar
@@ -7,7 +7,7 @@ Tillbaka
 Nätverkskonfig
 Avancerad Konfig
 <Inga värden>
-Inställningar sparade...
+Inställningar sparade till %s
 Fel vid skrivning av inställningar!
 Avsluta
 Inställning
@@ -19,7 +19,7 @@ Appar
 Tema
 Språk
 Systemet stängs av.
-Avsluta till Meny/OSDSYS?
+Avsluta till huvudmeny?
 Avbryt uppdatering?
 %d: Ingen Hårddisk hittad
 %d: Hårddisken ej formatterad
@@ -41,7 +41,7 @@ Cirkel
 Kryss
 Spel-lista
 Spelinst.
-Ta bort alla inställningar
+Ta bort inställningar
 Tog bort alla nycklar för spelet
 Bläddra
 Sakta
@@ -99,14 +99,14 @@ Objektet ska tas bort permanent , fortsätta?
 Byt namn
 Radera
 Kör
-Inställningar Skärm
+Skärminställningar
 Aktivera skrivåtkomst
 Kontrollera USB spelfragmentering
 Kom ihåg senast spelade spel
 Välj knapp
 Fel, spelet är fragmenterat
 Fel, kunde inte köra posten
-Test
+Testa ändringar
 Lämna tomt för Gäst konto.
 Korrekt läsning
 Synkroniseringsläge
@@ -114,8 +114,8 @@ Släpp Syscalls
 Skippa Videos
 Emulera DVD-DL
 Inaktivera IGR
-Högmoduls-lagring
-Göm dev9 modul
+Används ej
+Används ej
 Ändra storleken kommer att formatera om VMC
 Skapa
 Start
@@ -131,7 +131,7 @@ Framsteg
 VMC fil existerar
 Ogiltig VMC fil, felaktig storlek
 VMC filen måste skapas
-Fel med VMC % s , fortsätt med fysisk MC ( kortplats % d ) ?
+Felaktig åtkomst till VMC%s. Använd Minneskort i port %d?
 Automatisk uppdatering
 Om
 Kodare
@@ -143,7 +143,7 @@ Automatisk HDD nerspinn
 Videoläge
 Dialog färg
 Vald färg
-Visa info sida
+Återställ Färger
 Info
 Custom ELF
 Färgval
@@ -182,6 +182,8 @@ Horisontell position
 Ställer Horisontell offset
 Vertikal position
 Ställer Vertikal förskjutning
+Överskanning
+Överskanning justering
 Skippa FMV
 Skippar Full Motion Video
 Inställningar Fusk
@@ -195,7 +197,7 @@ Fel: kunde inte ladda Fuskfilen
 Inga fusk funna
 Hämta standard
 Nätverksuppdatering
-Ladda ner befintliga arkiv?
+Skriv över befintliga
 Uppdatering misslyckad
 Kunde inte ansluta till servern
 Uppdatering klar
@@ -210,12 +212,12 @@ PS2 Logo
 Visas bara när skivavbilden matchar konsolens region
 Konfigurera PADEMU
 Pad Emulator Inställningar
-Aktivera Pad Emulator
+Aktivera PadEmulator
 Slå av/på PadEmulator för valt spel.
 Pad Emulator läge
 Vlj Pad Emulator läge.
-DualShock3 USB
-DualShock3 BT
+DualShock3 / 4 USB
+DualShock3 / 4 BT
 Inställningar för port:
 Välj Pad Emulator port för inställningar.
 Aktivera emulation
@@ -223,8 +225,59 @@ Slå av/på Pad Emulator för vald port.
 Aktivera vibration
 Slå av/på vibration för Pad Emulator vald port.
 Usb bluetooth adapter mac address:
-DS3 Controller parkopplad till mac address:
+DS Controller kopplad till MAC-adress:
 Parkoppla
-Parkoppla DS3 controller
-Parkoppla DS3 controller till bluetooth adapter mac address.
+Para DS Controller
+Para DS-kontroller med Bluetooth-adapter MAC-adress.
 Ej ansluten
+Bluetooth-adapterinformation
+Visar mer information och funktioner som stöds
+HCI-version:
+LMP-version:
+Tillverkarens ID:
+Supportfunktioner:
+Ja
+Nej
+Bluetooth-adaptern ska vara fullt kompatibel med DS3 / DS4-kontroller.
+Bluetooth-adaptern kanske inte fungerar korrekt med DS3 / DS4-kontroller.
+Aktivera multitapemulering
+Slår på / av multitap emulering för valt spel.
+Multitap emulator på porten
+Välj port för multitap emulering.
+Inaktivera lösningen för falska DS3
+Några falska ds3s behöver lösningen, det här alternativet kommer att inaktivera det.
+Emulera FIELD vändning
+Fix för spel med problem i progressivt läge.
+Föräldrakontroll
+Lösenord för föräldrakontroll
+Ange inget för att inaktivera funktionen
+Ange lösenord för föräldrakontroll
+Fel lösenord för föräldrakontroll
+Föräldrakontroll inaktiverat
+Bygg-Alternativ:
+Fel - lösenordet kan ej användas.
+VMC %s filen är fragmenterad. Använd minneskort i port %d?
+Ljudinställningar
+Aktivera Ljudeffekter
+Aktivera Uppstartsljud
+Ljudeffektsvolym
+Uppstartsljudsvolym
+Bekräfta ändring av videoläge?
+Lägg Spellista i Cache (HDD)
+Aktivera notifikationer
+%s Laddat från %s
+SpelMeny
+Spelinställningar sparade.
+%s inställningar borttagna
+Skriver över befintliga spelinställningar om aktiverad.
+Inställningsläge
+Globalt
+Per Sper
+Alla
+Välj inställningar att ta bort.
+Support-Forum:
+Titel
+Genre
+Lansering
+Utvecklare
+Beskrivning

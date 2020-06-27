@@ -13,6 +13,8 @@
 # 100% compatible with its proprietary counterpart called atad.irx.
 #
 # This module also include support for 48-bit feature set (done by Clement).
+# To avoid causing an "emergency park" for some HDDs, shutdown callback 15 of dev9
+# is used for issuing the STANDBY IMMEDIATE command prior to DEV9 getting shut down.
 */
 
 #include <types.h>
@@ -21,6 +23,7 @@
 #include <loadcore.h>
 #include <thbase.h>
 #include <thevent.h>
+#include <thsemap.h>
 #include <stdio.h>
 #include <sysclib.h>
 #include <dev9.h>
@@ -50,22 +53,14 @@ extern int netlog_inited;
 #define VERSION "v1.2"
 
 extern char lba_48bit;
+static u8 ata_gamestar_workaround = 0;
 
 static int ata_evflg = -1;
 
-#ifdef VMC_DRIVER
-#include <thsemap.h>
-
-static int io_sema = -1;
+int ata_io_sema = -1;
 
 #define WAITIOSEMA(x) WaitSema(x)
 #define SIGNALIOSEMA(x) SignalSema(x)
-#define ATAWRITE 1
-#else
-#define WAITIOSEMA(x)
-#define SIGNALIOSEMA(x)
-#define ATAWRITE 0
-#endif
 
 #define ATA_EV_TIMEOUT 1
 #define ATA_EV_COMPLETE 2
@@ -81,7 +76,9 @@ typedef struct _ata_cmd_info
 } ata_cmd_info_t;
 
 static const ata_cmd_info_t ata_cmd_table[] = {
-    {ATA_C_READ_DMA, 0x04}, {ATA_C_IDENTIFY_DEVICE, 0x02}, {ATA_C_IDENTIFY_PACKET_DEVICE, 0x02}, {ATA_C_SMART, 0x07}, {ATA_C_SET_FEATURES, 0x01}, {ATA_C_READ_DMA_EXT, 0x84}, {ATA_C_WRITE_DMA, 0x04}, {ATA_C_IDLE, 0x01}, {ATA_C_WRITE_DMA_EXT, 0x84}};
+    {ATA_C_READ_DMA, 0x04}, {ATA_C_IDENTIFY_DEVICE, 0x02}, {ATA_C_IDENTIFY_PACKET_DEVICE, 0x02}, {ATA_C_SMART, 0x07}, {ATA_C_SET_FEATURES, 0x01},
+    {ATA_C_READ_DMA_EXT, 0x84}, {ATA_C_WRITE_DMA, 0x04}, {ATA_C_IDLE, 0x01}, {ATA_C_WRITE_DMA_EXT, 0x84}, {ATA_C_STANDBY_IMMEDIATE,0x1},
+    {ATA_C_FLUSH_CACHE, 0x01}, {ATA_C_STANDBY_IMMEDIATE,1},{ATA_C_FLUSH_CACHE_EXT, 0x01}};
 #define ATA_CMD_TABLE_SIZE (sizeof ata_cmd_table / sizeof(ata_cmd_info_t))
 
 static const ata_cmd_info_t smart_cmd_table[] = {
@@ -108,23 +105,23 @@ static int ata_intr_cb(int flag);
 static unsigned int ata_alarm_cb(void *unused);
 
 static void ata_set_dir(int dir);
+static void ata_shutdown_cb(void);
 
 /* In v1.04, DMA was enabled in ata_set_dir() instead. */
-static void AtadPreDmaCb(int bcr, int dir)
+static void ata_pre_dma_cb(int bcr, int dir)
 {
     USE_SPD_REGS;
 
     SPD_REG16(SPD_R_XFR_CTRL) |= 0x80;
 }
 
-static void AtadPostDmaCb(int bcr, int dir)
+static void ata_post_dma_cb(int bcr, int dir)
 {
     USE_SPD_REGS;
 
     SPD_REG16(SPD_R_XFR_CTRL) &= ~0x80;
 }
 
-#ifdef DEV9_DEBUG
 static int ata_create_event_flag(void)
 {
     iop_event_t event;
@@ -134,14 +131,10 @@ static int ata_create_event_flag(void)
     event.bits = 0;
     return CreateEventFlag(&event);
 }
-#endif
 
 int atad_start(void)
 {
-#ifdef DEV9_DEBUG
     USE_SPD_REGS;
-#endif
-    iop_event_t event;
     int res = 1;
 
     M_PRINTF(BANNER, VERSION);
@@ -153,37 +146,38 @@ int atad_start(void)
     }
 #endif
 
-    event.attr = 0;
-    event.bits = 0;
-    ata_evflg = CreateEventFlag(&event);
-#ifdef DEV9_DEBUG
+    /* Some compatible adaptors may malfunction if transfers are not done according to the old ps2atad design.
+       Official adaptors appear to have a 0x0001 set for this register, but not compatibles.
+       While official I/O to this register are 8-bit, some compatibles have a 0x01 for the lower 8-bits,
+       but the upper 8-bits contain some random value. Hence perform a 16-bit read instead. */
+    ata_gamestar_workaround = (SPD_REG16(0x20) != 1);
+
     if ((ata_evflg = ata_create_event_flag()) < 0) {
         M_PRINTF("Couldn't create event flag, exiting.\n");
         res = 1;
         goto out;
     }
-#endif
 
     /* In v1.04, PIO mode 0 was set here. In late versions, it is set in ata_init_devices(). */
     dev9RegisterIntrCb(1, &ata_intr_cb);
     dev9RegisterIntrCb(0, &ata_intr_cb);
-    dev9RegisterPreDmaCb(0, &AtadPreDmaCb);
-    dev9RegisterPostDmaCb(0, &AtadPostDmaCb);
+    if (!ata_gamestar_workaround) {
+      dev9RegisterPreDmaCb(0, &ata_pre_dma_cb);
+      dev9RegisterPostDmaCb(0, &ata_post_dma_cb);
+    }
+    /* Register this at the last position, as it should be the last thing done before shutdown. */
+    dev9RegisterShutdownCb(15, &ata_shutdown_cb);
 
-#ifdef VMC_DRIVER
     iop_sema_t smp;
     smp.initial = 1;
     smp.max = 1;
     smp.option = 0;
     smp.attr = SA_THPRI;
-    io_sema = CreateSema(&smp);
-#endif
+    ata_io_sema = CreateSema(&smp);
 
     res = 0;
     M_PRINTF("Driver loaded.\n");
-#ifdef DEV9_DEBUG
 out:
-#endif
     return res;
 }
 
@@ -570,6 +564,17 @@ finish:
     return res;
 }
 
+/* Export 17 */
+int ata_device_flush_cache(int device)
+{
+    int res;
+
+    if(!(res = ata_io_start(NULL, 1, 0, 0, 0, 0, 0, (device << 4) & 0xffff, lba_48bit ? ATA_C_FLUSH_CACHE_EXT : ATA_C_FLUSH_CACHE)))
+	res = ata_io_finish();
+
+    return res;
+}
+
 /* Export 9 */
 /* Note: this can only support DMA modes, due to the commands issued. */
 int ata_device_sector_io(int device, void *buf, u32 lba, u32 nsectors, int dir)
@@ -578,7 +583,7 @@ int ata_device_sector_io(int device, void *buf, u32 lba, u32 nsectors, int dir)
     int res = 0, retries;
     u16 sector, lcyl, hcyl, select, command, len;
 
-    WAITIOSEMA(io_sema);
+    WAITIOSEMA(ata_io_sema);
 
     while (res == 0 && nsectors > 0) {
         /* Variable lba is only 32 bits so no change for lcyl and hcyl.  */
@@ -586,31 +591,34 @@ int ata_device_sector_io(int device, void *buf, u32 lba, u32 nsectors, int dir)
         hcyl = (lba >> 16) & 0xff;
 
         if (lba_48bit) {
-            /* Setup for 48-bit LBA.
-               While ATA-6 allows for the transfer of up to 65536 sectors,
-               the DMAC allows only up to 65536 x 128 / 512 = 16384 sectors. */
-            len = (nsectors > 16384) ? 16384 : nsectors;
+            /* Setup for 48-bit LBA. */
+            len = (nsectors > 65536) ? 65536 : nsectors;
 
             /* Combine bits 24-31 and bits 0-7 of lba into sector.  */
             sector = ((lba >> 16) & 0xff00) | (lba & 0xff);
             /* In v1.04, LBA was enabled here.  */
             select = (device << 4) & 0xffff;
-            command = ((dir == 1) && (ATAWRITE)) ? ATA_C_WRITE_DMA_EXT : ATA_C_READ_DMA_EXT;
+            command = (dir == 1) ? ATA_C_WRITE_DMA_EXT : ATA_C_READ_DMA_EXT;
         } else {
             /* Setup for 28-bit LBA.  */
             len = (nsectors > 256) ? 256 : nsectors;
             sector = lba & 0xff;
             /* In v1.04, LBA was enabled here.  */
             select = ((device << 4) | ((lba >> 24) & 0xf)) & 0xffff;
-            command = ((dir == 1) && (ATAWRITE)) ? ATA_C_WRITE_DMA : ATA_C_READ_DMA;
+            command = (dir == 1) ? ATA_C_WRITE_DMA : ATA_C_READ_DMA;
         }
 
         for (retries = 3; retries > 0; retries--) {
+            /* Due to the retry loop, put this call (for the GameStar workaround) here instead of the old location. */
+            if (ata_gamestar_workaround)
+                ata_set_dir(dir);
+
             if ((res = ata_io_start(buf, len, 0, len, sector, lcyl, hcyl, select, command)) != 0)
                 break;
 
             /* Set up (part of) the transfer here. In v1.04, this was called at the top of the outer loop. */
-            ata_set_dir(dir);
+            if (!ata_gamestar_workaround)
+                ata_set_dir(dir);
 
             res = ata_io_finish();
 
@@ -626,7 +634,7 @@ int ata_device_sector_io(int device, void *buf, u32 lba, u32 nsectors, int dir)
         nsectors -= len;
     }
 
-    SIGNALIOSEMA(io_sema);
+    SIGNALIOSEMA(ata_io_sema);
 
     return res;
 }
@@ -646,5 +654,21 @@ static void ata_set_dir(int dir)
     val = SPD_REG16(SPD_R_IF_CTRL) & 1;
     val |= (dir == ATA_DIR_WRITE) ? 0x4c : 0x4e;
     SPD_REG16(SPD_R_IF_CTRL) = val;
-    SPD_REG16(SPD_R_XFR_CTRL) = dir | 0x6; //In v1.04, DMA was enabled here (0x86 instead of 0x6)
+    SPD_REG16(SPD_R_XFR_CTRL) = dir | (ata_gamestar_workaround ? 0x86 : 0x6); //In v1.04, DMA was enabled here (0x86 instead of 0x6)
 }
+
+static int ata_device_standby_immediate(int device)
+{
+    int res;
+
+    if (!(res = ata_io_start(NULL, 1, 0, 0, 0, 0, 0, (device << 4)&0xFFFF, ATA_C_STANDBY_IMMEDIATE))) res = ata_io_finish();
+
+    return res;
+}
+
+static void ata_shutdown_cb(void)
+{
+    if (atad_devinfo.exists)
+        ata_device_standby_immediate(0);
+}
+

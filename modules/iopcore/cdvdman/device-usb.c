@@ -7,7 +7,6 @@
 #include "smsutils.h"
 #include "mass_common.h"
 #include "mass_stor.h"
-#include "dev9.h"
 #include "atad.h"
 #include "ioplib_util.h"
 #include "cdvdman.h"
@@ -34,9 +33,7 @@
 
 extern struct cdvdman_settings_usb cdvdman_settings;
 
-#ifdef __USE_DEV9
-struct irx_export_table _exp_dev9;
-#endif
+extern int usb_io_sema;
 
 static void usbd_init(void);
 
@@ -66,14 +63,15 @@ static void usbd_init(void)
 
 void DeviceInit(void)
 {
-#ifdef __USE_DEV9
-    RegisterLibraryEntries(&_exp_dev9);
-    dev9d_init();
-#endif
 }
 
 void DeviceDeinit(void)
 {
+}
+
+void DeviceStop(void)
+{
+    mass_stor_stop_unit();
 }
 
 void DeviceFSInit(void)
@@ -86,7 +84,16 @@ void DeviceFSInit(void)
 
     // configure mass device
     while (mass_stor_configureDevice() <= 0)
-        DelayThread(200);
+        DelayThread(5000);
+}
+
+void DeviceLock(void)
+{
+    WaitSema(usb_io_sema);
+}
+
+void DeviceUnmount(void)
+{
 }
 
 int DeviceReadSectors(u32 lsn, void *buffer, unsigned int sectors)
@@ -114,6 +121,7 @@ int DeviceReadSectors(u32 lsn, void *buffer, unsigned int sectors)
             mass_stor_ReadCD(offslsn, sectors_to_read, &p[r], i);
 
             r += sectors_to_read << 11;
+            offslsn += sectors_to_read;
             sectors_to_read = sectors;
             lsn = nlsn;
         }

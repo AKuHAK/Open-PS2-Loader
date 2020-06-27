@@ -16,6 +16,7 @@
 #include <intrman.h>
 #include <thbase.h>
 #include <thevent.h>
+#include <thsemap.h>
 #include <stdio.h>
 #include <sysclib.h>
 #include "atad.h"
@@ -71,19 +72,10 @@ static int ata_evflg = -1;
 /* Used for indicating 48-bit LBA support.  */
 extern char lba_48bit;
 
-#ifdef VMC_DRIVER
-#include <thsemap.h>
-
-static int io_sema = -1;
+int ata_io_sema = -1;
 
 #define WAITIOSEMA(x) WaitSema(x)
 #define SIGNALIOSEMA(x) SignalSema(x)
-#define ATAWRITE 1
-#else
-#define WAITIOSEMA(x)
-#define SIGNALIOSEMA(x)
-#define ATAWRITE 0
-#endif
 
 #define ATA_EV_TIMEOUT 1
 #define ATA_EV_COMPLETE 2 //Unused as there is no completion interrupt
@@ -107,7 +99,9 @@ static const ata_cmd_info_t ata_cmd_table[] = {
     {ATA_C_READ_SECTOR, 0x02},
     {ATA_C_READ_SECTOR_EXT, 0x82},
     {ATA_C_WRITE_SECTOR, 0x03},
-    {ATA_C_WRITE_SECTOR_EXT, 0x83}};
+    {ATA_C_WRITE_SECTOR_EXT, 0x83},
+    {ATA_C_FLUSH_CACHE, 0x01},
+    {ATA_C_FLUSH_CACHE_EXT, 0x01}};
 #define ATA_CMD_TABLE_SIZE (sizeof ata_cmd_table / sizeof(ata_cmd_info_t))
 
 static const ata_cmd_info_t smart_cmd_table[] = {
@@ -139,6 +133,7 @@ static void hdpro_io_write(u8 cmd, u16 val);
 static int hdpro_io_read(u8 cmd);
 static int ata_bus_reset(void);
 static int gen_ata_wait_busy(int bits);
+int ata_device_set_write_cache(int device, int enable);
 
 static unsigned int ata_alarm_cb(void *unused)
 {
@@ -186,14 +181,12 @@ int atad_start(void)
     if (ata_bus_reset() != 0)
         goto out;
 
-#ifdef VMC_DRIVER
     iop_sema_t smp;
     smp.initial = 1;
     smp.max = 1;
     smp.option = 0;
     smp.attr = SA_THPRI;
-    io_sema = CreateSema(&smp);
-#endif
+    ata_io_sema = CreateSema(&smp);
 
     res = 0;
     M_PRINTF("Driver loaded.\n");
@@ -660,6 +653,23 @@ finish:
     return res;
 }
 
+/* Export 17 */
+int ata_device_flush_cache(int device)
+{
+    int res;
+
+    if (!hdpro_io_start())
+        return -1;
+
+    if(!(res = ata_io_start(NULL, 1, 0, 0, 0, 0, 0, (device << 4) & 0xffff, lba_48bit ? ATA_C_FLUSH_CACHE_EXT : ATA_C_FLUSH_CACHE)))
+        res = ata_io_finish();
+
+    if (!hdpro_io_finish())
+        return -2;
+
+    return res;
+}
+
 /* Export 9 */
 int ata_device_sector_io(int device, void *buf, u32 lba, u32 nsectors, int dir)
 {
@@ -667,7 +677,7 @@ int ata_device_sector_io(int device, void *buf, u32 lba, u32 nsectors, int dir)
     unsigned int nbytes;
     u16 sector, lcyl, hcyl, select, command, len;
 
-    WAITIOSEMA(io_sema);
+    WAITIOSEMA(ata_io_sema);
 
     if (!hdpro_io_start())
         return -1;
@@ -685,13 +695,13 @@ int ata_device_sector_io(int device, void *buf, u32 lba, u32 nsectors, int dir)
             sector = ((lba >> 16) & 0xff00) | (lba & 0xff);
             /* In v1.04, LBA was enabled here.  */
             select = (device << 4) & 0xffff;
-            command = ((dir == 1) && (ATAWRITE)) ? ATA_C_WRITE_SECTOR_EXT : ATA_C_READ_SECTOR_EXT;
+            command = (dir == 1) ? ATA_C_WRITE_SECTOR_EXT : ATA_C_READ_SECTOR_EXT;
         } else {
             /* Setup for 28-bit LBA.  */
             sector = lba & 0xff;
             /* In v1.04, LBA was enabled here.  */
             select = ((device << 4) | ((lba >> 24) & 0xf)) & 0xffff;
-            command = ((dir == 1) && (ATAWRITE)) ? ATA_C_WRITE_SECTOR : ATA_C_READ_SECTOR;
+            command = (dir == 1) ? ATA_C_WRITE_SECTOR : ATA_C_READ_SECTOR;
         }
 
         //Unlike ATAD, retry indefinitely until the I/O operation succeeds.
@@ -710,7 +720,7 @@ int ata_device_sector_io(int device, void *buf, u32 lba, u32 nsectors, int dir)
     if (!hdpro_io_finish())
         return -2;
 
-    SIGNALIOSEMA(io_sema);
+    SIGNALIOSEMA(ata_io_sema);
 
     return res;
 }
@@ -720,3 +730,21 @@ ata_devinfo_t *ata_get_devinfo(int device)
 {
     return &atad_devinfo;
 }
+
+/* Set features - enable/disable write cache.  */
+int ata_device_set_write_cache(int device, int enable)
+{
+    int res;
+
+    if (!hdpro_io_start())
+        return -1;
+
+    if((res = ata_io_start(NULL, 1, enable ? 0x02 : 0x82, 0, 0, 0, 0, (device << 4) & 0xffff, ATA_C_SET_FEATURES)) == 0)
+        res = ata_io_finish();
+
+    if (!hdpro_io_finish())
+        return -2;
+
+    return res;
+}
+

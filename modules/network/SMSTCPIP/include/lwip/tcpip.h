@@ -34,6 +34,21 @@
 
 #include "lwip/api_msg.h"
 #include "lwip/pbuf.h"
+#include "lwip/timers.h"
+
+#if LWIP_TCPIP_CORE_LOCKING
+/** The global semaphore to lock the stack. */
+extern sys_sem_t lock_tcpip_core;
+/** Lock lwIP core mutex (needs @ref LWIP_TCPIP_CORE_LOCKING 1) */
+#define LOCK_TCPIP_CORE()     sys_sem_wait(lock_tcpip_core)
+/** Unlock lwIP core mutex (needs @ref LWIP_TCPIP_CORE_LOCKING 1) */
+#define UNLOCK_TCPIP_CORE()   sys_sem_signal(lock_tcpip_core)
+#define TCPIP_APIMSG_ACK(m)
+#else /* LWIP_TCPIP_CORE_LOCKING */
+#define LOCK_TCPIP_CORE()
+#define UNLOCK_TCPIP_CORE()
+#define TCPIP_APIMSG_ACK(m)   sys_mbox_post(m, NULL)
+#endif /* LWIP_TCPIP_CORE_LOCKING */
 
 void tcpip_init(void (*tcpip_init_done)(void *), void *arg);
 void tcpip_apimsg(struct api_msg *apimsg);
@@ -43,8 +58,12 @@ err_t tcpip_callback(void (*f)(void));
 void tcpip_tcp_timer_needed(void);
 
 enum tcpip_msg_type {
+#if !LWIP_TCPIP_CORE_LOCKING
     TCPIP_MSG_API,
+#endif
+#if !LWIP_TCPIP_CORE_LOCKING_INPUT
     TCPIP_MSG_INPUT,
+#endif
     TCPIP_MSG_CALLBACK
 };
 

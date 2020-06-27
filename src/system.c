@@ -4,7 +4,12 @@
   Review OpenUsbLd README & LICENSE files for further details.
 */
 
+#ifdef __DECI2_DEBUG
+#include <iopcontrol_special.h>
+#endif
+
 #include "include/opl.h"
+#include "include/gui.h"
 #include "include/ethsupport.h"
 #include "include/util.h"
 #include "include/pad.h"
@@ -14,14 +19,20 @@
 #include "include/usbsupport.h"
 #include "include/OSDHistory.h"
 #include "include/renderman.h"
+#include "include/extern_irx.h"
 #include "../ee_core/include/modules.h"
+
+#include "include/pggsm.h"
+#include "include/cheatman.h"
 
 #ifdef PADEMU
 #include <libds34bt.h>
 #include <libds34usb.h>
 #endif
 
-#ifdef VMC
+#define NEWLIB_PORT_AWARE
+#include <fileXio_rpc.h> // fileXioInit, fileXioExit, fileXioDevctl
+
 typedef struct
 {
     char VMC_filename[1024];
@@ -31,119 +42,17 @@ typedef struct
     int VMC_card_slot;
 } createVMCparam_t;
 
-extern void *genvmc_irx;
-extern int size_genvmc_irx;
-#endif
-#ifdef GSM
-#include "include/pggsm.h"
-#endif
-#ifdef CHEAT
-#include "include/pgcht.h"
-#endif
-
-extern void *udnl_irx;
-extern int size_udnl_irx;
-
-extern void *imgdrv_irx;
-extern int size_imgdrv_irx;
-
-extern void *cdvdfsv_irx;
-extern int size_cdvdfsv_irx;
-
-extern void *isofs_irx;
-extern int size_isofs_irx;
-
-extern void *ps2dev9_irx;
-extern int size_ps2dev9_irx;
-
-extern void *smstcpip_irx;
-extern int size_smstcpip_irx;
-
-extern void *ingame_smstcpip_irx;
-extern int size_ingame_smstcpip_irx;
-
-extern void *smap_irx;
-extern int size_smap_irx;
-
-extern void *smap_ingame_irx;
-extern int size_smap_ingame_irx;
-
-extern void *smbinit_irx;
-extern int size_smbinit_irx;
-
-extern void *iomanx_irx;
-extern int size_iomanx_irx;
-
-extern void *filexio_irx;
-extern int size_filexio_irx;
-
-extern void *poweroff_irx;
-extern int size_poweroff_irx;
-
-extern void *ps2atad_irx;
-extern int size_ps2atad_irx;
-
-extern void *ps2hdd_irx;
-extern int size_ps2hdd_irx;
-
-#ifdef _DTL_T10000
-extern void *sio2man_irx;
-extern int size_sio2man_irx;
-
-extern void *padman_irx;
-extern int size_padman_irx;
-
-extern void *mcman_irx;
-extern int size_mcman_irx;
-
-extern void *mcserv_irx;
-extern int size_mcserv_irx;
-#endif
-
-extern void *hdldsvr_irx;
-extern int size_hdldsvr_irx;
-
 extern void *eecore_elf;
 extern int size_eecore_elf;
 
 extern void *elfldr_elf;
 extern int size_elfldr_elf;
 
-extern void *pusbd_irx;
-extern int size_pusbd_irx;
-
-#ifdef PADEMU
-extern void *ds34bt_irx;
-extern int size_ds34bt_irx;
-
-extern void *ds34usb_irx;
-extern int size_ds34usb_irx;
-
-extern void *bt_pademu_irx;
-extern int size_bt_pademu_irx;
-
-extern void *usb_pademu_irx;
-extern int size_usb_pademu_irx;
-#endif
-
-#ifdef __INGAME_DEBUG
-extern void *udptty_ingame_irx;
-extern int size_udptty_ingame_irx;
-
-extern void *ioptrap_irx;
-extern int size_ioptrap_irx;
-#endif
-
-#ifdef __DECI2_DEBUG
-extern void *drvtif_irx;
-extern int size_drvtif_irx;
-
-extern void *tifinet_irx;
-extern int size_tifinet_irx;
-#endif
-
 extern unsigned char IOPRP_img[];
 extern unsigned int size_IOPRP_img;
+
+extern unsigned char eesync_irx[];
+extern unsigned int size_eesync_irx;
 
 #define MAX_MODULES 32
 static void *g_sysLoadedModBuffer[MAX_MODULES];
@@ -188,6 +97,8 @@ void lngEnd();
 void thmEnd();
 void rmEnd();
 
+static void poweroffHandler(void *arg);
+
 int sysLoadModuleBuffer(void *buffer, int size, int argc, char *argv)
 {
 
@@ -223,13 +134,35 @@ int sysLoadModuleBuffer(void *buffer, int size, int argc, char *argv)
 
 #define OPL_SIF_CMD_BUFF_SIZE 1
 static SifCmdHandlerData_t OplSifCmdbuffer[OPL_SIF_CMD_BUFF_SIZE];
-static unsigned char dev9Initialized = 0;
+static unsigned char dev9Initialized = 0, dev9Loaded = 0, dev9InitCount = 0;
 
 void sysInitDev9(void)
 {
+    int ret;
+
     if (!dev9Initialized) {
-        sysLoadModuleBuffer(&ps2dev9_irx, size_ps2dev9_irx, 0, NULL);
+        ret = sysLoadModuleBuffer(&ps2dev9_irx, size_ps2dev9_irx, 0, NULL);
+        dev9Loaded = (ret == 0);  //DEV9.IRX must have successfully loaded and returned RESIDENT END.
         dev9Initialized = 1;
+    }
+
+    dev9InitCount++;
+}
+
+void sysShutdownDev9(void)
+{
+    if (dev9InitCount > 0)
+    {
+        --dev9InitCount;
+
+        if (dev9InitCount == 0)
+        {   /* Switch off DEV9 once nothing needs it. */
+            if (dev9Loaded)
+            {
+                while (fileXioDevctl("dev9x:", DDIOC_OFF, NULL, 0, NULL, 0) < 0) {
+                };
+            }
+        }
     }
 }
 
@@ -250,8 +183,13 @@ void sysReset(int modload_mask)
     while (!SifIopReset("rom0:UDNL", 0))
         ;
 #else
+#ifdef __DECI2_DEBUG
+    while (!SifIopRebootBuffer(&deci2_img, size_deci2_img))
+        ;
+#else
     while (!SifIopReset("", 0))
         ;
+#endif
 #endif
 
     dev9Initialized = 0;
@@ -306,9 +244,10 @@ void sysReset(int modload_mask)
         sysLoadModuleBuffer(&isofs_irx, size_isofs_irx, 0, NULL);
     }
 
-#ifdef VMC
     sysLoadModuleBuffer(&genvmc_irx, size_genvmc_irx, 0, NULL);
-#endif
+
+    sysLoadModuleBuffer(&libsd_irx, size_libsd_irx, 0, NULL);
+    sysLoadModuleBuffer(&audsrv_irx, size_audsrv_irx, 0, NULL);
 
 #ifdef PADEMU
     int ds3pads = 1; //only one pad enabled
@@ -327,12 +266,17 @@ void sysReset(int modload_mask)
 
     fileXioInit();
     poweroffInit();
+    poweroffSetCallback(&poweroffHandler, NULL);
+}
+
+static void poweroffHandler(void *arg)
+{
+    sysPowerOff();
 }
 
 void sysPowerOff(void)
 {
-    deinit(NO_EXCEPTION);
-    fileXioDevctl("dev9x:", DDIOC_OFF, NULL, 0, NULL, 0);
+    deinit(NO_EXCEPTION, IO_MODE_SELECTED_NONE);
     poweroffShutdown();
 }
 
@@ -413,12 +357,14 @@ int sysGetDiscID(char *hexDiscID)
     return 1;
 }
 
-void sysExecExit()
+void sysExecExit(void)
 {
-#ifdef PADEMU
-    ds34usb_reset();
-    ds34bt_reset();
-#endif
+    if (gEnableSFX) {
+        //wait 70ms for confirm sound to finish playing before exit
+        guiDelay(0070);
+    }
+    //Deinitialize without shutting down active devices.
+    deinit(NO_EXCEPTION, IO_MODE_SELECTED_ALL);
     Exit(0);
 }
 
@@ -431,23 +377,98 @@ void sysExecExit()
 #define CORE_IRX_DEBUG 0x20
 #define CORE_IRX_DECI2 0x40
 
-#ifdef VMC
-static unsigned int sendIrxKernelRAM(unsigned int modules, void *ModuleStorage, int size_cdvdman_irx, void **cdvdman_irx, int size_mcemu_irx, void **mcemu_irx)
+typedef struct
+{
+    char *game;
+    char *mode;
+    void *module;
+    int *module_size;
+} patchlist_t;
+
+//Blank string for mode = all modes.
+static const patchlist_t iop_patch_list[] = {
+    {"SLUS_205.61", "", &iremsndpatch_irx, &size_iremsndpatch_irx},    //Disaster Report
+    {"SLES_513.01", "", &iremsndpatch_irx, &size_iremsndpatch_irx},    //SOS: The Final Escape
+    {"SLPS_251.13", "", &iremsndpatch_irx, &size_iremsndpatch_irx},    //Zettai Zetsumei Toshi
+    {"SLES_535.08", "", &apemodpatch_irx, &size_apemodpatch_irx},      //Ultimate Pro Pinball
+    {"SLUS_204.13", "", &f2techioppatch_irx, &size_f2techioppatch_irx}, //Shadow Man: 2econd Coming (NTSC-U/C)
+    {"SLES_504.46", "", &f2techioppatch_irx, &size_f2techioppatch_irx}, //Shadow Man: 2econd Coming (PAL)
+    {"SLES_506.08", "", &f2techioppatch_irx, &size_f2techioppatch_irx}, //Shadow Man: 2econd Coming (PAL German)
+    {NULL, NULL, NULL, NULL },  //Terminator
+};
+
+static unsigned int addIopPatch(const char *mode_str, const char *startup, irxptr_t *tab)
+{
+    const patchlist_t *p;
+    int i;
+
+    for (i = 0; iop_patch_list[i].game != NULL; i++)
+    {
+        p = &iop_patch_list[i];
+
+        if (!strcmp(p->game, startup) && (p->mode[0] == '\0' || !strcmp(p->mode, startup)))
+        {
+            tab->info = (*(p->module_size)) | SET_OPL_MOD_ID(OPL_MODULE_ID_IOP_PATCH);
+            tab->ptr = (void *)p->module;
+            return 1;
+        }
+    }
+
+    return 0;
+}
+
+typedef struct
+{
+    char *game;
+    void *addr;
+} modStorageSetting_t;
+
+static const modStorageSetting_t mod_storage_location_list[] = {
+    {"SLUS_209.77", (void*)0x01fc7000},    //Virtua Quest
+    {"SLPM_656.32", (void*)0x01fc7000},    //Virtua Fighter Cyber Generation: Judgment Six No Yabou
+    {NULL, NULL },                         //Terminator
+};
+
+static void *GetModStorageLocation(const char *startup, unsigned compatFlags)
+{
+    const modStorageSetting_t *p;
+    int i;
+
+    for (i = 0; mod_storage_location_list[i].game != NULL; i++)
+    {
+        p = &mod_storage_location_list[i];
+
+        if (!strcmp(p->game, startup))
+        {
+            return p->addr;
+        }
+    }
+
+    return((void *)OPL_MOD_STORAGE);
+}
+
+static unsigned int sendIrxKernelRAM(const char *startup, const char *mode_str, unsigned int modules, void *ModuleStorage, int size_cdvdman_irx, void **cdvdman_irx, int size_mcemu_irx, void **mcemu_irx)
 { // Send IOP modules that core must use to Kernel RAM
-#else
-static unsigned int sendIrxKernelRAM(unsigned int modules, void *ModuleStorage, int size_cdvdman_irx, void **cdvdman_irx)
-{ // Send IOP modules that core must use to Kernel RAM
-#endif
     irxtab_t *irxtable;
     irxptr_t *irxptr_tab;
     void *irxptr, *ioprp_image;
     int i, modcount;
     unsigned int curIrxSize, size_ioprp_image, total_size;
 
+    if (!strcmp(mode_str, "USB_MODE"))
+        modules |= CORE_IRX_USB;
+    else if (!strcmp(mode_str, "ETH_MODE"))
+        modules |= CORE_IRX_ETH | CORE_IRX_SMB;
+    else
+        modules |= CORE_IRX_HDD;
+
     irxtable = (irxtab_t *)ModuleStorage;
     irxptr_tab = (irxptr_t *)((unsigned char *)irxtable + sizeof(irxtab_t));
-    ioprp_image = malloc(size_IOPRP_img + size_cdvdman_irx + size_cdvdfsv_irx + 256);
+    size_ioprp_image = size_IOPRP_img + size_cdvdman_irx + size_cdvdfsv_irx + size_eesync_irx + 256;
+    LOG("IOPRP image size calculated: %d\n", size_ioprp_image);
+    ioprp_image = malloc(size_ioprp_image);
     size_ioprp_image = patch_IOPRP_image(ioprp_image, cdvdman_irx, size_cdvdman_irx);
+    LOG("IOPRP image size actual:     %d\n", size_ioprp_image);
 
     modcount = 0;
     //Basic modules
@@ -457,6 +478,8 @@ static unsigned int sendIrxKernelRAM(unsigned int modules, void *ModuleStorage, 
     irxptr_tab[modcount++].ptr = ioprp_image;
     irxptr_tab[modcount].info = size_imgdrv_irx | SET_OPL_MOD_ID(OPL_MODULE_ID_IMGDRV);
     irxptr_tab[modcount++].ptr = (void *)&imgdrv_irx;
+    irxptr_tab[modcount].info = size_resetspu_irx | SET_OPL_MOD_ID(OPL_MODULE_ID_RESETSPU);
+    irxptr_tab[modcount++].ptr = (void *)&resetspu_irx;
 
 #ifdef PADEMU
 #define PADEMU_ARG || gEnablePadEmu
@@ -468,24 +491,20 @@ static unsigned int sendIrxKernelRAM(unsigned int modules, void *ModuleStorage, 
         irxptr_tab[modcount++].ptr = pusbd_irx;
     }
     if (modules & CORE_IRX_ETH) {
-#ifdef __DECI2_DEBUG //FIXME: I don't know why, but the ingame SMAP driver cannot be used with the DECI2 modules. Perhaps that old bug with the network stack become unresponsive gets triggered? Until this is solved, use the normal SMAP driver.
-        irxptr_tab[modcount].info = size_smap_irx | SET_OPL_MOD_ID(OPL_MODULE_ID_SMAP);
-        irxptr_tab[modcount++].ptr = (void *)&smap_irx;
-#else
         irxptr_tab[modcount].info = size_smap_ingame_irx | SET_OPL_MOD_ID(OPL_MODULE_ID_SMAP);
         irxptr_tab[modcount++].ptr = (void *)&smap_ingame_irx;
-#endif
         irxptr_tab[modcount].info = size_ingame_smstcpip_irx | SET_OPL_MOD_ID(OPL_MODULE_ID_SMSTCPIP);
         irxptr_tab[modcount++].ptr = (void *)&ingame_smstcpip_irx;
+    }
+    if (modules & CORE_IRX_SMB) {
         irxptr_tab[modcount].info = size_smbinit_irx | SET_OPL_MOD_ID(OPL_MODULE_ID_SMBINIT);
         irxptr_tab[modcount++].ptr = (void *)&smbinit_irx;
     }
-#ifdef VMC
+
     if (modules & CORE_IRX_VMC) {
         irxptr_tab[modcount].info = size_mcemu_irx | SET_OPL_MOD_ID(OPL_MODULE_ID_MCEMU);
         irxptr_tab[modcount++].ptr = (void *)mcemu_irx;
     }
-#endif
 
 #ifdef PADEMU
     if (gEnablePadEmu) {
@@ -502,10 +521,10 @@ static unsigned int sendIrxKernelRAM(unsigned int modules, void *ModuleStorage, 
 #ifdef __INGAME_DEBUG
 #ifdef __DECI2_DEBUG
     if (modules & CORE_IRX_DECI2) {
-        irxptr_tab[modcount].info = size_drvtif_irx | SET_OPL_MOD_ID(OPL_MODULE_ID_DRVTIF);
-        irxptr_tab[modcount++].ptr = (void *)&drvtif_irx;
-        irxptr_tab[modcount].info = size_tifinet_irx | SET_OPL_MOD_ID(OPL_MODULE_ID_TIFINET);
-        irxptr_tab[modcount++].ptr = (void *)&tifinet_irx;
+        irxptr_tab[modcount].info = size_drvtif_ingame_irx | SET_OPL_MOD_ID(OPL_MODULE_ID_DRVTIF);
+        irxptr_tab[modcount++].ptr = (void *)&drvtif_ingame_irx;
+        irxptr_tab[modcount].info = size_tifinet_ingame_irx | SET_OPL_MOD_ID(OPL_MODULE_ID_TIFINET);
+        irxptr_tab[modcount++].ptr = (void *)&tifinet_ingame_irx;
     }
 #else
     if (modules & CORE_IRX_DEBUG) {
@@ -517,6 +536,8 @@ static unsigned int sendIrxKernelRAM(unsigned int modules, void *ModuleStorage, 
 #endif
 #endif
 
+    modcount += addIopPatch(mode_str, startup, &irxptr_tab[modcount]);
+
     irxtable->modules = irxptr_tab;
     irxtable->count = modcount;
 
@@ -524,10 +545,10 @@ static unsigned int sendIrxKernelRAM(unsigned int modules, void *ModuleStorage, 
     //For DECI2 debugging mode, the UDNL module will have to be stored within kernel RAM because there isn't enough space below user RAM.
     //total_size will hence not include the IOPRP image, but it's okay because the EE core is interested in protecting the module storage within user RAM.
     irxptr = (void *)0x00033000;
-    LOG("SYSTEM DECI2 UDNL address start: %p end: %p\n", irxptr, irxptr + GET_OPL_MOD_SIZE(irxptr_tab[OPL_MODULE_ID_UDNL].info));
+    LOG("SYSTEM DECI2 UDNL address start: %p end: %p\n", irxptr, irxptr + GET_OPL_MOD_SIZE(irxptr_tab[0].info));
     DI();
     ee_kmode_enter();
-    memcpy((void *)(0x80000000 | (unsigned int)irxptr), irxptr_tab[OPL_MODULE_ID_UDNL].ptr, GET_OPL_MOD_SIZE(irxptr_tab[OPL_MODULE_ID_UDNL].info));
+    memcpy((void *)(0x80000000 | (unsigned int)irxptr), irxptr_tab[0].ptr, GET_OPL_MOD_SIZE(irxptr_tab[0].info));
     ee_kmode_exit();
     EI();
 
@@ -563,59 +584,6 @@ static unsigned int sendIrxKernelRAM(unsigned int modules, void *ModuleStorage, 
     return total_size;
 }
 
-#ifdef GSM
-static void PrepareGSM(char *cmdline)
-{
-    /* Preparing GSM */
-    LOG("Preparing GSM...\n");
-    // Pre-defined vmodes
-    // Some of following vmodes gives BOSD and/or freezing, depending on the console BIOS version, TV/Monitor set, PS2 cable (composite, component, VGA, ...)
-    // Therefore there are many variables involved here that can lead us to success or fail, depending on the already mentioned circumstances.
-    //
-    static const predef_vmode_struct predef_vmode[30] = {
-        //																		  DH    DW      MAGV    MAGH     DY     DX					  VS  VDP     VBPE VBP    VFPE  VFP
-        {GS_INTERLACED, GS_MODE_NTSC, GS_FIELD, makeDISPLAY(447, 2559, 0, 3, 46, 700), makeSYNCV(6, 480, 6, 26, 6, 1)},
-        {GS_INTERLACED, GS_MODE_NTSC, GS_FRAME, makeDISPLAY(223, 2559, 0, 3, 26, 700), makeSYNCV(6, 480, 6, 26, 6, 2)},
-        {GS_INTERLACED, GS_MODE_PAL, GS_FIELD, makeDISPLAY(511, 2559, 0, 3, 70, 720), makeSYNCV(5, 576, 5, 33, 5, 1)},
-        {GS_INTERLACED, GS_MODE_PAL, GS_FRAME, makeDISPLAY(255, 2559, 0, 3, 37, 720), makeSYNCV(5, 576, 5, 33, 5, 4)},
-        {GS_INTERLACED, GS_MODE_PAL, GS_FIELD, makeDISPLAY(447, 2559, 0, 3, 46, 700), makeSYNCV(6, 480, 6, 26, 6, 1)},
-        {GS_INTERLACED, GS_MODE_PAL, GS_FRAME, makeDISPLAY(223, 2559, 0, 3, 26, 700), makeSYNCV(6, 480, 6, 26, 6, 2)},
-        {GS_NONINTERLACED, GS_MODE_DTV_480P, GS_FRAME, makeDISPLAY(255, 2559, 0, 1, 12, 736), makeSYNCV(6, 483, 3072, 30, 0, 6)},
-        {GS_NONINTERLACED, GS_MODE_DTV_576P, GS_FRAME, makeDISPLAY(255, 2559, 0, 1, 23, 756), makeSYNCV(5, 576, 0, 39, 0, 5)},
-        {GS_NONINTERLACED, GS_MODE_DTV_480P, GS_FRAME, makeDISPLAY(479, 1279, 0, 1, 51, 308), makeSYNCV(6, 483, 3072, 30, 0, 6)},
-        {GS_NONINTERLACED, GS_MODE_DTV_576P, GS_FRAME, makeDISPLAY(575, 1279, 0, 1, 64, 320), makeSYNCV(5, 576, 0, 39, 0, 5)},
-        {GS_NONINTERLACED, GS_MODE_DTV_720P, GS_FRAME, makeDISPLAY(719, 1279, 1, 1, 24, 302), makeSYNCV(5, 720, 0, 20, 0, 5)},
-        {GS_INTERLACED, GS_MODE_DTV_1080I, GS_FIELD, makeDISPLAY(1079, 1919, 1, 2, 48, 238), makeSYNCV(10, 1080, 2, 28, 0, 5)},
-        {GS_INTERLACED, GS_MODE_DTV_1080I, GS_FRAME, makeDISPLAY(1079, 1919, 0, 2, 48, 238), makeSYNCV(10, 1080, 2, 28, 0, 5)},
-        {GS_NONINTERLACED, GS_MODE_DTV_1080P, GS_FRAME, makeDISPLAY(1079, 1919, 1, 2, 48, 238), makeSYNCV(10, 1080, 2, 28, 0, 5)},
-        {GS_NONINTERLACED, GS_MODE_VGA_640_60, GS_FRAME, makeDISPLAY(479, 1279, 0, 1, 54, 276), makeSYNCV(2, 480, 0, 33, 0, 10)},
-        {GS_NONINTERLACED, GS_MODE_VGA_640_72, GS_FRAME, makeDISPLAY(479, 1279, 0, 1, 18, 330), makeSYNCV(3, 480, 0, 28, 0, 9)},
-        {GS_NONINTERLACED, GS_MODE_VGA_640_75, GS_FRAME, makeDISPLAY(479, 1279, 0, 1, 18, 360), makeSYNCV(3, 480, 0, 16, 0, 1)},
-        {GS_NONINTERLACED, GS_MODE_VGA_640_85, GS_FRAME, makeDISPLAY(479, 1279, 0, 1, 18, 260), makeSYNCV(3, 480, 0, 16, 0, 1)},
-        {GS_INTERLACED, GS_MODE_VGA_640_60, GS_FIELD, makeDISPLAY(959, 1279, 1, 1, 128, 291), makeSYNCV(2, 992, 0, 33, 0, 10)},
-        {GS_NONINTERLACED, GS_MODE_VGA_800_56, GS_FRAME, makeDISPLAY(599, 1599, 0, 1, 25, 450), makeSYNCV(2, 600, 0, 22, 0, 1)},
-        {GS_NONINTERLACED, GS_MODE_VGA_800_60, GS_FRAME, makeDISPLAY(599, 1599, 0, 1, 25, 465), makeSYNCV(4, 600, 0, 23, 0, 1)},
-        {GS_NONINTERLACED, GS_MODE_VGA_800_72, GS_FRAME, makeDISPLAY(599, 1599, 0, 1, 25, 465), makeSYNCV(6, 600, 0, 23, 0, 37)},
-        {GS_NONINTERLACED, GS_MODE_VGA_800_75, GS_FRAME, makeDISPLAY(599, 1599, 0, 1, 25, 510), makeSYNCV(3, 600, 0, 21, 0, 1)},
-        {GS_NONINTERLACED, GS_MODE_VGA_800_85, GS_FRAME, makeDISPLAY(599, 1599, 0, 1, 15, 500), makeSYNCV(3, 600, 0, 27, 0, 1)},
-        {GS_NONINTERLACED, GS_MODE_VGA_1024_60, GS_FRAME, makeDISPLAY(767, 2047, 0, 2, 30, 580), makeSYNCV(6, 768, 0, 29, 0, 3)},
-        {GS_NONINTERLACED, GS_MODE_VGA_1024_70, GS_FRAME, makeDISPLAY(767, 1023, 0, 0, 30, 266), makeSYNCV(6, 768, 0, 29, 0, 3)},
-        {GS_NONINTERLACED, GS_MODE_VGA_1024_75, GS_FRAME, makeDISPLAY(767, 1023, 0, 0, 30, 260), makeSYNCV(3, 768, 0, 28, 0, 1)},
-        {GS_NONINTERLACED, GS_MODE_VGA_1024_85, GS_FRAME, makeDISPLAY(767, 1023, 0, 0, 30, 290), makeSYNCV(3, 768, 0, 36, 0, 1)},
-        {GS_NONINTERLACED, GS_MODE_VGA_1280_60, GS_FRAME, makeDISPLAY(1023, 1279, 1, 1, 40, 350), makeSYNCV(3, 1024, 0, 38, 0, 1)},
-        {GS_NONINTERLACED, GS_MODE_VGA_1280_75, GS_FRAME, makeDISPLAY(1023, 1279, 1, 1, 40, 350), makeSYNCV(3, 1024, 0, 38, 0, 1)}}; //ends predef_vmode definition
-
-    sprintf(cmdline, "%d %d %d %lu %lu %u %u %u", predef_vmode[gGSMVMode].interlace,
-            predef_vmode[gGSMVMode].mode,
-            predef_vmode[gGSMVMode].ffmd,
-            predef_vmode[gGSMVMode].display,
-            predef_vmode[gGSMVMode].syncv,
-            ((predef_vmode[gGSMVMode].ffmd) << 1) | (predef_vmode[gGSMVMode].interlace),
-            gGSMXOffset,
-            gGSMYOffset);
-}
-#endif
-
 #ifdef __DECI2_DEBUG
 /*
 	Look for the start of the EE DECI2 manager initialization function.
@@ -624,6 +592,8 @@ static void PrepareGSM(char *cmdline)
 	What happens is that the OSD initializes the EE DECI2 TTY protocol at startup, but the EE DECI2 manager is never aware that the OSDSYS ever loads other programs.
 
 	As a result, the EE kernel crashes immediately when the EE TTY gets used (when the IOP side of DECI2 comes up), when it invokes whatever that exists at the OSD's old ETTY handler's location. :(
+
+	Must be run in kernel mode.
 */
 static int ResetDECI2(void)
 {
@@ -636,9 +606,6 @@ static int ResetDECI2(void)
         0x34423800, //ori v0, v0, $3800
         0x34840102  //ori a0, a0, $0102
     };
-
-    DI();
-    ee_kmode_enter();
 
     result = -1;
     ptr = (void *)0x80000000;
@@ -654,6 +621,18 @@ static int ResetDECI2(void)
         }
     }
 
+    return result;
+}
+
+int sysInitDECI2(void)
+{
+    int result;
+
+    DI();
+    ee_kmode_enter();
+
+    result = ResetDECI2();
+
     ee_kmode_exit();
     EI();
 
@@ -661,57 +640,123 @@ static int ResetDECI2(void)
 }
 #endif
 
-void sysLaunchLoaderElf(char *filename, char *mode_str, int size_cdvdman_irx, void **cdvdman_irx, MCEMU int EnablePS2Logo, unsigned int compatflags)
+/*  Returns the patch location of LoadExecPS2(), which resides in kernel memory.
+ *  Patches the kernel to use the EELOAD module at the specified location.
+ *  Must be run in kernel mode.
+ */
+static void *initLoadExecPS2(void *new_eeload)
+{
+    void *result;
+
+    /* The pattern of the code in LoadExecPS2() that prepares the kernel for copying EELOAD from rom0: */
+    static const unsigned int initEELOADCopyPattern[] = {
+        0x8FA30010,    /* lw       v1, 0x0010(sp) */
+        0x0240302D,    /* daddu    a2, s2, zero */
+        0x8FA50014,    /* lw       a1, 0x0014(sp) */
+        0x8C67000C,    /* lw       a3, 0x000C(v1) */
+        0x18E00009,    /* blez     a3, +9 <- The kernel will skip the EELOAD copying loop if the value in $a3 is less than, or equal to 0. Lets do that... */
+    };
+
+    u32 *p;
+
+    result = NULL;
+    /* Find the part of LoadExecPS2() that initilizes the EELOAD copying loop's variables */
+    for(p = (u32 *)0x80001000; p < (u32 *)0x80030000; p++)
+    {
+        if(memcmp(p, &initEELOADCopyPattern, sizeof(initEELOADCopyPattern)) == 0)
+        {
+            p[1] = 0x3C120000 | (u16)((u32)new_eeload >> 16);    /* lui s2, HI16(new_eeload) */
+            p[2] = 0x36520000 | (u16)((u32)new_eeload & 0xFFFF); /* ori s2, s2, LO16(new_eeload) */
+            p[3] = 0x24070000;                                   /* li a3, 0 <- Disable the EELOAD copying loop */
+            result = (void*)p;
+            break;    /* All done. */
+        }
+    }
+
+    return result;
+}
+
+/*  Gets the address of the jump to the function that initializes user memory.
+ *  Pathces the kernel to begin erasure of memory from the specified address.
+ *  Must be run in kernel mode.
+ */
+static void *initInitializeUserMemory(void *start)
+{
+    u32 *p;
+    void *result;
+
+    result = NULL;
+    for (p = (unsigned int*)0x80001000; p < (unsigned int*)0x80030000; p++)
+    {
+        /*
+         * Search for function call and where $a0 is set.
+         *  lui  $a0, 0x0008
+         *  jal  InitializeUserMemory
+         *  ori  $a0, $a0, 0x2000
+         */
+        if (p[0] == 0x3c040008 && (p[1] & 0xfc000000) == 0x0c000000 && p[2] == 0x34842000) {
+            p[0] = 0x3c040000 | ((unsigned int)start >> 16);
+            p[2] = 0x34840000 | ((unsigned int)start & 0xffff);
+            result = (void*)p;
+            break;
+        }
+    }
+
+    return result;
+}
+
+static int initKernel(void *eeload, void *modStorageEnd, void **eeloadCopy, void **initUserMemory)
+{
+    DI();
+    ee_kmode_enter();
+
+#ifdef __DECI2_DEBUG
+    ResetDECI2();
+#endif
+    *eeloadCopy = initLoadExecPS2(eeload);
+    *initUserMemory = initInitializeUserMemory(modStorageEnd);
+
+    ee_kmode_exit();
+    EI();
+
+    return((*eeloadCopy != NULL && *initUserMemory != NULL) ? 0 : -1);
+}
+
+void sysLaunchLoaderElf(const char *filename, const char *mode_str, int size_cdvdman_irx, void **cdvdman_irx, int size_mcemu_irx, void **mcemu_irx, int EnablePS2Logo, unsigned int compatflags)
 {
     unsigned int modules, ModuleStorageSize;
-    void *ModuleStorage;
+    void *ModuleStorage, *ModuleStorageEnd;
     u8 local_ip_address[4], local_netmask[4], local_gateway[4];
     u8 *boot_elf = NULL;
     elf_header_t *eh;
     elf_pheader_t *eph;
     void *pdata;
     int i;
-#ifdef GSM
-#define GSM_ARGS 1
-#else
-#define GSM_ARGS 0
-#endif
-#ifdef CHEAT
-#define CHEAT_ARGS 1
-#else
-#define CHEAT_ARGS 0
-#endif
-#ifdef PADEMU
-#define PADEMU_ARGS 2
-#else
-#define PADEMU_ARGS 0
-#endif
-    char *argv[4 + GSM_ARGS + CHEAT_ARGS + PADEMU_ARGS];
+    char ElfPath[32];
+    char *argv[7 + GSM_ARGS];
     char ModStorageConfig[32];
+    char KernelConfig[32];
     char config_str[256];
-#ifdef GSM
     char gsm_config_str[256];
-#endif
+    void *eeloadCopy, *initUserMemory;
 
     ethGetNetConfig(local_ip_address, local_netmask, local_gateway);
-#ifndef __DEBUG
+#if (!defined(__DEBUG) && !defined(_DTL_T10000))
     AddHistoryRecordUsingFullPath(filename);
 #endif
 
     if (gExitPath[0] == '\0')
         strncpy(gExitPath, "Browser", sizeof(gExitPath));
 
+    //Disable sound effects via libsd, to prevent some games with improper initialization from inadvertently using digital effect settings from other software.
+    sysLoadModuleBuffer(&cleareffects_irx, size_cleareffects_irx, 0, NULL);
+
     //Wipe the low user memory region, since this region might not be wiped after OPL's EE core is installed.
-    memset((void *)0x00082000, 0, 0x00100000 - 0x00082000);
+    //Start wiping from 0x00084000 instead (as the HDD Browser does), as the alarm patch is installed at 0x00082000.
+    memset((void *)0x00084000, 0, 0x00100000 - 0x00084000);
 
-    if (!strcmp(mode_str, "USB_MODE"))
-        modules = CORE_IRX_USB;
-    else if (!strcmp(mode_str, "ETH_MODE"))
-        modules = CORE_IRX_ETH | CORE_IRX_SMB;
-    else
-        modules = CORE_IRX_HDD;
-
-    ModuleStorage = (void *)((compatflags & COMPAT_MODE_7) ? OPL_MOD_STORAGE_HI : OPL_MOD_STORAGE);
+    modules = 0;
+    ModuleStorage = GetModStorageLocation(filename, compatflags);
 
 #ifdef __DECI2_DEBUG
     modules |= CORE_IRX_DECI2 | CORE_IRX_ETH;
@@ -719,38 +764,13 @@ void sysLaunchLoaderElf(char *filename, char *mode_str, int size_cdvdman_irx, vo
     modules |= CORE_IRX_DEBUG | CORE_IRX_ETH;
 #endif
 
-#ifdef VMC
     modules |= CORE_IRX_VMC;
-    LOG("SYSTEM LaunchLoaderElf loading modules with size_mcemu_irx = %d\n", size_mcemu_irx);
-    ModuleStorageSize = (sendIrxKernelRAM(modules, ModuleStorage, size_cdvdman_irx, cdvdman_irx, size_mcemu_irx, mcemu_irx) + 0x3F) & ~0x3F;
-#else
+
     LOG("SYSTEM LaunchLoaderElf loading modules\n");
-    ModuleStorageSize = (sendIrxKernelRAM(modules, ModuleStorage, size_cdvdman_irx, cdvdman_irx) + 0x3F) & ~0x3F;
-#endif
-    sprintf(ModStorageConfig, "%u %u", (unsigned int)ModuleStorage, (unsigned int)ModuleStorage + ModuleStorageSize);
+    ModuleStorageSize = (sendIrxKernelRAM(filename, mode_str, modules, ModuleStorage, size_cdvdman_irx, cdvdman_irx, size_mcemu_irx, mcemu_irx) + 0x3F) & ~0x3F;
 
-    if (!gDisableDebug) {
-        char text[80];
-        float usage;
-        usage = (float)(ModuleStorageSize) / (float)(2 * 1024 * 1024) * 100;
-
-        snprintf(text, sizeof(text), "IOP Usage:%.2f%%,by %s(CDVDFSV+CDVDMAN)", (float)usage, mode_str);
-#ifdef VMC
-        if (size_mcemu_irx > 0)
-            strcat(text, "+VMC");
-#endif
-
-#ifdef PADEMU
-        if (gEnablePadEmu)
-            strcat(text, "+PADEMU");
-#endif
-        guiWarning(text, 20);
-    }
-
-
-#ifdef __DECI2_DEBUG
-    ResetDECI2();
-#endif
+    ModuleStorageEnd = (void*)((u8*)ModuleStorage + ModuleStorageSize);
+    sprintf(ModStorageConfig, "%u %u", (unsigned int)ModuleStorage, (unsigned int)ModuleStorageEnd);
 
     // NB: LOADER.ELF is embedded
     boot_elf = (u8 *)&eecore_elf;
@@ -770,21 +790,13 @@ void sysLaunchLoaderElf(char *filename, char *mode_str, int size_cdvdman_irx, vo
             memset(eph[i].vaddr + eph[i].filesz, 0, eph[i].memsz - eph[i].filesz);
     }
 
-#ifdef CHEAT
-#define CHEAT_SPECIFIER " %u"
-#define CHEAT_ARGUMENT , gEnableCheat ? (unsigned int)gCheatList : 0
-#else
-#define CHEAT_SPECIFIER
-#define CHEAT_ARGUMENT
-#endif
-
-#ifdef GSM
-#define GSM_SPECIFIER " %d"
-#define GSM_ARGUMENT , gEnableGSM
-#else
-#define GSM_SPECIFIER
-#define GSM_ARGUMENT
-#endif
+    //Get the kernel to use our EELOAD module and to begin erasure after module storage. EE core will erase any memory before the module storage (if any).
+    if(initKernel((void*)eh->entry, ModuleStorageEnd, &eeloadCopy, &initUserMemory) != 0)
+    {   //Should not happen, but...
+        LOG("Error - kernel is unsupported.\n");
+        asm volatile("break\n");
+    }
+    sprintf(KernelConfig, "%u %u", (unsigned int)eeloadCopy, (unsigned int)initUserMemory);
 
 #ifdef PADEMU
 #define PADEMU_SPECIFIER " %d, %u"
@@ -795,20 +807,24 @@ void sysLaunchLoaderElf(char *filename, char *mode_str, int size_cdvdman_irx, vo
 #endif
 
     i = 0;
-    sprintf(config_str, "%s %d %d %s %d %u.%u.%u.%u %u.%u.%u.%u %u.%u.%u.%u %d" CHEAT_SPECIFIER GSM_SPECIFIER PADEMU_SPECIFIER,
-            mode_str, gDisableDebug, EnablePS2Logo, gExitPath, gHDDSpindown,
+    sprintf(config_str, "%s %d %s %d %u.%u.%u.%u %u.%u.%u.%u %u.%u.%u.%u %d %u %d" PADEMU_SPECIFIER,
+            mode_str, gDisableDebug, gExitPath, gHDDSpindown,
             local_ip_address[0], local_ip_address[1], local_ip_address[2], local_ip_address[3],
             local_netmask[0], local_netmask[1], local_netmask[2], local_netmask[3],
             local_gateway[0], local_gateway[1], local_gateway[2], local_gateway[3],
-            gETHOpMode
-                CHEAT_ARGUMENT GSM_ARGUMENT PADEMU_ARGUMENT);
+            gETHOpMode,
+            GetCheatsEnabled() ? (unsigned int)GetCheatsList() : 0,
+            GetGSMEnabled() PADEMU_ARGUMENT);
     argv[i] = config_str;
+    i++;
+
+    argv[i] = KernelConfig;
     i++;
 
     argv[i] = ModStorageConfig;
     i++;
 
-    argv[i] = filename;
+    argv[i] = (char*)filename;
     i++;
 
     char cmask[10];
@@ -816,28 +832,12 @@ void sysLaunchLoaderElf(char *filename, char *mode_str, int size_cdvdman_irx, vo
     argv[i] = cmask;
     i++;
 
-#ifdef GSM
     PrepareGSM(gsm_config_str);
     argv[i] = gsm_config_str;
     i++;
-#endif
 
-    if (!gDisableDebug) {
-        guiWarning("Let's go.", 10);
-        // deinit stuff
-        unloadPads();
-        ioEnd();
-        guiEnd();
-        menuEnd();
-        lngEnd();
-        thmEnd();
-        rmEnd();
-    }
+    snprintf(ElfPath, sizeof(ElfPath), "cdrom0:\\%s;1", filename);
 
-#ifdef PADEMU
-    ds34usb_reset();
-    ds34bt_reset();
-#endif
     // Let's go.
     fileXioExit();
     SifExitRpc();
@@ -845,10 +845,19 @@ void sysLaunchLoaderElf(char *filename, char *mode_str, int size_cdvdman_irx, vo
     FlushCache(0);
     FlushCache(2);
 
-    ExecPS2((void *)eh->entry, 0, i, argv);
+    //PS2LOGO Caller, based on l_oliveira & SP193 tips
+    //Don't call LoadExecPS2 here because it will wipe all memory above the EE core, making it impossible to pass data via pointers.
+    if (EnablePS2Logo) {
+        argv[i] = "rom0:PS2LOGO";
+        argv[i+1] = ElfPath;
+        ExecPS2((void*)eh->entry, NULL, i + 2, argv);
+    } else {
+        argv[i] = ElfPath;
+        ExecPS2((void*)eh->entry, NULL, i + 1, argv);
+    }
 }
 
-int sysExecElf(char *path)
+int sysExecElf(const char *path)
 {
     u8 *boot_elf = NULL;
     elf_header_t *eh;
@@ -883,12 +892,12 @@ int sysExecElf(char *path)
     fileXioExit();
     SifExitRpc();
 
-    elf_argv[0] = path;
+    elf_argv[0] = (char*)path;
 
     FlushCache(0);
     FlushCache(2);
 
-    ExecPS2((void *)eh->entry, 0, 1, elf_argv);
+    ExecPS2((void *)eh->entry, NULL, 1, elf_argv);
 
     return 0;
 }
@@ -912,7 +921,6 @@ int sysCheckMC(void)
     return -11;
 }
 
-#ifdef VMC
 // createSize == -1 : delete, createSize == 0 : probing, createSize > 0 : creation
 int sysCheckVMC(const char *prefix, const char *sep, char *name, int createSize, vmc_superblock_t *vmc_superblock)
 {
@@ -921,16 +929,16 @@ int sysCheckVMC(const char *prefix, const char *sep, char *name, int createSize,
     snprintf(path, sizeof(path), "%sVMC%s%s.bin", prefix, sep, name);
 
     if (createSize == -1)
-        fileXioRemove(path);
+        unlink(path);
     else {
-        int fd = fileXioOpen(path, O_RDONLY, FIO_S_IRUSR | FIO_S_IWUSR | FIO_S_IXUSR | FIO_S_IRGRP | FIO_S_IWGRP | FIO_S_IXGRP | FIO_S_IROTH | FIO_S_IWOTH | FIO_S_IXOTH);
+        int fd = open(path, O_RDONLY, S_IRUSR | S_IWUSR | S_IXUSR | S_IRGRP | S_IWGRP | S_IXGRP | S_IROTH | S_IWOTH | S_IXOTH);
         if (fd >= 0) {
-            size = fileXioLseek(fd, 0, SEEK_END);
+            size = lseek(fd, 0, SEEK_END);
 
             if (vmc_superblock) {
                 memset(vmc_superblock, 0, sizeof(vmc_superblock_t));
-                fileXioLseek(fd, 0, SEEK_SET);
-                fileXioRead(fd, (void *)vmc_superblock, sizeof(vmc_superblock_t));
+                lseek(fd, 0, SEEK_SET);
+                read(fd, (void *)vmc_superblock, sizeof(vmc_superblock_t));
 
                 LOG("SYSTEM File size  : 0x%X\n", size);
                 LOG("SYSTEM Magic      : %s\n", vmc_superblock->magic);
@@ -951,10 +959,10 @@ int sysCheckVMC(const char *prefix, const char *sep, char *name, int createSize,
             else
                 size /= 1048576;
 
-            fileXioClose(fd);
+            close(fd);
 
             if (createSize && (createSize != size))
-                fileXioRemove(path);
+                unlink(path);
         }
 
 
@@ -970,4 +978,4 @@ int sysCheckVMC(const char *prefix, const char *sep, char *name, int createSize,
     }
     return size;
 }
-#endif
+

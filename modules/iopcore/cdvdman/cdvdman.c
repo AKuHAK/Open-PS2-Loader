@@ -31,17 +31,10 @@
 #include <usbd.h>
 #include "ioman_add.h"
 
-/*	Some modules (e.g. SMAP) will check for dev9 and its version number.
-	In the interest of maintaining network support of games in HDD mode,
-	the module ID of CDVDMAN is changed to DEV9.
-	SMB mode will never support network support in games, as the SMAP interface cannot be shared.	*/
-#ifdef HDD_DRIVER
-#define MODNAME "dev9"
-IRX_ID(MODNAME, 2, 8);
-#else
+#include <defs.h>
+
 #define MODNAME "cdvd_driver"
 IRX_ID(MODNAME, 1, 1);
-#endif
 
 //------------------ Patch Zone ----------------------
 #ifdef HDD_DRIVER
@@ -76,11 +69,12 @@ struct cdvdman_settings_usb cdvdman_settings = {
 #endif
 
 //----------------------------------------------------
-struct irx_export_table _exp_cdvdman;
-struct irx_export_table _exp_cdvdstm;
-struct irx_export_table _exp_smsutils;
-#ifdef VMC_DRIVER
-struct irx_export_table _exp_oplutils;
+extern struct irx_export_table _exp_cdvdman;
+extern struct irx_export_table _exp_cdvdstm;
+extern struct irx_export_table _exp_smsutils;
+extern struct irx_export_table _exp_oplutils;
+#ifdef __USE_DEV9
+extern struct irx_export_table _exp_dev9;
 #endif
 
 struct dirTocEntry
@@ -107,6 +101,7 @@ typedef struct
 } FHANDLE;
 
 // internal functions prototypes
+static void oplShutdown(int poff);
 static void fs_init(void);
 static void cdvdman_init(void);
 static int cdvdman_readMechaconVersion(char *mname, u32 *stat);
@@ -117,8 +112,10 @@ static struct dirTocEntry *cdvdman_locatefile(char *name, u32 tocLBA, int tocLen
 static int cdvdman_findfile(cd_file_t *pcd_file, const char *name, int layer);
 static int cdvdman_writeSCmd(u8 cmd, void *in, u32 in_size, void *out, u32 out_size);
 static int cdvdman_sendSCmd(u8 cmd, void *in, u32 in_size, void *out, u32 out_size);
-static int cdvdman_cb_event(int reason);
+static void cdvdman_cb_event(int reason);
 static unsigned int event_alarm_cb(void *args);
+static void cdvdman_signal_read_end(void);
+static void cdvdman_signal_read_end_intr(void);
 static void cdvdman_startThreads(void);
 static void cdvdman_create_semaphores(void);
 static void cdvdman_initdev(void);
@@ -194,8 +191,14 @@ typedef struct
 
 static layer_info_t layer_info[2];
 
+struct cdvdman_cb_data
+{
+    void (*user_cb)(int reason);
+    int reason;
+};
+
 cdvdman_status_t cdvdman_stat;
-static void *user_cb;
+static struct cdvdman_cb_data cb_data;
 
 static int cdrom_io_sema;
 static int cdrom_rthread_sema;
@@ -208,10 +211,9 @@ static iop_sys_clock_t gCallbackSysClock;
 
 // buffers
 #define CDVDMAN_BUF_SECTORS 2
+#define CDVDFSV_ALIGNMENT 64
 static u8 cdvdman_buf[CDVDMAN_BUF_SECTORS * 2048];
-
-#define CDVDMAN_FS_BUFSIZE CDVDMAN_FS_SECTORS * 2048
-static u8 cdvdman_fs_buf[CDVDMAN_FS_BUFSIZE + 2 * 2048];
+static u8 cdvdman_fs_buf[CDVDMAN_FS_SECTORS * 2048 + CDVDFSV_ALIGNMENT];
 
 #define CDVDMAN_MODULE_VERSION 0x225
 static int cdvdman_debug_print_flag = 0;
@@ -222,9 +224,35 @@ static unsigned char sync_flag;
 static unsigned char cdvdman_cdinited = 0;
 static unsigned int ReadPos = 0; /* Current buffer offset in 2048-byte sectors. */
 
-#if (defined(HDD_DRIVER) && !defined(HD_PRO)) || defined(SMB_DRIVER)
+#ifdef __USE_DEV9
 static int POFFThreadID;
 #endif
+
+typedef void (*oplShutdownCb_t)(void);
+static oplShutdownCb_t vmcShutdownCb = NULL;
+
+void oplRegisterShutdownCallback(oplShutdownCb_t cb)
+{
+    vmcShutdownCb = cb;
+}
+
+static void oplShutdown(int poff)
+{
+    int stat;
+
+    DeviceLock();
+    if(vmcShutdownCb != NULL)
+        vmcShutdownCb();
+    DeviceUnmount();
+    if (poff)
+    {
+        DeviceStop();
+#ifdef __USE_DEV9
+        dev9Shutdown();
+#endif
+        sceCdPowerOff(&stat);
+    }
+}
 
 //--------------------------------------------------------------
 static void fs_init(void)
@@ -264,20 +292,18 @@ static void fs_init(void)
 }
 
 //-------------------------------------------------------------------------
-#if (defined(HDD_DRIVER) && !defined(HD_PRO)) || defined(SMB_DRIVER)
+#ifdef __USE_DEV9
 static void cdvdman_poff_thread(void *arg)
 {
-    int stat;
-
     SleepThread();
-    dev9Shutdown();
-    sceCdPowerOff(&stat);
+
+    oplShutdown(1);
 }
 #endif
 
 static void cdvdman_init(void)
 {
-#if (defined(HDD_DRIVER) && !defined(HD_PRO)) || defined(SMB_DRIVER)
+#ifdef __USE_DEV9
     iop_thread_t ThreadData;
 #endif
 
@@ -286,7 +312,7 @@ static void cdvdman_init(void)
 
         fs_init();
 
-#if (defined(HDD_DRIVER) && !defined(HD_PRO)) || defined(SMB_DRIVER)
+#ifdef __USE_DEV9
         if (cdvdman_settings.common.flags & IOPCORE_ENABLE_POFF) {
             ThreadData.attr = TH_C;
             ThreadData.option = 0xABCD0001;
@@ -348,7 +374,7 @@ static int cdvdman_read_sectors(u32 lsn, unsigned int sectors, void *buf)
                 SectorsToRead = 8;
 
             TargetTime.hi = 0;
-            TargetTime.lo = 26321 * SectorsToRead; // approximately 2KB/2800KB/s = 714us required per 2048-byte data sector at 2800KB/s, so 714 * 36.864 = 26321 ticks per sector with a 36.864MHz clock.
+            TargetTime.lo = 20460 * SectorsToRead; // approximately 2KB/3600KB/s = 555us required per 2048-byte data sector at 3600KB/s, so 555 * 36.864 = 20460 ticks per sector with a 36.864MHz clock.
             ClearEventFlag(cdvdman_stat.intr_ef, ~0x1000);
             SetAlarm(&TargetTime, &cdvdemu_read_end_cb, NULL);
         }
@@ -360,12 +386,18 @@ static int cdvdman_read_sectors(u32 lsn, unsigned int sectors, void *buf)
             break;
         }
 
-        // PS2LOGO Decryptor algorithm; based on misfire's code (https://github.com/mlafeldt/ps2logo)
+        /* PS2LOGO Decryptor algorithm; based on misfire's code (https://github.com/mlafeldt/ps2logo)
+           The PS2 logo is stored within the first 12 sectors, scrambled.
+           This algorithm exploits the characteristic that the value used for scrambling will be recorded,
+           when it is XOR'ed against a black pixel. The first pixel is black, hence the value of the first byte
+           was the value used for scrambling. */
         if (lsn < 13) {
             u32 j;
             u8 *logo = (u8 *)ptr;
-            u8 key = logo[0];
-            if (logo[0] != 0) {
+            static u8 key = 0;
+            if (lsn == 0) //First sector? Copy the first byte as the value for unscrambling the logo.
+                key = logo[0];
+            if (key != 0) {
                 for (j = 0; j < (SectorsToRead * 2048); j++) {
                     logo[j] ^= key;
                     logo[j] = (logo[j] << 3) | (logo[j] >> 5);
@@ -391,7 +423,8 @@ static int cdvdman_read(u32 lsn, u32 sectors, void *buf)
 {
     cdvdman_stat.status = CDVD_STAT_READ;
 
-#if UNALIGNED_BUFFER_PATCH
+    buf = (void *)PHYSADDR(buf);
+#ifdef HDD_DRIVER //As of now, only the ATA interface requires this. We do this here to share cdvdman_buf.
     if ((u32)(buf)&3) {
         //For transfers to unaligned buffers, a double-copy is required to avoid stalling the device's DMA channel.
         WaitSema(cdvdman_searchfilesema);
@@ -417,10 +450,10 @@ static int cdvdman_read(u32 lsn, u32 sectors, void *buf)
 
         SignalSema(cdvdman_searchfilesema);
     } else {
+#endif
         cdvdman_read_sectors(lsn, sectors, buf);
+#ifdef HDD_DRIVER
     }
-#else
-    cdvdman_read_sectors(lsn, sectors, buf);
 #endif
 
     ReadPos = 0; /* Reset the buffer offset indicator. */
@@ -520,6 +553,9 @@ int sceCdSeek(u32 lsn)
 {
     DPRINTF("sceCdSeek %d\n", (int)lsn);
 
+    if (sync_flag)
+        return 0;
+
     cdvdman_stat.err = CDVD_ERR_NO;
 
     cdvdman_stat.status = CDVD_STAT_PAUSE;
@@ -540,9 +576,12 @@ int sceCdGetError(void)
 //-------------------------------------------------------------------------
 int sceCdGetToc(void *toc)
 {
+    if (sync_flag)
+        return 0;
+
     cdvdman_stat.err = CDVD_ERR_READ;
 
-    return 1;
+    return 0; //Not supported
 }
 
 //-------------------------------------------------------------------------
@@ -645,6 +684,9 @@ int sceCdTrayReq(int mode, u32 *traycnt)
 //-------------------------------------------------------------------------
 int sceCdStop(void)
 {
+    if (sync_flag)
+        return 0;
+
     cdvdman_stat.err = CDVD_ERR_NO;
 
     cdvdman_stat.status = CDVD_STAT_STOP;
@@ -739,11 +781,13 @@ int *sceCdCallback(void *func)
 
     DPRINTF("sceCdCallback %p\n", func);
 
-    old_cb = user_cb;
+    if (sceCdSync(1))
+        return NULL;
 
     CpuSuspendIntr(&oldstate);
 
-    user_cb = func;
+    old_cb = cb_data.user_cb;
+    cb_data.user_cb = func;
 
     CpuResumeIntr(oldstate);
 
@@ -753,6 +797,11 @@ int *sceCdCallback(void *func)
 //-------------------------------------------------------------------------
 int sceCdPause(void)
 {
+    DPRINTF("sceCdPause\n");
+
+    if (sync_flag)
+        return 0;
+
     cdvdman_stat.err = CDVD_ERR_NO;
 
     cdvdman_stat.status = CDVD_STAT_PAUSE;
@@ -765,6 +814,9 @@ int sceCdPause(void)
 int sceCdBreak(void)
 {
     DPRINTF("sceCdBreak\n");
+
+    if (sync_flag)
+        return 0;
 
     cdvdman_stat.err = CDVD_ERR_NO;
     cdvdman_stat.status = CDVD_STAT_PAUSE;
@@ -823,6 +875,10 @@ int sceCdSC(int code, int *param)
             break;
         case CDSC_SET_ERROR:
             result = cdvdman_stat.err = *param;
+            break;
+        case CDSC_OPL_SHUTDOWN:
+            oplShutdown(*param);
+            result = 1;
             break;
         default:
             result = 1; // dummy result
@@ -1301,14 +1357,16 @@ static int cdrom_ioctl2(iop_file_t *f, int cmd, void *args, unsigned int arglen,
 {
     int r = 0;
 
+    //There was a check here on whether the file was opened with mode 8.
+
     WaitSema(cdrom_io_sema);
 
     switch (cmd) {
         case CIOCSTREAMPAUSE:
-            sceCdStPause();
+            r = sceCdStPause();
             break;
         case CIOCSTREAMRESUME:
-            sceCdStResume();
+            r = sceCdStResume();
             break;
         case CIOCSTREAMSTAT:
             r = sceCdStStat();
@@ -1332,13 +1390,15 @@ static int cdrom_devctl(iop_file_t *f, const char *name, int cmd, void *args, u3
     result = 0;
     switch (cmd) {
         case CDIOC_READCLOCK:
-            sceCdReadClock((cd_clock_t *)buf);
+            result = sceCdReadClock((cd_clock_t *)buf);
+            if (result != 1)
+                result = -EIO;
             break;
         case CDIOC_READGUID:
-            sceCdReadGUID(buf);
+            result = sceCdReadGUID(buf);
             break;
         case CDIOC_READDISKGUID:
-            sceCdReadDiskID(buf);
+            result = sceCdReadDiskID(buf);
             break;
         case CDIOC_GETDISKTYPE:
             *(int *)buf = sceCdGetDiskType();
@@ -1347,12 +1407,18 @@ static int cdrom_devctl(iop_file_t *f, const char *name, int cmd, void *args, u3
             *(int *)buf = sceCdGetError();
             break;
         case CDIOC_TRAYREQ:
-            sceCdTrayReq(*(int *)args, (u32 *)buf);
+            result = sceCdTrayReq(*(int *)args, (u32 *)buf);
+            if (result != 1)
+                result = -EIO;
             break;
         case CDIOC_STATUS:
             *(int *)buf = sceCdStatus();
             break;
         case CDIOC_POWEROFF:
+            result = sceCdPowerOff((int *)args);
+            if (result != 1)
+                result = -EIO;
+            break;
         case CDIOC_MMODE:
             result = 1;
             break;
@@ -1360,13 +1426,16 @@ static int cdrom_devctl(iop_file_t *f, const char *name, int cmd, void *args, u3
             *(int *)buf = sceCdDiskReady(*(int *)args);
             break;
         case CDIOC_READMODELID:
-            sceCdReadModelID(buf);
+            result = sceCdReadModelID(buf);
             break;
         case CDIOC_STREAMINIT:
-            sceCdStInit(((u32 *)args)[0], ((u32 *)args)[1], (void *)((u32 *)args)[2]);
+            result = sceCdStInit(((u32 *)args)[0], ((u32 *)args)[1], (void *)((u32 *)args)[2]);
             break;
         case CDIOC_BREAK:
-            sceCdBreak();
+            result = sceCdBreak();
+            if (result != 1)
+                result = -EIO;
+            sceCdSync(0);
             break;
         case CDIOC_SPINNOM:
         case CDIOC_SPINSTM:
@@ -1376,16 +1445,27 @@ static int cdrom_devctl(iop_file_t *f, const char *name, int cmd, void *args, u3
             result = 0;
             break;
         case CDIOC_STANDBY:
-            sceCdStandby();
+            result = sceCdStandby();
+            if (result != 1)
+                result = -EIO;
+            sceCdSync(0);
             break;
         case CDIOC_STOP:
-            sceCdStop();
+            result = sceCdStop();
+            if (result != 1)
+                result = -EIO;
+            sceCdSync(0);
             break;
         case CDIOC_PAUSE:
-            sceCdPause();
+            result = sceCdPause();
+            if (result != 1)
+                result = -EIO;
+            sceCdSync(0);
             break;
         case CDIOC_GETTOC:
-            sceCdGetToc(buf);
+            result = sceCdGetToc(buf);
+            if (result != 1)
+                result = -EIO;
             break;
         case CDIOC_GETINTREVENTFLG:
             *(int *)buf = cdvdman_stat.intr_ef;
@@ -1667,18 +1747,9 @@ retry:
 }
 
 //--------------------------------------------------------------
-struct cdvdman_cb_data
+static void cdvdman_cb_event(int reason)
 {
-    void (*user_cb)(int reason);
-    int reason;
-};
-
-static int cdvdman_cb_event(int reason)
-{
-    static struct cdvdman_cb_data cb_data;
-
-    if (user_cb) {
-        cb_data.user_cb = user_cb;
+    if (cb_data.user_cb != NULL) {
         cb_data.reason = reason;
 
         DPRINTF("cdvdman_cb_event reason: %d - setting cb alarm...\n", reason);
@@ -1687,21 +1758,40 @@ static int cdvdman_cb_event(int reason)
             iSetAlarm(&gCallbackSysClock, &event_alarm_cb, &cb_data);
         else
             SetAlarm(&gCallbackSysClock, &event_alarm_cb, &cb_data);
+    } else {
+        cdvdman_signal_read_end();
     }
-
-    return 1;
 }
 
-//-------------------------------------------------------------------------
 static unsigned int event_alarm_cb(void *args)
 {
     struct cdvdman_cb_data *cb_data = args;
 
-    cb_data->user_cb(cb_data->reason);
+    cdvdman_signal_read_end_intr();
+    if (cb_data->user_cb != NULL) //This interrupt does not occur immediately, hence check for the callback again here.
+        cb_data->user_cb(cb_data->reason);
     return 0;
 }
 
 //-------------------------------------------------------------------------
+/* Use these to signal that the reading process is complete.
+   Do not run the user callback after the drive can be deemed ready,
+   as this may break games that were not designed to expect the callback to be run
+   after the drive becomes visibly ready via the libcdvd API.
+   Hence if a user callback is registered, signal completion from
+   within the interrupt handler, before the user callback is run. */
+static void cdvdman_signal_read_end(void)
+{
+    sync_flag = 0;
+    SetEventFlag(cdvdman_stat.intr_ef, 9);
+}
+
+static void cdvdman_signal_read_end_intr(void)
+{
+    sync_flag = 0;
+    iSetEventFlag(cdvdman_stat.intr_ef, 9);
+}
+
 static void cdvdman_cdread_Thread(void *args)
 {
     while (1) {
@@ -1709,14 +1799,18 @@ static void cdvdman_cdread_Thread(void *args)
 
         cdvdman_read(cdvdman_stat.cdread_lba, cdvdman_stat.cdread_sectors, cdvdman_stat.cdread_buf);
 
-        sync_flag = 0;
-        SetEventFlag(cdvdman_stat.intr_ef, 9);
-
         /* This streaming callback is not compatible with the original SONY stream channel 0 (IOP) callback's design.
-			The original is run from the interrupt handler, but we want it to run
-			from a threaded environment because it's easier to protect critical regions. */
+	   The original is run from the interrupt handler, but we want it to run
+	   from a threaded environment because our interrupt is emulated. */
         if (Stm0Callback != NULL)
-            Stm0Callback();
+	{
+            cdvdman_signal_read_end();
+
+            /* Check that the streaming callback was not cleared, as this pointer may get changed between function calls.
+               As per the original semantics, once it is cleared, then it should not be called. */
+            if (Stm0Callback != NULL)
+                Stm0Callback();
+	}
         else
             cdvdman_cb_event(SCECdFuncRead); //Only runs if streaming is not in action.
     }
@@ -1784,7 +1878,7 @@ static int intrh_cdrom(void *common)
         iSetEventFlag(cdvdman_stat.intr_ef, 0x14); //Notify FILEIO and CDVDFSV of the power-off event.
 
 //Call power-off callback here. OPL doesn't handle one, so do nothing.
-#if (defined(HDD_DRIVER) && !defined(HD_PRO)) || defined(SMB_DRIVER)
+#ifdef __USE_DEV9
         if (cdvdman_settings.common.flags & IOPCORE_ENABLE_POFF) {
             //If IGR is disabled, switch off the console.
             iWakeupThread(POFFThreadID);
@@ -1815,11 +1909,14 @@ int _start(int argc, char **argv)
     RegisterLibraryEntries(&_exp_cdvdstm);
 
     RegisterLibraryEntries(&_exp_smsutils);
+#ifdef __USE_DEV9
+    RegisterLibraryEntries(&_exp_dev9);
+    dev9d_init();
+#endif
+
     DeviceInit();
 
-#ifdef VMC_DRIVER
     RegisterLibraryEntries(&_exp_oplutils);
-#endif
 
     // Setup the callback timer.
     USec2SysClock((cdvdman_settings.common.flags & IOPCORE_COMPAT_ACCU_READS) ? 5000 : 0, &gCallbackSysClock);

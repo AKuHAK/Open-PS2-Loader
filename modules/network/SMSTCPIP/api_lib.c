@@ -36,15 +36,14 @@
 #include "lwip/opt.h"
 #include "lwip/api.h"
 #include "lwip/api_msg.h"
+#include "lwip/tcpip.h"
 #include "lwip/memp.h"
 
+#include <intrman.h>
 #include <thsemap.h>
 #include <sysclib.h>
 
 #include "smsutils.h"
-
-extern void tcpip_apimsg(struct api_msg *apimsg);
-
 
 struct netbuf *netbuf_new(void)
 {
@@ -72,17 +71,22 @@ void netbuf_delete(struct netbuf *buf)
 
 } /* end netbuf_delete */
 
-void netbuf_ref(struct netbuf *buf, void *dataptr, u16_t size)
+err_t netbuf_ref(struct netbuf *buf, void *dataptr, u16_t size)
 {
 
     if (buf->p)
         pbuf_free(buf->p);
 
     buf->p = pbuf_alloc(PBUF_TRANSPORT, 0, PBUF_REF);
+    if (buf->p == NULL) {
+        buf->ptr = NULL;
+        return ERR_MEM;
+    }
     buf->p->payload = dataptr;
     buf->p->len = buf->p->tot_len = size;
     buf->ptr = buf->p;
 
+    return ERR_OK;
 } /* end netbuf_ref */
 
 void netbuf_copy_partial(
@@ -142,10 +146,12 @@ struct
     conn->type = t;
     conn->pcb.tcp = NULL;
 
+#if !LWIP_TCPIP_CORE_LOCKING
     if ((conn->mbox = sys_mbox_new()) == SYS_MBOX_NULL) {
         memp_free(MEMP_NETCONN, conn);
         return NULL;
     }
+#endif
     conn->recvmbox = SYS_MBOX_NULL;
     conn->acceptmbox = SYS_MBOX_NULL;
     conn->sem = SYS_SEM_NULL;
@@ -163,7 +169,6 @@ struct
     msg->msg.msg.bc.port = proto; /* misusing the port field */
     msg->msg.conn = conn;
     api_msg_post(msg);
-    sys_mbox_fetch(conn->mbox, NULL);
     memp_free(MEMP_API_MSG, msg);
 
     if (conn->err != ERR_OK) {
@@ -190,7 +195,6 @@ err_t netconn_delete(struct netconn *conn)
     msg->type = API_MSG_DELCONN;
     msg->msg.conn = conn;
     api_msg_post(msg);
-    sys_mbox_fetch(conn->mbox, NULL);
     memp_free(MEMP_API_MSG, msg);
 
     /* Drain the recvmbox. */
@@ -216,8 +220,10 @@ err_t netconn_delete(struct netconn *conn)
         conn->acceptmbox = SYS_MBOX_NULL;
     }
 
+#if !LWIP_TCPIP_CORE_LOCKING
     sys_mbox_free(conn->mbox);
     conn->mbox = SYS_MBOX_NULL;
+#endif
     if (conn->sem != SYS_SEM_NULL) {
         sys_sem_free(conn->sem);
     }
@@ -298,7 +304,6 @@ err_t netconn_bind(struct netconn *conn, struct ip_addr *addr,
     msg->msg.msg.bc.ipaddr = addr;
     msg->msg.msg.bc.port = port;
     api_msg_post(msg);
-    sys_mbox_fetch(conn->mbox, NULL);
     memp_free(MEMP_API_MSG, msg);
     return conn->err;
 }
@@ -328,7 +333,6 @@ err_t netconn_connect(struct netconn *conn, struct ip_addr *addr,
     msg->msg.msg.bc.ipaddr = addr;
     msg->msg.msg.bc.port = port;
     api_msg_post(msg);
-    sys_mbox_fetch(conn->mbox, NULL);
     memp_free(MEMP_API_MSG, msg);
     return conn->err;
 }
@@ -347,7 +351,6 @@ err_t netconn_disconnect(struct netconn *conn)
     msg->type = API_MSG_DISCONNECT;
     msg->msg.conn = conn;
     api_msg_post(msg);
-    sys_mbox_fetch(conn->mbox, NULL);
     memp_free(MEMP_API_MSG, msg);
     return conn->err;
 }
@@ -373,7 +376,6 @@ err_t netconn_listen(struct netconn *conn)
     msg->type = API_MSG_LISTEN;
     msg->msg.conn = conn;
     api_msg_post(msg);
-    sys_mbox_fetch(conn->mbox, NULL);
     memp_free(MEMP_API_MSG, msg);
     return conn->err;
 }
@@ -434,7 +436,7 @@ netconn_recv(struct netconn *conn)
 
         if (p != NULL) {
             len = p->tot_len;
-            conn->recv_avail -= len;
+            SYS_ARCH_DEC(conn->recv_avail, len);
         } else
             len = 0;
 
@@ -470,11 +472,10 @@ netconn_recv(struct netconn *conn)
         }
         api_msg_post(msg);
 
-        sys_mbox_fetch(conn->mbox, NULL);
         memp_free(MEMP_API_MSG, msg);
     } else {
         sys_mbox_fetch(conn->recvmbox, (void **)&buf);
-        conn->recv_avail -= buf->p->tot_len;
+        SYS_ARCH_DEC(conn->recv_avail, buf->p->tot_len);
         /* Register event with callback */
         if (conn->callback)
             (*conn->callback)(conn, NETCONN_EVT_RCVMINUS, buf->p->tot_len);
@@ -503,7 +504,6 @@ err_t netconn_send(struct netconn *conn, struct netbuf *buf)
     msg->msg.msg.p = buf->p;
     api_msg_post(msg);
 
-    sys_mbox_fetch(conn->mbox, NULL);
     memp_free(MEMP_API_MSG, msg);
     return conn->err;
 }
@@ -512,7 +512,7 @@ err_t netconn_send(struct netconn *conn, struct netbuf *buf)
 err_t netconn_write(struct netconn *conn, void *dataptr, u16_t size, u8_t copy)
 {
     struct api_msg *msg;
-    u16_t len;
+    u16_t len, sndbuf;
 
     if (conn == NULL) {
         return ERR_VAL;
@@ -535,16 +535,16 @@ err_t netconn_write(struct netconn *conn, void *dataptr, u16_t size, u8_t copy)
         msg->msg.msg.w.copy = copy;
 
         if (conn->type == NETCONN_TCP) {
-            if (tcp_sndbuf(conn->pcb.tcp) == 0) {
+            while ((sndbuf = tcp_sndbuf(conn->pcb.tcp)) == 0) {
                 sys_sem_wait(conn->sem);
                 if (conn->err != ERR_OK) {
                     goto ret;
                 }
             }
-            if (size > tcp_sndbuf(conn->pcb.tcp)) {
+            if (size > sndbuf) {
                 /* We cannot send more than one send buffer's worth of data at a
      time. */
-                len = tcp_sndbuf(conn->pcb.tcp);
+                len = sndbuf;
             } else {
                 len = size;
             }
@@ -555,7 +555,6 @@ err_t netconn_write(struct netconn *conn, void *dataptr, u16_t size, u8_t copy)
         LWIP_DEBUGF(API_LIB_DEBUG, ("netconn_write: writing %d bytes (%d)\n", len, copy));
         msg->msg.msg.w.len = len;
         api_msg_post(msg);
-        sys_mbox_fetch(conn->mbox, NULL);
         if (conn->err == ERR_OK) {
             dataptr = (void *)((u8_t *)dataptr + len);
             size -= len;
@@ -589,7 +588,6 @@ again:
     msg->type = API_MSG_CLOSE;
     msg->msg.conn = conn;
     api_msg_post(msg);
-    sys_mbox_fetch(conn->mbox, NULL);
     if (conn->err == ERR_MEM &&
         conn->sem != SYS_SEM_NULL) {
         sys_sem_wait(conn->sem);

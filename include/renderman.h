@@ -16,11 +16,8 @@
  *   horizontally. Use rmWideScale to scale any x/width value.
  */
 
-/// DTV 576 Progressive Scan (720x576)
+/// DTV 576 Progressive Scan (720x576). Not available in ROM v1.70 and earlier.
 #define GS_MODE_DTV_576P 0x53
-
-/// DTV 1080 Progressive Scan (1920x1080)
-#define GS_MODE_DTV_1080P 0x54
 
 #define DIM_UNDEF -1
 
@@ -66,17 +63,6 @@ const u64 gColDarker;
 const u64 gColFocus;
 const u64 gDefaultCol;
 const u64 gDefaultAlpha;
-
-enum rm_vmode {
-    RM_VMODE_AUTO = 0,
-    RM_VMODE_PAL,
-    RM_VMODE_NTSC,
-    RM_VMODE_DTV480P,
-    RM_VMODE_DTV576P,
-    RM_VMODE_DTV720P,
-    RM_VMODE_DTV1080I,
-    RM_VMODE_VGA_640_60
-};
 
 enum rm_aratio {
     RM_ARATIO_4_3 = 0,
@@ -140,6 +126,9 @@ int rmWideScale(int x);
 /** Get Pixel Aspect Ratio of native resolution */
 float rmGetPAR();
 
+/** Get interfaced frame mode */
+int rmGetInterlacedFrameMode();
+
 /** Scale x from 640 to native resolution */
 int rmScaleX(int x);
 
@@ -151,9 +140,6 @@ int rmUnScaleX(int x);
 
 /** Scale y from native to 480 resolution */
 int rmUnScaleY(int y);
-
-/** sets the transposition coordiantes (all content is transposed with these values) */
-void rmSetTransposition(float x, float y);
 
 //Returns H-sync frequency in KHz
 unsigned char rmGetHsync(void);

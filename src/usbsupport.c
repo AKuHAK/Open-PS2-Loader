@@ -9,35 +9,20 @@
 #include "include/textures.h"
 #include "include/ioman.h"
 #include "include/system.h"
-#ifdef CHEAT
+#include "include/extern_irx.h"
 #include "include/cheatman.h"
-#endif
 #include "modules/iopcore/common/cdvd_config.h"
 
-extern void *usb_cdvdman_irx;
-extern int size_usb_cdvdman_irx;
-
-extern void *usbd_irx;
-extern int size_usbd_irx;
-
-extern void *usbhdfsd_irx;
-extern int size_usbhdfsd_irx;
-
-extern void *usbhdfsdfsv_irx;
-extern int size_usbhdfsdfsv_irx;
-
-#ifdef VMC
-extern void *usb_mcemu_irx;
-extern int size_usb_mcemu_irx;
-#endif
+#define NEWLIB_PORT_AWARE
+#include <fileXio_rpc.h> // fileXioIoctl, fileXioDevctl
 
 void *pusbd_irx = NULL;
 int size_pusbd_irx = 0;
 
 static char usbPrefix[40]; //Contains the full path to the folder where all the games are.
 static int usbULSizePrev = -2;
-static unsigned char usbModifiedCDPrev[8];
-static unsigned char usbModifiedDVDPrev[8];
+static time_t usbModifiedCDPrev;
+static time_t usbModifiedDVDPrev;
 static int usbGameCount = 0;
 static base_game_info_t *usbGames;
 
@@ -45,24 +30,27 @@ static base_game_info_t *usbGames;
 static item_list_t usbGameList;
 
 //Identifies the partition that the specified file is stored on and generates a full path to it.
-int usbFindPartition(char *target, char *name)
+int usbFindPartition(char *target, const char *name, int write)
 {
     int i, fd;
     char path[256];
 
-    for (i = 0; i < 5; i++) {
+    for (i = 0; i < MAX_USB_DEVICES; i++) {
         if (gUSBPrefix[0] != '\0')
             sprintf(path, "mass%d:%s/%s", i, gUSBPrefix, name);
         else
             sprintf(path, "mass%d:%s", i, name);
-        fd = fileXioOpen(path, O_RDONLY, 0666);
+        if (write)
+            fd = open(path, O_WRONLY|O_TRUNC|O_CREAT, 0666);
+        else
+            fd = open(path, O_RDONLY);
 
         if (fd >= 0) {
             if (gUSBPrefix[0] != '\0')
                 sprintf(target, "mass%d:%s/", i, gUSBPrefix);
             else
                 sprintf(target, "mass%d:", i);
-            fileXioClose(fd);
+            close(fd);
             return 1;
         }
     }
@@ -112,8 +100,8 @@ void usbInit(void)
 {
     LOG("USBSUPPORT Init\n");
     usbULSizePrev = -2;
-    memset(usbModifiedCDPrev, 0, 8);
-    memset(usbModifiedDVDPrev, 0, 8);
+    usbModifiedCDPrev = 0;
+    usbModifiedDVDPrev = 0;
     usbGameCount = 0;
     usbGames = NULL;
     configGetInt(configGetByType(CONFIG_OPL), "usb_frames_delay", &usbGameList.delay);
@@ -132,28 +120,29 @@ static int usbNeedsUpdate(void)
     char path[256];
     static unsigned int OldGeneration = 0;
     static unsigned char ThemesLoaded = 0;
+    static unsigned char LanguagesLoaded = 0;
     int result = 0;
-    iox_stat_t stat;
+    struct stat st;
 
     if (usbULSizePrev != -2 && OldGeneration == UsbGeneration)
         return 0;
     OldGeneration = UsbGeneration;
 
-    usbFindPartition(usbPrefix, "ul.cfg");
+    usbFindPartition(usbPrefix, "ul.cfg", 0);
 
     sprintf(path, "%sCD", usbPrefix);
-    if (fileXioGetStat(path, &stat) != 0)
-        memset(stat.mtime, 0, 8);
-    if (memcmp(usbModifiedCDPrev, stat.mtime, 8)) {
-        memcpy(usbModifiedCDPrev, stat.mtime, 8);
+    if (stat(path, &st) != 0)
+        st.st_mtime = 0;
+    if (usbModifiedCDPrev != st.st_mtime) {
+        usbModifiedCDPrev = st.st_mtime;
         result = 1;
     }
 
     sprintf(path, "%sDVD", usbPrefix);
-    if (fileXioGetStat(path, &stat) != 0)
-        memset(stat.mtime, 0, 8);
-    if (memcmp(usbModifiedDVDPrev, stat.mtime, 8)) {
-        memcpy(usbModifiedDVDPrev, stat.mtime, 8);
+    if (stat(path, &st) != 0)
+        st.st_mtime = 0;
+    if (usbModifiedDVDPrev != st.st_mtime) {
+        usbModifiedDVDPrev = st.st_mtime;
         result = 1;
     }
 
@@ -165,6 +154,13 @@ static int usbNeedsUpdate(void)
         sprintf(path, "%sTHM", usbPrefix);
         if (thmAddElements(path, "/", usbGameList.mode) > 0)
             ThemesLoaded = 1;
+    }
+
+    // update Languages
+    if (!LanguagesLoaded) {
+        sprintf(path, "%sLNG", usbPrefix);
+        if (lngAddLanguages(path, "/", usbGameList.mode) > 0)
+            LanguagesLoaded = 1;
     }
 
     sbCreateFolders(usbPrefix, 1);
@@ -203,7 +199,6 @@ static char *usbGetGameStartup(int id)
     return usbGames[id].startup;
 }
 
-#ifndef __CHILDPROOF
 static void usbDeleteGame(int id)
 {
     sbDelete(&usbGames, usbPrefix, "/", usbGameCount, id);
@@ -212,67 +207,16 @@ static void usbDeleteGame(int id)
 
 static void usbRenameGame(int id, char *newName)
 {
-    char oldpath[256], newpath[256];
-    base_game_info_t *game = &usbGames[id];
-    int fd;
-
-    if (game->format != GAME_FORMAT_USBLD) {
-        if (game->format == GAME_FORMAT_OLD_ISO) {
-            if (game->media == 0x12) {
-                snprintf(oldpath, sizeof(oldpath), "%sCD/%s.%s%s", usbPrefix, game->startup, game->name, game->extension);
-                snprintf(newpath, sizeof(newpath), "%sCD/%s.%s%s", usbPrefix, game->startup, newName, game->extension);
-            } else {
-                snprintf(oldpath, sizeof(oldpath), "%sDVD/%s.%s%s", usbPrefix, game->startup, game->name, game->extension);
-                snprintf(newpath, sizeof(newpath), "%sDVD/%s.%s%s", usbPrefix, game->startup, newName, game->extension);
-            }
-        } else {
-            if (game->media == 0x12) {
-                snprintf(oldpath, sizeof(oldpath), "%sCD/%s%s", usbPrefix, game->name, game->extension);
-                snprintf(newpath, sizeof(newpath), "%sCD/%s%s", usbPrefix, newName, game->extension);
-            } else {
-                snprintf(oldpath, sizeof(oldpath), "%sDVD/%s%s", usbPrefix, game->name, game->extension);
-                snprintf(newpath, sizeof(newpath), "%sDVD/%s%s", usbPrefix, newName, game->extension);
-            }
-        }
-
-        if ((fd = fileXioOpen(oldpath, O_RDONLY)) >= 0) {
-            fileXioIoctl(fd, USBMASS_IOCTL_RENAME, newpath);
-            fileXioClose(fd);
-        }
-    } else {
-        const char *pathStr = "%sul.%08X.%s.%02x";
-        unsigned int oldcrc = USBA_crc32(game->name);
-        unsigned int newcrc = USBA_crc32(newName);
-        int i;
-
-        for (i = 0; i < game->parts; i++) {
-            snprintf(oldpath, sizeof(oldpath), pathStr, usbPrefix, oldcrc, game->startup, i);
-            snprintf(newpath, sizeof(newpath), pathStr, usbPrefix, newcrc, game->startup, i);
-            if ((fd = fileXioOpen(oldpath, O_RDONLY)) >= 0) {
-                fileXioIoctl(fd, USBMASS_IOCTL_RENAME, newpath);
-                fileXioClose(fd);
-            }
-        }
-
-        memset(game->name, 0, UL_GAME_NAME_MAX + 1);
-        memcpy(game->name, newName, UL_GAME_NAME_MAX);
-        sbRebuildULCfg(&usbGames, usbPrefix, usbGameCount, -1);
-    }
-
+    sbRename(&usbGames, usbPrefix, "/", usbGameCount, id, newName);
     usbULSizePrev = -2;
 }
-#endif
 
 static void usbLaunchGame(int id, config_set_t *configSet)
 {
     int i, fd, index, compatmask = 0;
     int EnablePS2Logo = 0;
-#ifdef CHEAT
     int result;
-#endif
-#ifdef VMC
     unsigned int start;
-#endif
     unsigned int startCluster;
     char partname[256], filename[32];
     base_game_info_t *game = &usbGames[id];
@@ -280,7 +224,6 @@ static void usbLaunchGame(int id, config_set_t *configSet)
     u32 layer1_start, layer1_offset;
     unsigned short int layer1_part;
 
-#ifdef VMC
     char vmc_name[32], vmc_path[256], have_error = 0;
     int vmc_id, size_mcemu_irx = 0;
     usb_vmc_infos_t usb_vmc_infos;
@@ -300,7 +243,7 @@ static void usbLaunchGame(int id, config_set_t *configSet)
 
                 sprintf(vmc_path, "%sVMC/%s.bin", usbPrefix, vmc_name);
 
-                fd = fileXioOpen(vmc_path, O_RDONLY);
+                fd = open(vmc_path, O_RDONLY);
                 if (fd >= 0) {
                     if ((start = (unsigned int)fileXioIoctl(fd, USBMASS_IOCTL_GET_LBA, vmc_path)) != 0 && (startCluster = (unsigned int)fileXioIoctl(fd, USBMASS_IOCTL_GET_CLUSTER, vmc_path)) != 0) {
 
@@ -313,17 +256,21 @@ static void usbLaunchGame(int id, config_set_t *configSet)
                             LOG("USBSUPPORT VMC slot %d start: 0x%X\n", vmc_id, start);
                         } else {
                             LOG("USBSUPPORT Cluster Chain NG\n");
+                            have_error = 2;
                         }
                     }
 
-                    fileXioClose(fd);
+                    close(fd);
                 }
             }
         }
 
         if (have_error) {
             char error[256];
-            snprintf(error, sizeof(error), _l(_STR_ERR_VMC_CONTINUE), vmc_name, (vmc_id + 1));
+            if (have_error == 2) //VMC file is fragmented
+                snprintf(error, sizeof(error), _l(_STR_ERR_VMC_FRAGMENTED_CONTINUE), vmc_name, (vmc_id + 1));
+            else
+                snprintf(error, sizeof(error), _l(_STR_ERR_VMC_CONTINUE), vmc_name, (vmc_id + 1));
             if (!guiMsgBox(error, 1, NULL)) {
                 return;
             }
@@ -338,7 +285,6 @@ static void usbLaunchGame(int id, config_set_t *configSet)
             }
         }
     }
-#endif
 
     void **irx = &usb_cdvdman_irx;
     int irx_size = size_usb_cdvdman_irx;
@@ -347,22 +293,22 @@ static void usbLaunchGame(int id, config_set_t *configSet)
     for (i = 0; i < game->parts; i++) {
         switch (game->format) {
             case GAME_FORMAT_ISO:
-                sprintf(partname, "%s%s/%s%s", usbPrefix, (game->media == 0x12) ? "CD" : "DVD", game->name, game->extension);
+                sprintf(partname, "%s%s/%s%s", usbPrefix, (game->media == SCECdPS2CD) ? "CD" : "DVD", game->name, game->extension);
                 break;
             case GAME_FORMAT_OLD_ISO:
-                sprintf(partname, "%s%s/%s.%s%s", usbPrefix, (game->media == 0x12) ? "CD" : "DVD", game->startup, game->name, game->extension);
+                sprintf(partname, "%s%s/%s.%s%s", usbPrefix, (game->media == SCECdPS2CD) ? "CD" : "DVD", game->startup, game->name, game->extension);
                 break;
             default: //USBExtreme format.
                 sprintf(partname, "%sul.%08X.%s.%02x", usbPrefix, USBA_crc32(game->name), game->startup, i);
         }
 
-        fd = fileXioOpen(partname, O_RDONLY);
+        fd = open(partname, O_RDONLY);
         if (fd >= 0) {
             settings->LBAs[i] = fileXioIoctl(fd, USBMASS_IOCTL_GET_LBA, partname);
             if (gCheckUSBFragmentation) {
                 if ((startCluster = (unsigned int)fileXioIoctl(fd, USBMASS_IOCTL_GET_CLUSTER, partname)) == 0 || fileXioDevctl("xmass0:", XUSBHDFSD_CHECK_CLUSTER_CHAIN, &startCluster, 4, NULL, 0) == 0) {
 
-                    fileXioClose(fd);
+                    close(fd);
                     //Game is fragmented. Do not continue.
                     if (settings != NULL)
                         sbUnprepare(&settings->common);
@@ -375,7 +321,7 @@ static void usbLaunchGame(int id, config_set_t *configSet)
             if ((gPS2Logo) && (i == 0))
                 EnablePS2Logo = CheckPS2Logo(fd, 0);
 
-            fileXioClose(fd);
+            close(fd);
         } else {
             //Unable to open part of the game. Do not continue.
             if (settings != NULL)
@@ -388,10 +334,10 @@ static void usbLaunchGame(int id, config_set_t *configSet)
     //Initialize layer 1 information.
     switch (game->format) {
         case GAME_FORMAT_ISO:
-            sprintf(partname, "%s%s/%s%s", usbPrefix, (game->media == 0x12) ? "CD" : "DVD", game->name, game->extension);
+            sprintf(partname, "%s%s/%s%s", usbPrefix, (game->media == SCECdPS2CD) ? "CD" : "DVD", game->name, game->extension);
             break;
         case GAME_FORMAT_OLD_ISO:
-            sprintf(partname, "%s%s/%s.%s%s", usbPrefix, (game->media == 0x12) ? "CD" : "DVD", game->startup, game->name, game->extension);
+            sprintf(partname, "%s%s/%s.%s%s", usbPrefix, (game->media == SCECdPS2CD) ? "CD" : "DVD", game->startup, game->name, game->extension);
             break;
         default: //USBExtreme format.
             sprintf(partname, "%sul.%08X.%s.00", usbPrefix, USBA_crc32(game->name), game->startup);
@@ -419,7 +365,6 @@ static void usbLaunchGame(int id, config_set_t *configSet)
     }
     settings->common.layer1_start = layer1_start;
 
-#ifdef CHEAT
     if ((result = sbLoadCheats(usbPrefix, game->startup)) < 0) {
         switch (result) {
             case -ENOENT:
@@ -429,7 +374,6 @@ static void usbLaunchGame(int id, config_set_t *configSet)
                 guiWarning(_l(_STR_ERR_CHEATS_LOAD_FAILED), 10);
         }
     }
-#endif
 
     if (gRememberLastPlayed) {
         configSetStr(configGetByType(CONFIG_LAST), "last_played", game->startup);
@@ -438,15 +382,9 @@ static void usbLaunchGame(int id, config_set_t *configSet)
 
     if (configGetStrCopy(configSet, CONFIG_ITEM_ALTSTARTUP, filename, sizeof(filename)) == 0)
         strcpy(filename, game->startup);
-    deinit(NO_EXCEPTION); // CAREFUL: deinit will call usbCleanUp, so usbGames/game will be freed
+    deinit(NO_EXCEPTION, USB_MODE); // CAREFUL: deinit will call usbCleanUp, so usbGames/game will be freed
 
-#ifdef VMC
-#define USB_MCEMU size_mcemu_irx, &usb_mcemu_irx,
-#else
-#define USB_MCEMU
-#endif
-
-    sysLaunchLoaderElf(filename, "USB_MODE", irx_size, irx, USB_MCEMU EnablePS2Logo, compatmask);
+    sysLaunchLoaderElf(filename, "USB_MODE", irx_size, irx, size_mcemu_irx, &usb_mcemu_irx, EnablePS2Logo, compatmask);
 }
 
 static config_set_t *usbGetConfig(int id)
@@ -458,38 +396,50 @@ static int usbGetImage(char *folder, int isRelative, char *value, char *suffix, 
 {
     char path[256];
     if (isRelative)
-        sprintf(path, "%s%s/%s_%s", usbPrefix, folder, value, suffix);
+        snprintf(path, sizeof(path), "%s%s/%s_%s", usbPrefix, folder, value, suffix);
     else
-        sprintf(path, "%s%s_%s", folder, value, suffix);
+        snprintf(path, sizeof(path), "%s%s_%s", folder, value, suffix);
     return texDiscoverLoad(resultTex, path, -1, psm);
 }
 
+//This may be called, even if usbInit() was not.
 static void usbCleanUp(int exception)
 {
     if (usbGameList.enabled) {
         LOG("USBSUPPORT CleanUp\n");
 
         free(usbGames);
+
+//      if ((exception & UNMOUNT_EXCEPTION) == 0)
+//          ...
     }
 }
 
-#ifdef VMC
+//This may be called, even if usbInit() was not.
+static void usbShutdown(void)
+{
+    if (usbGameList.enabled) {
+        LOG("USBSUPPORT Shutdown\n");
+
+        free(usbGames);
+    }
+
+    // As required by some (typically 2.5") HDDs, issue the SCSI STOP UNIT command to avoid causing an emergency park.
+    fileXioDevctl("mass:", USBMASS_DEVCTL_STOP_ALL, NULL, 0, NULL, 0);
+}
+
 static int usbCheckVMC(char *name, int createSize)
 {
     return sysCheckVMC(usbPrefix, "/", name, createSize, NULL);
 }
-#endif
+
+static void usbGetAppsPath(char *path, int max)
+{
+    snprintf(path, max, "%s/APPS", usbPrefix);
+}
 
 static item_list_t usbGameList = {
-    USB_MODE, 0, 0, MENU_MIN_INACTIVE_FRAMES, USB_MODE_UPDATE_DELAY, "USB Games", _STR_USB_GAMES, &usbInit, &usbNeedsUpdate,
-#ifdef __CHILDPROOF
-    &usbUpdateGameList, &usbGetGameCount, &usbGetGame, &usbGetGameName, &usbGetGameNameLength, &usbGetGameStartup, NULL, NULL,
-#else
+    USB_MODE, 2, 0, 0, MENU_MIN_INACTIVE_FRAMES, USB_MODE_UPDATE_DELAY, "USB Games", _STR_USB_GAMES, &usbGetAppsPath, &usbInit, &usbNeedsUpdate,
     &usbUpdateGameList, &usbGetGameCount, &usbGetGame, &usbGetGameName, &usbGetGameNameLength, &usbGetGameStartup, &usbDeleteGame, &usbRenameGame,
-#endif
-#ifdef VMC
-    &usbLaunchGame, &usbGetConfig, &usbGetImage, &usbCleanUp, &usbCheckVMC, USB_ICON
-#else
-    &usbLaunchGame, &usbGetConfig, &usbGetImage, &usbCleanUp, USB_ICON
-#endif
+    &usbLaunchGame, &usbGetConfig, &usbGetImage, &usbCleanUp, &usbShutdown, &usbCheckVMC, USB_ICON
 };

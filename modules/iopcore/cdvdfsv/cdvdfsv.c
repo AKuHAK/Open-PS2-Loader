@@ -121,12 +121,14 @@ static void cdvdfsv_startrpcthreads(void);
 static void cdvdfsv_rpc0_th(void *args);
 static void cdvdfsv_rpc1_th(void *args);
 static void cdvdfsv_rpc2_th(void *args);
+static void cdvdfsv_rpc_sd_th(void *args);
 static void *cbrpc_cdinit(int fno, void *buf, int size);
 static void *cbrpc_cdvdScmds(int fno, void *buf, int size);
 static void *cbrpc_cddiskready(int fno, void *buf, int size);
 static void *cbrpc_cddiskready2(int fno, void *buf, int size);
 static void *cbrpc_cdvdNcmds(int fno, void *buf, int size);
 static void *cbrpc_S596(int fno, void *buf, int size);
+static void *cbrpc_shutdown(int fno, void *buf, int size);
 static void *cbrpc_cdsearchfile(int fno, void *buf, int size);
 static inline void rpcSCmd_cdreadclock(void *buf);
 static inline void rpcSCmd_cdtrayreq(void *buf);
@@ -204,9 +206,11 @@ static u8 *cdvdfsv_buf;
 static SifRpcDataQueue_t rpc0_DQ;
 static SifRpcDataQueue_t rpc1_DQ;
 static SifRpcDataQueue_t rpc2_DQ;
+static SifRpcDataQueue_t rpc_sd_DQ;
 static SifRpcServerData_t cdinit_rpcSD, cddiskready_rpcSD, cddiskready2_rpcSD, cdvdScmds_rpcSD;
 static SifRpcServerData_t cdsearchfile_rpcSD, cdvdNcmds_rpcSD;
 static SifRpcServerData_t S596_rpcSD;
+static SifRpcServerData_t sd_rpcSD;
 
 static u8 cdinit_rpcbuf[16];
 static u8 cddiskready_rpcbuf[16];
@@ -215,10 +219,9 @@ static u8 cdvdScmds_rpcbuf[1024];
 static u8 cdsearchfile_rpcbuf[304];
 static u8 cdvdNcmds_rpcbuf[1024];
 static u8 S596_rpcbuf[16];
+static u8 shutdown_rpcbuf[16];
 
-#define CDVDFSV_BUF_SECTORS (CDVDMAN_FS_SECTORS + 1) //CDVDFSV will use CDVDFSV_BUF_SECTORS+1 sectors of space. Remember that the actual size of the buffer within CDVDMAN is CDVDMAN_FS_SECTORS+2.
-
-static int rpc0_thread_id, rpc1_thread_id, rpc2_thread_id;
+static int rpc0_thread_id, rpc1_thread_id, rpc2_thread_id, rpc_sd_thread_id;
 
 struct irx_export_table _exp_cdvdfsv;
 
@@ -259,7 +262,7 @@ static void cdvdfsv_startrpcthreads(void)
     thread_param.attr = TH_C;
     thread_param.option = 0xABCD8001;
     thread_param.thread = (void *)cdvdfsv_rpc1_th;
-    thread_param.stacksize = 0x1900;
+    thread_param.stacksize = 0x600; //Original: 0x1900. Its operations probably won't need so much space, since its functions will never trigger a callback.
     thread_param.priority = 0x51;
 
     rpc1_thread_id = CreateThread(&thread_param);
@@ -277,11 +280,20 @@ static void cdvdfsv_startrpcthreads(void)
     thread_param.attr = TH_C;
     thread_param.option = 0xABCD8000;
     thread_param.thread = (void *)cdvdfsv_rpc0_th;
-    thread_param.stacksize = 0x800;
+    thread_param.stacksize = 0x400; //Original: 0x800. Its operations probably won't need so much space, since its functions will never trigger a callback.
     thread_param.priority = 0x51;
 
     rpc0_thread_id = CreateThread(&thread_param);
     StartThread(rpc0_thread_id, NULL);
+
+    thread_param.attr = TH_C;
+    thread_param.option = 0xABCD8003;
+    thread_param.thread = (void *)cdvdfsv_rpc_sd_th;
+    thread_param.stacksize = 0x440;
+    thread_param.priority = 0x1;
+
+    rpc_sd_thread_id = CreateThread(&thread_param);
+    StartThread(rpc_sd_thread_id, NULL);
 }
 
 //-------------------------------------------------------------------------
@@ -323,6 +335,15 @@ static void cdvdfsv_rpc2_th(void *args)
     sceSifRegisterRpc(&cdsearchfile_rpcSD, 0x80000597, &cbrpc_cdsearchfile, cdsearchfile_rpcbuf, NULL, NULL, &rpc2_DQ);
 
     sceSifRpcLoop(&rpc2_DQ);
+}
+
+//-------------------------------------------------------------------------
+//Unofficial RPC for shutting down OPL.
+static void cdvdfsv_rpc_sd_th(void *args)
+{
+    sceSifSetRpcQueue(&rpc_sd_DQ, GetThreadId());
+    sceSifRegisterRpc(&sd_rpcSD, 0x80000598, &cbrpc_shutdown, shutdown_rpcbuf, NULL, NULL, &rpc_sd_DQ);
+    sceSifRpcLoop(&rpc_sd_DQ);
 }
 
 //-------------------------------------------------------------------------
@@ -567,6 +588,22 @@ static void *cbrpc_S596(int fno, void *buf, int size)
     return buf;
 }
 
+//--------------------------------------------------------------
+static void *cbrpc_shutdown(int fno, void *buf, int size)
+{
+    int value;
+
+    if (fno == 1) {
+        //Terminate operations.
+        //Shutdown OPL
+        value = *(int*)buf;
+        sceCdSC(CDSC_OPL_SHUTDOWN, &value);
+    }
+
+    *(int *)buf = 1;
+    return buf;
+}
+
 //-------------------------------------------------------------------------
 static void *cbrpc_cdsearchfile(int fno, void *buf, int size)
 { // CD Search File RPC callback
@@ -715,7 +752,7 @@ static inline void cdvd_readchain(void *buf)
             readpos += tsectors * 2048;
         } else { // EE addr
             while (tsectors > 0) {
-                nsectors = (tsectors > CDVDFSV_BUF_SECTORS) ? CDVDFSV_BUF_SECTORS : tsectors;
+                nsectors = (tsectors > CDVDMAN_FS_SECTORS) ? CDVDMAN_FS_SECTORS : tsectors;
 
                 if (sceCdRead(lsn, nsectors, cdvdfsv_buf, NULL) == 0) {
                     if (sceCdGetError() == CDVD_ERR_NO) {
@@ -815,16 +852,17 @@ static inline void cdvd_readee(void *buf)
             }
 
             if (flag_64b == 0) { // not 64 bytes aligned buf
-                if (sectors_to_read < CDVDFSV_BUF_SECTORS)
+                //The data of the last sector of the chunk will be used to correct buffer alignment.
+                if (sectors_to_read < CDVDMAN_FS_SECTORS - 1)
                     nsectors = sectors_to_read;
                 else
-                    nsectors = CDVDFSV_BUF_SECTORS - 1;
+                    nsectors = CDVDMAN_FS_SECTORS - 1;
                 temp = nsectors + 1;
             } else { // 64 bytes aligned buf
-                if (sectors_to_read < (CDVDFSV_BUF_SECTORS + 1))
+                if (sectors_to_read < CDVDMAN_FS_SECTORS)
                     nsectors = sectors_to_read;
                 else
-                    nsectors = CDVDFSV_BUF_SECTORS;
+                    nsectors = CDVDMAN_FS_SECTORS;
                 temp = nsectors;
             }
 
@@ -843,10 +881,10 @@ static inline void cdvd_readee(void *buf)
             size_64bb = size_64b;
 
             if (!flag_64b) {
-                if (sectors_to_read == r->sectors) // check that was the first read
+                if (sectors_to_read == r->sectors) // check that was the first read. Data read will be skewed by readee.b1len bytes into the adjacent sector.
                     mips_memcpy((void *)readee.buf1, (void *)fsvRbuf, readee.b1len);
 
-                if ((!flag_64b) && (sectors_to_read == nsectors) && (readee.b1len))
+                if ((sectors_to_read == nsectors) && (readee.b1len)) // For the last sector read.
                     size_64bb = size_64b - 64;
             }
 
@@ -864,6 +902,7 @@ static inline void cdvd_readee(void *buf)
 
         } while ((flag_64b) || (sectors_to_read));
 
+        //At the very last pass, copy readee.b2len bytes from the last sector, to complete the alignment correction.
         mips_memcpy((void *)readee.buf2, (void *)(fsvRbuf + size_64b - readee.b2len), readee.b2len);
     }
 

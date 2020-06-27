@@ -11,23 +11,20 @@
 #include "modmgr.h"
 #include "util.h"
 #include "syshook.h"
-#ifdef GSM
 #include "gsm_api.h"
-#endif
-#ifdef CHEAT
 #include "cheat_api.h"
-#endif
 
 void *ModStorageStart, *ModStorageEnd;
+void *eeloadCopy, *initUserMemory;
 
-int main(int argc, char **argv)
+int isInit = 0;
+
+static int eecoreInit(int argc, char **argv)
 {
-    char ElfPath[32];
+    SifInitRpc(0);
 
     DINIT();
     DPRINTF("OPL EE core start!\n");
-
-    SifInitRpc(0);
 
     int i = 0;
 
@@ -45,13 +42,7 @@ int main(int argc, char **argv)
         DPRINTF("Debug Colors disabled\n");
     }
 
-    PS2Logo = 0;
-    if (!_strncmp(&argv[i][11], "1", 1)) {
-        PS2Logo = 1;
-        DPRINTF("PS2 Logo enabled\n");
-    }
-
-    char *p = _strtok(&argv[i][13], " ");
+    char *p = _strtok(&argv[i][11], " ");
     if (!_strncmp(p, "Browser", 7))
         ExitPath[0] = '\0';
     else
@@ -71,15 +62,11 @@ int main(int argc, char **argv)
     g_ps2_ETHOpMode = _strtoui(_strtok(NULL, " "));
     DPRINTF("IP=%s NM=%s GW=%s mode: %d\n", g_ps2_ip, g_ps2_netmask, g_ps2_gateway, g_ps2_ETHOpMode);
 
-#ifdef CHEAT
     EnableCheatOp = (gCheatList = (void *)_strtoui(_strtok(NULL, " "))) != NULL;
     DPRINTF("PS2RD Cheat Engine = %s\n", EnableCheatOp == 0 ? "Disabled" : "Enabled");
-#endif
 
-#ifdef GSM
     EnableGSMOp = _strtoi(_strtok(NULL, " "));
     DPRINTF("GSM = %s\n", EnableGSMOp == 0 ? "Disabled" : "Enabled");
-#endif
 
 #ifdef PADEMU
     EnablePadEmuOp = _strtoi(_strtok(NULL, " "));
@@ -90,19 +77,16 @@ int main(int argc, char **argv)
 
     i++;
 
+    eeloadCopy = (void *)_strtoui(_strtok(argv[i], " "));
+    initUserMemory = (void *)_strtoui(_strtok(NULL, " "));
+    i++;
+
     ModStorageStart = (void *)_strtoui(_strtok(argv[i], " "));
     ModStorageEnd = (void *)_strtoui(_strtok(NULL, " "));
     i++;
 
-    argv[i][11] = 0x00; // fix for 8+3 filename.
-    _strcpy(ElfPath, "cdrom0:\\");
-    _strcat(ElfPath, argv[i]);
-    _strcat(ElfPath, ";1");
     strncpy(GameID, argv[i], sizeof(GameID) - 1);
     GameID[sizeof(GameID) - 1] = '\0';
-    DPRINTF("Elf path = '%s'\n", ElfPath);
-    DPRINTF("Game ID = '%s'\n", GameID);
-
     i++;
 
     // bitmask of the compat. settings
@@ -111,30 +95,32 @@ int main(int argc, char **argv)
 
     i++;
 
-#ifdef CHEAT
     if (EnableCheatOp) {
         EnableCheats();
     }
-#endif
 
-#ifdef GSM
     if (EnableGSMOp) {
-        u32 interlace, mode, ffmd, dx_offset, dy_offset;
+        s16 interlace, mode, ffmd;
+        u32 dx_offset, dy_offset;
         u64 display, syncv, smode2;
+        int k576P_fix, kGsDxDyOffsetSupported, FIELD_fix;
 
-        interlace = _strtoui(_strtok(argv[i], " "));
-        mode = _strtoui(_strtok(NULL, " "));
-        ffmd = _strtoui(_strtok(NULL, " "));
+        interlace = _strtoi(_strtok(argv[i], " "));
+        mode = _strtoi(_strtok(NULL, " "));
+        ffmd = _strtoi(_strtok(NULL, " "));
         display = _strtoul(_strtok(NULL, " "));
         syncv = _strtoul(_strtok(NULL, " "));
         smode2 = _strtoui(_strtok(NULL, " "));
         dx_offset = _strtoui(_strtok(NULL, " "));
         dy_offset = _strtoui(_strtok(NULL, " "));
+        k576P_fix = _strtoui(_strtok(NULL, " "));
+        kGsDxDyOffsetSupported = _strtoui(_strtok(NULL, " "));
+        FIELD_fix = _strtoui(_strtok(NULL, " "));
 
-        UpdateGSMParams(interlace, mode, ffmd, display, syncv, smode2, dx_offset, dy_offset);
+        UpdateGSMParams(interlace, mode, ffmd, display, syncv, smode2, dx_offset, dy_offset, k576P_fix, kGsDxDyOffsetSupported, FIELD_fix);
         EnableGSM();
     }
-#endif
+    i++;
 
     set_ipconfig();
 
@@ -147,23 +133,26 @@ int main(int argc, char **argv)
 
     SifExitRpc();
 
-    DPRINTF("Executing '%s'...\n", ElfPath);
+    return i;
+}
 
-    //PS2LOGO Caller, based on l_oliveira & SP193 tips
-    if (PS2Logo) {
-        char *argvs[1];
-        argvs[0] = ElfPath;
-        argvs[1] = NULL;
-        LoadExecPS2("rom0:PS2LOGO", 1, argvs);
+int main(int argc, char **argv)
+{
+    int argOffset;
+
+    if(isInit)
+    {   //Ignore argv[0], as it contains the name of this module ("EELOAD"), as passed by the LoadExecPS2 syscall itself (2nd invocation and later will be from LoadExecPS2).
+        argv++;
+        argc--;
+
+        sysLoadElf(argv[0], argc, argv);
     } else {
-        LoadExecPS2(ElfPath, 0, NULL);
+        argOffset = eecoreInit(argc, argv);
+        isInit = 1;
+
+        LoadExecPS2(argv[argOffset], argc - 1 - argOffset, &argv[1 + argOffset]);
     }
-
-    if (!DisableDebug)
-        GS_BGCOLOUR = 0x0000ff; //Red
-    DPRINTF("LoadExecPS2 failed!\n");
-
-    SleepThread();
 
     return 0;
 }
+

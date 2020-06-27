@@ -9,7 +9,7 @@
 #include "xhdd.h"
 
 #define MODNAME "xhdd"
-IRX_ID(MODNAME, 1, 1);
+IRX_ID(MODNAME, 1, 2);
 
 static int isHDPro;
 

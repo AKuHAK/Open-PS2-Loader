@@ -9,10 +9,10 @@
 #                                                                                                 #
 # Once the translation is complete, you can submit it to the development team.                    #
 #                                                                                                 #
-# To use your custom language with OPL, simply copy your file into your mc?:/OPL folder.          #
+# To use your custom language with OPL, simply copy your file into your mc?:/OPL or LNG folder.   #
 # (File must start with the "lang_" prefix and have the ".lng" extension)                         #
 #                                                                                                 #
-# Finally, don't put too many comments in your file, it will waste space and increases loading     #
+# Finally, don't put too many comments in your file, it will waste space and increases loading    #
 # time. One single comment line on top (e.g. "name <yourmail@address.com>") should be enough.     #
 #                                                                                                 #
 # Thanks for your work.                                                                           #
@@ -22,12 +22,12 @@
 # Put here the English name of your language (will be displayed in the OPL Settings menu), in standard latin characters.
 English template
 Open PS2 Loader %s
-Save changes
+Save Changes
 Back
-Network config
-Advanced options
+Network Settings
+Advanced Options
 <no values>
-Settings saved...
+Settings saved to %s
 Error writing settings!
 Exit
 Settings
@@ -39,69 +39,69 @@ Apps
 Theme
 Language
 The system will be powered off.
-Exit to Browser/OSDSYS?
+Exit to Browser?
 Cancel updating?
-%d: HardDisk Drive not detected
-%d: HardDisk Drive not formatted
-%d: Network startup error
-%d: No network adaptor detected
-%d: Cannot connect to SMB server
-%d: Cannot log into SMB server
-%d: Cannot open SMB share
-%d: Cannot list SMB shares
-%d: Cannot list games
-%d: DHCP server unavailable
-%d: No network connection
+%d: HardDisk Drive not detected.
+%d: HardDisk Drive not formatted.
+%d: Network startup error.
+%d: No network adaptor detected.
+%d: Cannot connect to SMB server.
+%d: Cannot log into SMB server.
+%d: Cannot open SMB share.
+%d: Cannot list SMB shares.
+%d: Cannot list games.
+%d: DHCP server unavailable.
+%d: No network connection.
 On
-Off 
+Off
 OK
 Select
 Cancel
 Circle
 Cross
 Games List
-Game settings
-Remove all settings
-Removed all keys for the game
+Game Settings
+Remove Settings
+Removed all keys for the game.
 Scrolling
 Slow
 Medium
 Fast
-Default menu
-Load from disc
-Please wait
-Error while loading the Game ID
-Automatic sorting
-Error loading the language file
+Default Menu
+Load From Disc
+Please wait.
+Error while loading the Game ID.
+Automatic Sorting
+Error loading the language file.
 Disable Debug Colors
 No controller detected, waiting...
 Enable Cover Art
-Wide screen
-Power off
-Loading config
-Saving config
-Start device
+Widescreen
+Power Off
+Loading config...
+Saving config...
+Start Device
 Refresh
-USB device start mode
-HDD device start mode
-ETH device start mode
-Applications menu display mode
+USB Device Start Mode
+HDD Device Start Mode
+ETH Device Start Mode
+Applications Start Mode
 Auto
 Manual
 Start HDL Server
-HDL Server Starting...
-HDL Server Running...
+HDL Server starting...
+HDL Server running...
 Failed to start HDL Server.
-HDL Server Unloading...
-IGR path
-Background color
-Text color
+HDL Server unloading...
+IGR Path
+Background Color
+Text Color
 - PS2 -
 - SMB Server -
-IP address type
+IP Address Type
 Static
 DHCP
-IP address
+IP Address
 Address
 Mask
 Gateway
@@ -111,7 +111,7 @@ Share
 User
 Password
 <not set>
-Address type
+Address Type
 IP
 NetBIOS
 Accept
@@ -119,57 +119,57 @@ Item will be permanently deleted, continue?
 Rename
 Delete
 Run
-Display settings
-Enable write operations
-Check USB game fragmentation
-Remember last played game
-Select button
-Error, the game is fragmented
-Error, could not run the item
-Test
+Display Settings
+Enable Write Operations
+Check USB Game Fragmentation
+Remember Last Played Game
+Select Button
+Error, the game is fragmented.
+Error, could not run the item.
+Test Changes
 Leave empty for GUEST auth.
 Accurate Reads
 Synchronous Mode
 Unhook Syscalls
-Skip videos
+Skip Videos
 Emulate DVD-DL
 Disable IGR
-High module storage
-Hide DEV9 module
-Changing the size will reformat the VMC
+Unused
+Unused
+Changing the size will reformat the VMC.
 Create
 Start
 Modify
 Abort
 Reset
-Use generic
+Use Generic
 Configure VMC
 Name
 Size
 Status
 Progress
-VMC file exist
-Invalid VMC file, size is incorrect
-VMC file need to be created
-Error with VMC %s, continue with physical MC (slot %d) ?
-Automatic refresh
+VMC file exists.
+Invalid VMC file, size is incorrect.
+VMC file needs to be created.
+Error accessing VMC %s. Continue with the Memory Card in slot %d?
+Automatic Refresh
 About
 Coders
 Quality Assurance
-USB prefix path
-Boots Custom ELF after an IGR
-Value in minute(s), 0 to disable spin down
-Automatic HDD spin down
-Video mode
-Dialog color
-Selected color
-Display info page
-Info 
+USB Prefix Path
+Boots custom ELF after an IGR.
+Value in minute(s), 0 to disable spin down.
+Automatic HDD Spin Down
+Video Mode
+Dialog Color
+Selected Color
+Reset Colors
+Info
 Custom ELF
-Color selection
+Color Selection
 Reconnect
-Leave empty to list shares
-ETH prefix path
+Leave empty to list shares.
+ETH Prefix Path
 Backspace
 Space
 Enter
@@ -180,44 +180,44 @@ Game ID
 DMA Mode
 V-Sync
 Mode 1
-Mode 2 
+Mode 2
 Mode 3
-Mode 4 
+Mode 4
 Mode 5
-Mode 6 
-Mode 7 
-Mode 8 
+Mode 6
+Mode 7
+Mode 8
 Configure GSM
-Ethernet link mode
-100Mbit full-duplex
-100Mbit half-duplex
-10Mbit full-duplex
-10Mbit half-duplex
+Ethernet Link Mode
+100Mbit Full-duplex
+100Mbit Half-duplex
+10Mbit Full-duplex
+10Mbit Half-duplex
 GSM Settings
 Enable GSM
-Toggles GSM ON or OFF
+Toggles GSM on/off.
 VMODE
-Forced Custom Display Mode
+Forced custom display mode.
 H-POS
-Horizontal Adjustment
+Horizontal adjustment.
 V-POS
-Vertical Adjustment
+Vertical adjustment.
 Overscan
-Overscan Adjustment
+Overscan adjustment.
 FMV Skip
-Skips Full Motion Videos
+Skips full motion videos.
 Cheat Settings
 Enable PS2RD Cheat Engine
-Let PS2RD Cheat Engine patch your games
+Lets PS2RD Cheat Engine patch your game.
 PS2RD Cheat Engine Mode
-Auto-select or Select game cheats
-Auto-select cheats
-Select game cheats
-Error: failed to load Cheat File
-No cheats found
-Download defaults
-Network update
-Re-download existing records?
+Auto select or select game cheats.
+Auto Select Cheats
+Select Game Cheats
+Error: failed to load cheat file.
+No cheats found.
+Download Defaults
+Network Update
+Overwrite Existing Records
 Update failed.
 Failed to connect to update server.
 Update completed.
@@ -226,27 +226,78 @@ Download settings from the network?
 Customized Settings
 Downloaded Defaults
 Auto start in %i s...
-Auto start
-Value in second(s), 0 to disable auto start
+Auto Start
+Value in second(s), 0 to disable auto start.
 PS2 Logo
-Only displayed for a valid disc logo which matches the console's region
+Displayed for a valid disc logo matching the console's region.
 Configure PADEMU
 Pad Emulator Settings
 Enable Pad Emulator
-Turns on/off PadEmulator for selected game.
-Pad Emulator mode
+Turns on/off Pad Emulator for selected game.
+Pad Emulator Mode
 Select Pad Emulator mode.
-DualShock3 USB
-DualShock3 BT
-Settings for port:
+DualShock3/4 USB
+DualShock3/4 BT
+Settings For Port:
 Select Pad Emulator port for settings.
-Enable emulation
+Enable Emulation
 Turns on/off Pad Emulator for selected port.
-Enable vibration
+Enable Vibration
 Turns on/off vibration for Pad Emulator selected port.
-Usb bluetooth adapter mac address:
-DS3 Controller paired to mac address:
+USB Bluetooth Adapter MAC Address:
+DS Controller Paired To MAC Address:
 Pair
-Pair DS3 controller
-Pair DS3 controller with bluetooth adapter mac address.
-Not connected
+Pair DS Controller
+Pair DS controller with Bluetooth adapter MAC address.
+Not Connected
+Bluetooth Adapter Information
+Shows more information and supported features.
+HCI Version:
+LMP Version:
+Manufacturer ID:
+Supported Features:
+Yes
+No
+Bluetooth adapter should be fully compatible with DS3/DS4 controllers.
+Bluetooth adapter may not work correctly with DS3/DS4 controllers.
+Enable Multitap Emulation
+Turns on/off Multitap emulation for selected game.
+Multitap Emulator On Port:
+Select port for Multitap emulation.
+Disable Fake DS3 Workaround
+Some fake DS3s need workaround, this option will disable it.
+Emulate FIELD Flipping
+Fix for games that glitch under progressive video modes.
+Parental Lock Settings
+Parental Lock Password
+Leave blank to disable the parental lock.
+Enter Parental Lock Password
+Parental lock password incorrect.
+Parental lock disabled.
+Build Options:
+Error - this password cannot be used.
+VMC %s file is fragmented. Continue with Memory Card in slot %d?
+Audio Settings
+Enable Sound Effects
+Enable Boot Sound
+Sound Effects Volume
+Boot Sound Volume
+Confirm video mode change?
+Cache Game List (HDD)
+Enable Notifications
+%s loaded from %s
+Game Menu
+Game settings saved.
+%s settings removed.
+Overwrites existing game compatibility settings when enabled.
+Settings Mode
+Global
+Per Game
+All
+Select settings to remove.
+Support Forums:
+Title
+Genre
+Release
+Developer
+Description

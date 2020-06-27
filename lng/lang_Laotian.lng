@@ -1,5 +1,5 @@
 # Laotian translation by blackbutterfly (Anousith Phompida <noum_terry@hotmail.com>)
-# For Open PS2 Loader 0.9.3+ betas - Official OPL Beta thread @http://psx-scene.com/forums/f150/open-ps2-loader-official-beta-revisions-releases-156209/
+# For Open PS2 Loader 0.9.3+ betas - Official OPL Beta thread @https://www.psx-place.com/threads/open-ps2-loader-official-beta-releases.21573/
 Laotian
 Open PS2 Loader %s
 ບັນທຶກການປ່ຽນແປງ
@@ -7,7 +7,7 @@ Open PS2 Loader %s
 ກຳນົດຄ່າທາງດ້ານ Network
 ທາງເລືອກສຳລັບການຕັ້ງຄ່າຂັ້ນສູງ
 <ບໍ່ມີຄ່າໃດໆ>
-ບັນທຶກການຕັ້ງຄ່າ…
+Settings saved to %s
 ການຂຽນການຕັ້ງຄ່າມີຂໍ້ຜິດພາດ!
 ອອກຈາກໂປຣແກຣມ
 ການຕັ້ງຄ່າ
@@ -19,7 +19,7 @@ Open PS2 Loader %s
 ຄຸນລັກສະນະຮູບຮ່າງ
 ພາສາ
 ລະບົບຈະຖືກປິດການໃຊ້ງານ
-ອອກໄປສູ່ໜ້າ Browser/OSDSYS
+ອອກໄປສູ່ໜ້າ Browser
 ຍົກເລີກການອັບເດດ?
 %d: ບໍ່ສາມາດຄົ້ນຫາ HardDisk ໄດ້
 %d: HardDisk ຍັງບໍ່ທັນໄດ້ Format
@@ -41,7 +41,7 @@ Open PS2 Loader %s
 ຄູນ
 ໄປທີ່ລາຍຊື່ເກມ
 ຕັ້ງຄ່າໃຫ້ເກມນີ້
-ຍົກເລີກການຕັ້ງຄ່າທັງໝົດ
+Remove Settings
 ລົບລ້າງ Key ທັງໝົດອອກຈາກເກມ
 ການເລື່ອນ
 ຊ້າໆ
@@ -106,7 +106,7 @@ NetBIOS
 ເລືອກປຸ່ມ
 ເກີດຂໍ້ຜິດພາດ, ເກມນີ້ມີ fragmentation. ກະລຸນາ Defragment ເກມນີ້ກ່ອນ
 ເກີດຂໍ້ຜິດພາດ, ບໍ່ສາມາດເປີດໃຊ້ງານໄດ້
-ທົດລອງ
+Test Changes
 ບໍ່ມີຄ່າກຳນົດໃດໆສຳລັບການເຂົ້າເຖິງຂອງ GUEST
 ອ່ານແບບຖືກຕ້ອງແມ່ນຍຳ
 ວິທີການອ່ານຂໍ້ມູນທີ່ມີທາງເລືອກ
@@ -114,8 +114,8 @@ Unhook Syscalls
 ຂ້າມການຫຼິ້ນວິດິໂອ
 ປະມວນຜົນ DVD-DL 
 Disable IGR
-High module storage
-ປິດບັງ dev9 module
+Unused
+Unused
 ການປ່ຽນຂະໜາດຈະເຮັດໃຫ້ VMC(ກ້ອນເຊບສະເໝືອນຈິງ) ຖືກ format ໃໝ່
 ສ້າງ
 Start
@@ -131,7 +131,7 @@ Start
 ມີ File ຂອງ VMC ຢູ່ແລ້ວ
 ຂະໜາດຂອງ File VMC ບໍ່ຖືກຕ້ອງ
 File VMC(ກ້ອນເຊບສະເໝືອນຈິງ) ຈະຕ້ອງຖືກສ້າງຂຶ້ນ
-ເກີດຂໍ້ຜິດພາດກັບ VMC(ກ້ອນເຊບສະເໝືອນຈິງ) %s, ດຳເນີນການຕໍ່ດ້ວຍກ້ອນເຊບແທ້ (ຊ່ອງ %d) ຫຼື ບໍ່?
+Error accessing VMC %s. Continue with the Memory Card in slot %d?
 ເອີ້ນຄືນໃໝ່ແບບອັດຕະໂນມັດ
 ກ່ຽວກັບໂປຣແກຣມ
 ກຸ່ມນັກພັດທະນາໂປຣແກຣມ
@@ -143,7 +143,7 @@ USB prefix path
 ໂໝດວິດິໂອ
 ສີ Dialog
 ສີທີ່ຖືກເລືອກ
-ສະແດງຂໍ້ມູນຂອງໜ້າ
+Reset Colors
 ຂໍ້ມູນ
 ELF ທີ່ຖືກປັບແຕ່ງເອງ
 ເລືອກສີ
@@ -182,6 +182,8 @@ H-POS
 ການປັບແຕ່ງຄ່າສະແດງຜົນຕາມແນວນອນ
 V-POS
 ການປັບແຕ່ງຄ່າສະແດງຜົນຕາມແນວຕັ້ງ
+Overscan
+Overscan Adjustment
 ຂ້າມຂັ້ນຕອນ FMV
 ຂ້າມຂັ້ນຕອນສະແດງພາບເຄື່ອນໄຫວ Full Video
 ຕັ້ງຄ່າການໂກງເກມ
@@ -195,7 +197,7 @@ V-POS
 ບໍ່ພົບ File ໂກງເກມໃດໆ
 ດາວໂຫຼດຄ່າມາດຕະຖານ
 ອັບເດດ Network
-ດາວໂຫຼດການບັນທຶກທີ່ມີຢູ່ອີກຄັ້ງ?
+Overwrite Existing Records
 ການອັບເດດເກີດຂໍ້ຜິດພາດ.
 ການເຊື່ອມຕໍ່ເພື່ອອັບເດດ Server ບໍ່ສົມບູນ.
 ການອັບເດດສົມບູນ.
@@ -210,12 +212,12 @@ PS2 Logo
 ຈະຖືກສະແດງຜົນ ກໍຕໍ່ເມື່ອໂລໂກ້ຂອງແຜ່ນຖືກຕ້ອງ ແລະ ສອດຄ່ອງຕາມໂຊນຂອງເຄື່ອງ
 Configure PADEMU
 Pad Emulator Settings
-Enable Pad Emulator
+Enable PadEmulator
 Turns on/off PadEmulator for selected game.
 Pad Emulator mode
 Select Pad Emulator mode.
-DualShock3 USB
-DualShock3 BT
+DualShock3/4 USB
+DualShock3/4 BT
 Settings for port:
 Select Pad Emulator port for settings.
 Enable emulation
@@ -223,8 +225,59 @@ Turns on/off Pad Emulator for selected port.
 Enable vibration
 Turns on/off vibration for Pad Emulator selected port.
 Usb bluetooth adapter mac address:
-DS3 Controller paired to mac address:
+DS Controller paired to mac address:
 Pair
-Pair DS3 controller
-Pair DS3 controller with bluetooth adapter mac address.
+Pair DS Controller
+Pair DS Controller with bluetooth adapter mac address.
 Not connected
+Bluetooth adapter information
+Shows more information and supported features
+HCI Version:
+LMP Version:
+Manufacturer ID:
+Support features:
+Yes
+No
+Bluetooth adapter should be fully compatible with DS3/DS4 controllers.
+Bluetooth adapter may not work correctly with DS3/DS4 controllers.
+Enable Multitap emulation
+Turns on/off Multitap emulation for selected game.
+Multitap emulator on port
+Select port for Multitap emulation.
+Disable workaround for fake ds3
+Some fake ds3s need workaround, this option will disable it.
+Emulate FIELD flipping
+Fix for games that glitch under progressive video modes.
+Parental Lock Settings
+Parental Lock Password
+Leave blank to disable the parental lock.
+Enter Parental Lock Password
+Parental lock password incorrect.
+Parental lock disabled.
+Build Options:
+Error - this password cannot be used.
+VMC %s file is fragmented. Continue with Memory Card in slot %d?
+Audio Settings
+Enable Sound Effects
+Enable Boot Sound
+Sound Effects Volume
+Boot Sound Volume
+Confirm video mode change?
+Cache Game List (HDD)
+Enable Notifications
+%s loaded from %s
+Game Menu
+Game settings saved.
+%s settings removed.
+Overwrites existing game compatibility settings when enabled.
+Settings Mode
+Global
+Per Game
+All
+Select settings to remove.
+Support Forums:
+Title
+Genre
+Release
+Developer
+Description

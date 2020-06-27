@@ -56,13 +56,9 @@ int guiFrameId;
 #define GUI_SCREEN_MAIN 0
 #define GUI_SCREEN_MENU 1
 #define GUI_SCREEN_INFO 2
+#define GUI_SCREEN_GAME_MENU 3
 
-#define TRANSITION_LEFT 0
-#define TRANSITION_RIGHT 1
-#define TRANSITION_UP 2
-#define TRANSITION_DOWN 3
-
-void guiSwitchScreen(int target, int transition);
+void guiSwitchScreen(int target);
 
 void guiReloadScreenExtents();
 
@@ -113,7 +109,6 @@ struct gui_update_t *guiOpCreate(gui_op_type_t type);
 /** For completeness, the deffered operations are destroyed automatically */
 void guiDestroyOp(struct gui_update_t *op);
 
-int guiShowCompatConfig(int id, item_list_t *support, config_set_t *configSet);
 int guiShowKeyboard(char *value, int maxLength);
 int guiMsgBox(const char *text, int addAccept, struct UIItem *ui);
 
@@ -122,12 +117,22 @@ void guiUpdateScreenScale(void);
 
 void guiDrawBGPlasma();
 int guiDrawIconAndText(int iconId, int textId, int font, int x, int y, u64 color);
+void guiDrawSubMenuHints(void);
+
+int guiAlignMenuHints(menu_hint_item_t *hint, int font, int width);
+int guiAlignSubMenuHints(int hintCount, int *textID, int *iconID, int font, int width, int align);
 
 void guiShowNetCompatUpdate(void);
+void guiShowNetCompatUpdateSingle(int id, item_list_t *support, config_set_t *configSet);
 void guiShowAbout();
 void guiShowConfig();
 void guiShowUIConfig();
+void guiShowAudioConfig();
 void guiShowNetConfig();
+void guiShowParentalLockConfig();
+
+void guiDelay(int milliSeconds);
+void guiCheckNotifications(int checkTheme, int checkLang);
 
 /** Renders the given string on screen for the given function until it's io finishes 
 * @note The ptr pointer is watched for it's value. The IO is considered finished when the value becomes zero. 
@@ -138,16 +143,16 @@ void guiShowNetConfig();
 */
 void guiHandleDeferedIO(int *ptr, const unsigned char *message, int type, void *data);
 
+void guiGameHandleDeferedIO(int *ptr, struct UIItem *ui, int type, void *data);
+
 /** Renders a single frame with a specified message on the screen
 */
 void guiRenderTextScreen(const unsigned char *message);
 
-int guiAltStartupNameHandler(char *text, int maxLen);
-
-#ifdef VMC
-int guiVmcNameHandler(char *text, int maxLen);
-#endif
-
 void guiWarning(const char *text, int count);
+
+int guiConfirmVideoMode(void);
+
+int guiGameShowRemoveSettings(config_set_t *configSet, config_set_t *configGame);
 
 #endif

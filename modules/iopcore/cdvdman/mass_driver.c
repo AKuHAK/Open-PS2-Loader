@@ -38,7 +38,6 @@ extern struct cdvdman_settings_usb cdvdman_settings;
 
 #define TAG_TEST_UNIT_READY 0
 #define TAG_REQUEST_SENSE 3
-#define TAG_INQUIRY 18
 #define TAG_READ_CAPACITY 37
 #define TAG_READ 40
 #define TAG_START_STOP_UNIT 33
@@ -48,7 +47,6 @@ extern struct cdvdman_settings_usb cdvdman_settings;
 #define USB_BLK_EP_OUT 1
 
 #define USB_XFER_MAX_RETRIES 16
-#define USB_IO_MAX_RETRIES 32
 
 #define DEVICE_DETECTED 0x01
 #define DEVICE_CONFIGURED 0x02
@@ -76,19 +74,6 @@ typedef struct _csw_packet
     unsigned char status;
 } csw_packet __attribute__((packed));
 
-typedef struct _inquiry_data
-{
-    u8 peripheral_device_type; // 00h - Direct access (Floppy), 1Fh none (no FDD connected)
-    u8 removable_media;        // 80h - removeable
-    u8 iso_ecma_ansi;
-    u8 response_data_format;
-    u8 additional_length;
-    u8 res[3];
-    u8 vendor[8];
-    u8 product[16];
-    u8 revision[4];
-} inquiry_data __attribute__((packed));
-
 typedef struct _sense_data
 {
     u8 error_code;
@@ -110,26 +95,44 @@ typedef struct _read_capacity_data
 
 static UsbDriver driver;
 
-#ifdef VMC_DRIVER
-static int io_sema;
+int usb_io_sema;
 
 #define WAITIOSEMA(x) WaitSema(x)
 #define SIGNALIOSEMA(x) SignalSema(x)
-#else
-#define WAITIOSEMA(x)
-#define SIGNALIOSEMA(x)
-#endif
 
 typedef struct _usb_callback_data
 {
-    int semh;
+    int sema;
     int returnCode;
     int returnSize;
 } usb_callback_data;
 
+#define USB_BLOCK_SIZE	4096	//Maximum single USB 1.1 transfer length.
+
+typedef struct _usb_transfer_callback_data {
+    int sema;
+    int pipe;
+    u8 *buffer;
+    int returnCode;
+    unsigned int remaining;
+} usb_transfer_callback_data;
+
 static mass_dev g_mass_device;
 static void *gSectorBuffer;
 
+static void usb_callback(int resultCode, int bytes, void *arg);
+static int perform_bulk_transfer(usb_transfer_callback_data* data);
+static void usb_transfer_callback(int resultCode, int bytes, void *arg);
+static int usb_set_configuration(mass_dev* dev, int configNumber);
+static int usb_set_interface(mass_dev* dev, int interface, int altSetting);
+static int usb_bulk_clear_halt(mass_dev* dev, int endpoint);
+static void usb_bulk_reset(mass_dev* dev, int mode);
+static int usb_bulk_status(mass_dev* dev, csw_packet* csw, unsigned int tag);
+static int usb_bulk_manage_status(mass_dev* dev, unsigned int tag);
+static int usb_bulk_command(mass_dev* dev, cbw_packet* packet );
+static int usb_bulk_transfer(mass_dev* dev, int direction, void* buffer, unsigned int transferSize);
+
+static int mass_stor_warmup(mass_dev *dev);
 static void mass_stor_release(mass_dev *dev);
 
 static void usb_callback(int resultCode, int bytes, void *arg)
@@ -138,45 +141,85 @@ static void usb_callback(int resultCode, int bytes, void *arg)
     data->returnCode = resultCode;
     data->returnSize = bytes;
     XPRINTF("USBHDFSD: callback: res %d, bytes %d, arg %p \n", resultCode, bytes, arg);
-    SignalSema(data->semh);
+    SignalSema(data->sema);
 }
 
-static void usb_set_configuration(mass_dev *dev, int configNumber)
+static int perform_bulk_transfer(usb_transfer_callback_data* data)
+{
+    int ret, len;
+
+    len = data->remaining > USB_BLOCK_SIZE ? USB_BLOCK_SIZE : data->remaining;
+    ret = UsbBulkTransfer(
+                data->pipe,		//bulk pipe epI (Read) or epO (Write)
+                data->buffer,		//data ptr
+                len,			//data length
+                &usb_transfer_callback,
+                (void*)data
+            );
+    return ret;
+}
+
+static void usb_transfer_callback(int resultCode, int bytes, void *arg)
+{
+    int ret;
+    usb_transfer_callback_data* data = (usb_transfer_callback_data*)arg;
+
+    data->returnCode = resultCode;
+    if(resultCode == USB_RC_OK)
+    {  //Update transfer progress if successful.
+        data->remaining -= bytes;
+        data->buffer += bytes;
+    }
+
+    if((resultCode == USB_RC_OK) && (data->remaining > 0))
+    {	//OK to continue.
+        ret = perform_bulk_transfer(data);
+        if (ret != USB_RC_OK)
+        {
+            data->returnCode = ret;
+            SignalSema(data->sema);
+        }
+    }
+    else
+    {
+        SignalSema(data->sema);
+    }
+}
+
+static int usb_set_configuration(mass_dev *dev, int configNumber)
 {
     int ret;
     usb_callback_data cb_data;
 
-    cb_data.semh = dev->ioSema;
+    cb_data.sema = dev->ioSema;
 
     XPRINTF("USBHDFSD: setting configuration controlEp=%i, confNum=%i \n", dev->controlEp, configNumber);
     ret = UsbSetDeviceConfiguration(dev->controlEp, configNumber, usb_callback, (void *)&cb_data);
 
     if (ret == USB_RC_OK) {
-        WaitSema(cb_data.semh);
+        WaitSema(cb_data.sema);
         ret = cb_data.returnCode;
     }
-    if (ret != USB_RC_OK) {
-        XPRINTF("USBHDFSD: Error - sending set_configuration %d\n", ret);
-    }
+
+    return ret;
 }
 
-static void usb_set_interface(mass_dev *dev, int interface, int altSetting)
+static int usb_set_interface(mass_dev *dev, int interface, int altSetting)
 {
     int ret;
     usb_callback_data cb_data;
 
-    cb_data.semh = dev->ioSema;
+    cb_data.sema = dev->ioSema;
 
     XPRINTF("USBHDFSD: setting interface controlEp=%i, interface=%i altSetting=%i\n", dev->controlEp, interface, altSetting);
     ret = UsbSetInterface(dev->controlEp, interface, altSetting, usb_callback, (void *)&cb_data);
 
     if (ret == USB_RC_OK) {
-        WaitSema(cb_data.semh);
+        WaitSema(cb_data.sema);
         ret = cb_data.returnCode;
     }
-    if (ret != USB_RC_OK) {
-        XPRINTF("USBHDFSD: Error - sending set_interface %d\n", ret);
-    }
+
+    return ret;
 }
 
 static int usb_bulk_clear_halt(mass_dev *dev, int endpoint)
@@ -184,7 +227,7 @@ static int usb_bulk_clear_halt(mass_dev *dev, int endpoint)
     int ret;
     usb_callback_data cb_data;
 
-    cb_data.semh = dev->ioSema;
+    cb_data.sema = dev->ioSema;
 
     ret = UsbClearEndpointFeature(
         dev->controlEp, //Config pipe
@@ -194,7 +237,7 @@ static int usb_bulk_clear_halt(mass_dev *dev, int endpoint)
         (void *)&cb_data);
 
     if (ret == USB_RC_OK) {
-        WaitSema(cb_data.semh);
+        WaitSema(cb_data.sema);
         ret = cb_data.returnCode;
     }
     if (ret != USB_RC_OK) {
@@ -209,7 +252,7 @@ static void usb_bulk_reset(mass_dev *dev, int mode)
     int ret;
     usb_callback_data cb_data;
 
-    cb_data.semh = dev->ioSema;
+    cb_data.sema = dev->ioSema;
 
     //Call Bulk only mass storage reset
     ret = UsbControlTransfer(
@@ -224,7 +267,7 @@ static void usb_bulk_reset(mass_dev *dev, int mode)
         (void *)&cb_data);
 
     if (ret == USB_RC_OK) {
-        WaitSema(cb_data.semh);
+        WaitSema(cb_data.sema);
         ret = cb_data.returnCode;
     }
     if (ret == USB_RC_OK) {
@@ -248,7 +291,7 @@ static int usb_bulk_status(mass_dev *dev, csw_packet *csw, unsigned int tag)
     int ret;
     usb_callback_data cb_data;
 
-    cb_data.semh = dev->ioSema;
+    cb_data.sema = dev->ioSema;
 
     csw->signature = CSW_TAG;
     csw->tag = tag;
@@ -263,7 +306,7 @@ static int usb_bulk_status(mass_dev *dev, csw_packet *csw, unsigned int tag)
         (void *)&cb_data);
 
     if (ret == USB_RC_OK) {
-        WaitSema(cb_data.semh);
+        WaitSema(cb_data.sema);
         ret = cb_data.returnCode;
 
 #ifdef DEBUG
@@ -312,43 +355,6 @@ static int usb_bulk_manage_status(mass_dev *dev, unsigned int tag)
     return ((ret == USB_RC_OK && csw.signature == CSW_TAG && csw.tag == tag) ? csw.status : -1);
 }
 
-static int usb_bulk_get_max_lun(mass_dev *dev)
-{
-    int ret;
-    usb_callback_data cb_data;
-    char max_lun;
-
-    cb_data.semh = dev->ioSema;
-
-    //Call Bulk only mass storage reset
-    ret = UsbControlTransfer(
-        dev->controlEp, //default pipe
-        0xA1,
-        0xFE,
-        0,
-        dev->interfaceNumber, //interface number
-        1,                    //length
-        &max_lun,             //data
-        usb_callback,
-        (void *)&cb_data);
-
-    if (ret == USB_RC_OK) {
-        WaitSema(cb_data.semh);
-        ret = cb_data.returnCode;
-    }
-    if (ret == USB_RC_OK) {
-        ret = max_lun;
-    } else {
-        //Devices that do not support multiple LUNs may STALL this command.
-        usb_bulk_clear_halt(dev, USB_BLK_EP_IN);
-        usb_bulk_clear_halt(dev, USB_BLK_EP_OUT);
-
-        ret = -ret;
-    }
-
-    return ret;
-}
-
 static int usb_bulk_command(mass_dev *dev, cbw_packet *packet)
 {
     int ret;
@@ -359,7 +365,7 @@ static int usb_bulk_command(mass_dev *dev, cbw_packet *packet)
         return -1;
     }
 
-    cb_data.semh = dev->ioSema;
+    cb_data.sema = dev->ioSema;
 
     ret = UsbBulkTransfer(
         dev->bulkEpO, //bulk output pipe
@@ -369,7 +375,7 @@ static int usb_bulk_command(mass_dev *dev, cbw_packet *packet)
         (void *)&cb_data);
 
     if (ret == USB_RC_OK) {
-        WaitSema(cb_data.semh);
+        WaitSema(cb_data.sema);
         ret = cb_data.returnCode;
     }
     if (ret != USB_RC_OK) {
@@ -383,48 +389,28 @@ static int usb_bulk_command(mass_dev *dev, cbw_packet *packet)
 static int usb_bulk_transfer(mass_dev *dev, int direction, void *buffer, unsigned int transferSize)
 {
     int ret;
-    unsigned char *buf = (unsigned char *)buffer;
-    int blockSize = transferSize;
-    int offset = 0, pipe;
-    usb_callback_data cb_data;
+    usb_transfer_callback_data cb_data;
 
-    cb_data.semh = dev->ioSema;
+    cb_data.sema = dev->ioSema;
+    cb_data.pipe = (direction==USB_BLK_EP_IN) ? dev->bulkEpI : dev->bulkEpO;
+    cb_data.buffer = buffer;
+    cb_data.remaining = transferSize;
 
-    pipe = (direction == USB_BLK_EP_IN) ? dev->bulkEpI : dev->bulkEpO;
-    while (transferSize > 0) {
-        if (transferSize < blockSize) {
-            blockSize = transferSize;
-        }
-
-        ret = UsbBulkTransfer(
-            pipe,           //bulk pipe epI(Read)  epO(Write)
-            (buf + offset), //data ptr
-            blockSize,      //data length
-            usb_callback,
-            (void *)&cb_data);
-        if (ret != USB_RC_OK) {
-            cb_data.returnCode = ret;
-            break;
-        } else {
-            WaitSema(cb_data.semh);
-            //XPRINTF("USBHDFSD: retCode=%i retSize=%i \n", cb_data.returnCode, cb_data.returnSize);
-            if (cb_data.returnCode != USB_RC_OK) {
-                break;
-            }
-            offset += cb_data.returnSize;
-            transferSize -= cb_data.returnSize;
-        }
+    ret = perform_bulk_transfer(&cb_data);
+    if (ret == USB_RC_OK) {
+        WaitSema(cb_data.sema);
+        ret = cb_data.returnCode;
     }
 
-    if (cb_data.returnCode != USB_RC_OK) {
+    if (ret != USB_RC_OK) {
         XPRINTF("USBHDFSD: Error - bulk data transfer %d. Clearing HALT state.\n", cb_data.returnCode);
         usb_bulk_clear_halt(dev, direction);
     }
 
-    return cb_data.returnCode;
+    return ret;
 }
 
-static inline int cbw_scsi_test_unit_ready(mass_dev *dev)
+static int cbw_scsi_test_unit_ready(mass_dev *dev)
 {
     int result, retries;
     static cbw_packet cbw = {
@@ -463,7 +449,7 @@ static inline int cbw_scsi_test_unit_ready(mass_dev *dev)
     return result;
 }
 
-static inline int cbw_scsi_request_sense(mass_dev *dev, void *buffer, int size)
+static int cbw_scsi_request_sense(mass_dev *dev, void *buffer, int size)
 {
     int rcode, result, retries;
     static cbw_packet cbw = {
@@ -508,52 +494,7 @@ static inline int cbw_scsi_request_sense(mass_dev *dev, void *buffer, int size)
     return -EIO;
 }
 
-static inline int cbw_scsi_inquiry(mass_dev *dev, void *buffer, int size)
-{
-    int rcode, result, retries;
-    static cbw_packet cbw = {
-        CBW_TAG,      // cbw.signature
-        -TAG_INQUIRY, // cbw.tag
-        0,            // cbw.dataTransferLength
-        0x80,         // cbw.flags
-        0,            // cbw.lun
-        12,           // cbw.comLength
-
-        /* scsi command packet */
-        {
-            0x12, // inquiry operation code
-            0,    // lun/reserved
-            0,    // reserved
-            0,    // reserved
-            0,    // inquiry reply length
-            0,    // reserved
-            0,    // reserved
-            0,    // reserved
-            0,    // reserved
-            0,    // reserved
-            0,    // reserved
-            0,    // reserved
-        }};
-
-    XPRINTF("USBHDFSD: cbw_scsi_inquiry\n");
-
-    cbw.dataTransferLength = size; //INQUIRY_REPLY_LENGTH
-    cbw.comData[4] = size;         //inquiry reply length
-
-    for (retries = USB_XFER_MAX_RETRIES; retries > 0; retries--) {
-        if (usb_bulk_command(dev, &cbw) == USB_RC_OK) {
-            rcode = usb_bulk_transfer(dev, USB_BLK_EP_IN, buffer, size);
-            result = usb_bulk_manage_status(dev, -TAG_INQUIRY);
-
-            if (rcode == USB_RC_OK && result == 0)
-                return 0;
-        }
-    }
-
-    return -EIO;
-}
-
-static inline int cbw_scsi_start_stop_unit(mass_dev *dev)
+static int cbw_scsi_start_stop_unit(mass_dev *dev, u8 param)
 {
     int result, retries;
     static cbw_packet cbw = {
@@ -582,6 +523,8 @@ static inline int cbw_scsi_start_stop_unit(mass_dev *dev)
 
     XPRINTF("USBHDFSD: cbw_scsi_start_stop_unit\n");
 
+    cbw.comData[4] = param;
+
     for (result = -EIO, retries = USB_XFER_MAX_RETRIES; retries > 0; retries--) {
         if (usb_bulk_command(dev, &cbw) == USB_RC_OK) {
             if ((result = usb_bulk_manage_status(dev, -TAG_START_STOP_UNIT)) == 0)
@@ -592,7 +535,7 @@ static inline int cbw_scsi_start_stop_unit(mass_dev *dev)
     return result;
 }
 
-static inline int cbw_scsi_read_capacity(mass_dev *dev, void *buffer, int size)
+static int cbw_scsi_read_capacity(mass_dev *dev, void *buffer, int size)
 {
     int rcode, result, retries;
     static cbw_packet cbw = {
@@ -702,23 +645,21 @@ static void cbw_scsi_sector_io(mass_dev *dev, short int dir, unsigned int lba, v
 
 void mass_stor_readSector(unsigned int lba, unsigned short int nsectors, unsigned char *buffer)
 {
-    WAITIOSEMA(io_sema);
+    WAITIOSEMA(usb_io_sema);
 
     cbw_scsi_sector_io(&g_mass_device, USB_BLK_EP_IN, lba, buffer, nsectors);
 
-    SIGNALIOSEMA(io_sema);
+    SIGNALIOSEMA(usb_io_sema);
 }
 
-#ifdef VMC_DRIVER
 void mass_stor_writeSector(unsigned int lba, unsigned short int nsectors, const unsigned char *buffer)
 {
-    WAITIOSEMA(io_sema);
+    WAITIOSEMA(usb_io_sema);
 
     cbw_scsi_sector_io(&g_mass_device, USB_BLK_EP_OUT, lba, (void *)buffer, nsectors);
 
-    SIGNALIOSEMA(io_sema);
+    SIGNALIOSEMA(usb_io_sema);
 }
-#endif
 
 /* test that endpoint is bulk endpoint and if so, update device info */
 static void usb_bulk_probeEndpoint(int devId, mass_dev *dev, UsbEndpointDescriptor *endpoint)
@@ -726,13 +667,19 @@ static void usb_bulk_probeEndpoint(int devId, mass_dev *dev, UsbEndpointDescript
     if (endpoint->bmAttributes == USB_ENDPOINT_XFER_BULK) {
         /* out transfer */
         if ((endpoint->bEndpointAddress & USB_ENDPOINT_DIR_MASK) == USB_DIR_OUT && dev->bulkEpO < 0) {
+            /* When sceUsbdOpenPipe() is used to work around the hardware errata that occurs when an unaligned memory address is specified,
+               some USB devices become incompatible. Hence it is preferable to do alignment correction in software instead. */
             dev->bulkEpO = pUsbOpenEndpointAligned(devId, endpoint);
             dev->packetSzO = (unsigned short int)endpoint->wMaxPacketSizeHB << 8 | endpoint->wMaxPacketSizeLB;
             XPRINTF("USBHDFSD: register Output endpoint id =%i addr=%02X packetSize=%i\n", dev->bulkEpO, endpoint->bEndpointAddress, dev->packetSzO);
         } else
             /* in transfer */
             if ((endpoint->bEndpointAddress & USB_ENDPOINT_DIR_MASK) == USB_DIR_IN && dev->bulkEpI < 0) {
-            dev->bulkEpI = pUsbOpenEndpointAligned(devId, endpoint);
+            /* Open this pipe with sceUsbdOpenPipe, to allow unaligned addresses to be used.
+               According to the Sony documentation and the USBD code,
+               there is always an alignment check if the pipe is opened with the sceUsbdOpenPipeAligned(),
+               even when there is never any correction for the bulk in pipe. */
+            dev->bulkEpI = pUsbOpenEndpoint(devId, endpoint);
             dev->packetSzI = (unsigned short int)endpoint->wMaxPacketSizeHB << 8 | endpoint->wMaxPacketSizeLB;
             XPRINTF("USBHDFSD: register Input endpoint id =%i addr=%02X packetSize=%i\n", dev->bulkEpI, endpoint->bEndpointAddress, dev->packetSzI);
         }
@@ -860,6 +807,7 @@ int mass_stor_connect(int devId)
     SemaData.option = 0;
     SemaData.attr = 0;
     if ((dev->ioSema = CreateSema(&SemaData)) < 0) {
+        mass_stor_release(dev);
         XPRINTF("USBHDFSD: Failed to allocate I/O semaphore.\n");
         return -1;
     }
@@ -916,7 +864,6 @@ int mass_stor_disconnect(int devId)
 
 static int mass_stor_warmup(mass_dev *dev)
 {
-    inquiry_data id;
     sense_data sd;
     read_capacity_data rcd;
     int stat, OldState;
@@ -927,19 +874,6 @@ static int mass_stor_warmup(mass_dev *dev)
         XPRINTF("USBHDFSD: Error - no mass storage device found!\n");
         return -1;
     }
-
-    stat = usb_bulk_get_max_lun(dev);
-    XPRINTF("USBHDFSD: usb_bulk_get_max_lun %d\n", stat);
-
-    mips_memset(&id, 0, sizeof(inquiry_data));
-    if ((stat = cbw_scsi_inquiry(dev, &id, sizeof(inquiry_data))) < 0) {
-        XPRINTF("USBHDFSD: Error - cbw_scsi_inquiry %d\n", stat);
-        return -1;
-    }
-
-    XPRINTF("USBHDFSD: Vendor: %.8s\n", id.vendor);
-    XPRINTF("USBHDFSD: Product: %.16s\n", id.product);
-    XPRINTF("USBHDFSD: Revision: %.4s\n", id.revision);
 
     while ((stat = cbw_scsi_test_unit_ready(dev)) != 0) {
         XPRINTF("USBHDFSD: Error - cbw_scsi_test_unit_ready %d\n", stat);
@@ -953,7 +887,7 @@ static int mass_stor_warmup(mass_dev *dev)
 
             if ((sd.sense_key == 0x02) && (sd.add_sense_code == 0x04) && (sd.add_sense_qual == 0x02)) {
                 XPRINTF("USBHDFSD: Error - Additional initalization is required for this device!\n");
-                if ((stat = cbw_scsi_start_stop_unit(dev)) != 0) {
+                if ((stat = cbw_scsi_start_stop_unit(dev, 1)) != 0) {
                     XPRINTF("USBHDFSD: Error - cbw_scsi_start_stop_unit %d\n", stat);
                     return -1;
                 }
@@ -988,8 +922,25 @@ int mass_stor_configureDevice(void)
     mass_dev *dev = &g_mass_device;
     if (dev->devId != -1 && (dev->status & DEVICE_DETECTED) && !(dev->status & DEVICE_CONFIGURED)) {
         int ret;
-        usb_set_configuration(dev, dev->configId);
-        usb_set_interface(dev, dev->interfaceNumber, dev->interfaceAlt);
+        if ((ret = usb_set_configuration(dev, dev->configId)) != USB_RC_OK) {
+            XPRINTF("USBHDFSD: Error - sending set_configuration %d\n", ret);
+            mass_stor_release(dev);
+            return -1;
+        }
+
+        if ((ret = usb_set_interface(dev, dev->interfaceNumber, dev->interfaceAlt)) != USB_RC_OK) {
+            XPRINTF("USBHDFSD: Error - sending set_interface %d\n", ret);
+            if (ret == USB_RC_STALL) {
+                /* USB Specification 1.1, section 9.4.10: Devices that only support a default setting for the specified interface may return a STALL.
+                   As with Linux, we shall clear the halt state of the interface's pipes and continue. */
+                usb_bulk_clear_halt(dev, USB_BLK_EP_IN);
+                usb_bulk_clear_halt(dev, USB_BLK_EP_OUT);
+            } else {
+                mass_stor_release(dev);
+                return -1;
+            }
+        }
+
         dev->status |= DEVICE_CONFIGURED;
 
         ret = mass_stor_warmup(dev);
@@ -1005,20 +956,33 @@ int mass_stor_configureDevice(void)
     return 0;
 }
 
+int mass_stor_stop_unit(void)
+{
+    int stat;
+
+    if (g_mass_device.devId != -1)
+    {
+        if ((stat = cbw_scsi_start_stop_unit(&g_mass_device, 0)) != 0) {
+            XPRINTF("USBHDFSD: Error - cbw_scsi_start_stop_unit %d\n", stat);
+        }
+    } else
+        stat = -ENODEV;
+
+    return stat;
+}
+
 int mass_stor_init(void)
 {
     register int ret;
 
     g_mass_device.devId = -1;
 
-#ifdef VMC_DRIVER
     iop_sema_t smp;
     smp.initial = 1;
     smp.max = 1;
     smp.option = 0;
     smp.attr = SA_THPRI;
-    io_sema = CreateSema(&smp);
-#endif
+    usb_io_sema = CreateSema(&smp);
 
     driver.next = NULL;
     driver.prev = NULL;
@@ -1046,13 +1010,14 @@ int mass_stor_init(void)
 	Devices with sector sizes above 4096 bytes are unsupported.	*/
 int mass_stor_ReadCD(unsigned int lsn, unsigned int nsectors, void *buf, int part_num)
 {
-    u32 sectors, nbytes, DiskSectorsToRead, lba;
+    u32 sectorsToRead, nbytes, DiskSectorsToRead, lba;
     u8 *p = (u8 *)buf;
 
+	//Phase 1: read sectors until the LSN is aligned with the disk's LBA (sector sizes > 2048).
     if (g_mass_device.sectorSize > 2048) {
         //4096-byte sectors
         lba = cdvdman_settings.LBAs[part_num] + (lsn / 2);
-        if ((lsn % 2) > 0) {
+        if ((lsn % 2) == 1) {
             //Start sector is in the middle of a physical sector.
             mass_stor_readSector(lba, 1, gSectorBuffer);
             mips_memcpy(p, &((unsigned char *)gSectorBuffer)[2048], 2048);
@@ -1065,26 +1030,25 @@ int mass_stor_ReadCD(unsigned int lsn, unsigned int nsectors, void *buf, int par
         lba = cdvdman_settings.LBAs[part_num] + (lsn * (2048 / g_mass_device.sectorSize));
     }
 
-    while (nsectors > 0) {
-        sectors = nsectors;
-        if (sectors > MAX_USB_SECTORS)
-            sectors = MAX_USB_SECTORS;
+    //Phase 2: read as much of the remaining sectors as possible
+    DiskSectorsToRead = nsectors * 2048 / g_mass_device.sectorSize;
+	if (DiskSectorsToRead > 0) {
+        sectorsToRead = DiskSectorsToRead * g_mass_device.sectorSize / 2048; //Compute the number of CD-ROM/DVD sectors that will be read.
+        nbytes = sectorsToRead * 2048;
 
-        nbytes = sectors * 2048;
-        DiskSectorsToRead = nbytes / g_mass_device.sectorSize;
-
-        if (DiskSectorsToRead == 0) {
-            // nsectors should be 1 at this point.
-            mass_stor_readSector(lba, 1, gSectorBuffer);
-            mips_memcpy(p, gSectorBuffer, 2048);
-        } else {
-            mass_stor_readSector(lba, DiskSectorsToRead, p);
-        }
+        mass_stor_readSector(lba, DiskSectorsToRead, p);
 
         lba += DiskSectorsToRead;
-        lsn += sectors;
+        lsn += sectorsToRead;
         p += nbytes;
-        nsectors -= sectors;
+        nsectors -= sectorsToRead;
+	}
+
+    //Phase 3: read any outstanding amount of data (sector sizes > 2048)
+    if (nsectors > 0) {
+        // nsectors should be 1 at this point, with the first half of the sector being outstanding.
+        mass_stor_readSector(lba, 1, gSectorBuffer);
+        mips_memcpy(p, gSectorBuffer, 2048);
     }
 
     return 1;

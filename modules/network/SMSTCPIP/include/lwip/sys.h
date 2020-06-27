@@ -69,20 +69,6 @@ struct sys_timeout
 /** Return code for timeouts from sys_arch_mbox_fetch and sys_arch_sem_wait */
 #define SYS_ARCH_TIMEOUT -418
 
-typedef void (*sys_timeout_handler)(void *arg);
-
-struct sys_timeout
-{
-    struct sys_timeout *next;
-    u32_t time;
-    sys_timeout_handler h;
-    void *arg;
-};
-
-struct sys_timeouts
-{
-    struct sys_timeout *next;
-};
 /* Semaphore functions. */
 sys_sem_t sys_sem_new(u8_t count);
 //void sys_sem_signal(sys_sem_t sem);
@@ -164,5 +150,41 @@ unsigned long sys_now(void);
 #endif /* SYS_LIGHTWEIGHT_PROT */
 
 #endif /* SYS_ARCH_PROTECT */
+
+#ifndef SYS_ARCH_INC
+#define SYS_ARCH_INC(var, val) do { \
+                                SYS_ARCH_DECL_PROTECT(old_level); \
+                                SYS_ARCH_PROTECT(old_level); \
+                                var += val; \
+                                SYS_ARCH_UNPROTECT(old_level); \
+                              } while(0)
+#endif /* SYS_ARCH_INC */
+
+#ifndef SYS_ARCH_DEC
+#define SYS_ARCH_DEC(var, val) do { \
+                                SYS_ARCH_DECL_PROTECT(old_level); \
+                                SYS_ARCH_PROTECT(old_level); \
+                                var -= val; \
+                                SYS_ARCH_UNPROTECT(old_level); \
+                              } while(0)
+#endif /* SYS_ARCH_DEC */
+
+#ifndef SYS_ARCH_GET
+#define SYS_ARCH_GET(var, ret) do { \
+                                SYS_ARCH_DECL_PROTECT(old_level); \
+                                SYS_ARCH_PROTECT(old_level); \
+                                ret = var; \
+                                SYS_ARCH_UNPROTECT(old_level); \
+                              } while(0)
+#endif /* SYS_ARCH_GET */
+
+#ifndef SYS_ARCH_SET
+#define SYS_ARCH_SET(var, val) do { \
+                                SYS_ARCH_DECL_PROTECT(old_level); \
+                                SYS_ARCH_PROTECT(old_level); \
+                                var = val; \
+                                SYS_ARCH_UNPROTECT(old_level); \
+                              } while(0)
+#endif /* SYS_ARCH_SET */
 
 #endif /* __LWIP_SYS_H__ */

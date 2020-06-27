@@ -14,6 +14,7 @@ enum UI_ITEMS {
     UICFG_UICOL,
     UICFG_TXTCOL,
     UICFG_SELCOL,
+    UICFG_RESETCOL,
     UICFG_AUTOSORT,
     UICFG_COVERART,
     UICFG_WIDESCREEN,
@@ -22,10 +23,11 @@ enum UI_ITEMS {
     UICFG_XOFF,
     UICFG_YOFF,
     UICFG_OVERSCAN,
-    UICFG_INFOPAGE,
+    UICFG_NOTIFICATIONS,
 
     CFG_DEBUG,
     CFG_PS2LOGO,
+    CFG_HDDGAMELISTCACHE,
     CFG_EXITTO,
     CFG_DEFDEVICE,
     CFG_USBMODE,
@@ -41,6 +43,16 @@ enum UI_ITEMS {
     CFG_USBPREFIX,
     CFG_ETHPREFIX,
     CFG_HDDSPINDOWN,
+
+    ABOUT_TITLE,
+    ABOUT_BUILD_DETAILS,
+
+    CFG_PARENLOCK_PASSWORD,
+
+    CFG_SFX,
+    CFG_BOOT_SND,
+    CFG_SFX_VOLUME,
+    CFG_BOOT_SND_VOLUME,
 
     NETCFG_SHOW_ADVANCED_OPTS,
     NETCFG_PS2_IP_ADDR_TYPE,
@@ -77,28 +89,26 @@ enum UI_ITEMS {
     NETCFG_RECONNECT,
     NETCFG_OK,
 
+    CHTCFG_CHEATSOURCE,
     CHTCFG_CHEATCFG,
     CHTCFG_ENABLECHEAT,
     CHTCFG_CHEATMODE,
 
+    GSMCFG_GSMSOURCE,
     GSMCFG_GSCONFIG,
     GSMCFG_ENABLEGSM,
     GSMCFG_GSMVMODE,
     GSMCFG_GSMXOFFSET,
     GSMCFG_GSMYOFFSET,
+    GSMCFG_GSMFIELDFIX,
 
     COMPAT_DMA = 100,
     COMPAT_ALTSTARTUP,
-    COMPAT_GAME,
     COMPAT_GAMEID,
-    COMPAT_SAVE,
-    COMPAT_STATUS,
     COMPAT_DL_DEFAULTS,
-    COMPAT_TEST,
-    COMPAT_REMOVE,
 
     COMPAT_LOADFROMDISC_ID,
-#ifdef VMC
+
     COMPAT_VMC1_ACTION_ID,
     COMPAT_VMC2_ACTION_ID,
     COMPAT_VMC1_DEFINE_ID,
@@ -111,7 +121,6 @@ enum UI_ITEMS {
     VMC_STATUS,
     VMC_PROGRESS,
     VMC_REFRESH,
-#endif
 
     NETUPD_OPT_UPD_ALL_LBL,
     NETUPD_OPT_UPD_ALL,
@@ -121,6 +130,7 @@ enum UI_ITEMS {
     NETUPD_BTN_START,
     NETUPD_BTN_CANCEL,
 #ifdef PADEMU
+    PADCFG_PADEMU_SOURCE,
     PADCFG_PADEMU_CONFIG,
     PADCFG_PADEMU_ENABLE,
     PADCFG_PADEMU_MODE,
@@ -155,33 +165,30 @@ enum UI_ITEMS {
 };
 
 #define COMPAT_NOEXIT 0x70000000
-#define COMPAT_GSMCONFIG (GSMCFG_GSCONFIG | COMPAT_NOEXIT)
-#define COMPAT_CHEATCONFIG (CHTCFG_CHEATCFG | COMPAT_NOEXIT)
 #define COMPAT_LOADFROMDISC (COMPAT_LOADFROMDISC_ID | COMPAT_NOEXIT)
-#ifdef VMC
+
 #define COMPAT_VMC1_ACTION (COMPAT_VMC1_ACTION_ID | COMPAT_NOEXIT)
 #define COMPAT_VMC2_ACTION (COMPAT_VMC2_ACTION_ID | COMPAT_NOEXIT)
 #define COMPAT_VMC1_DEFINE (COMPAT_VMC1_DEFINE_ID | COMPAT_NOEXIT)
 #define COMPAT_VMC2_DEFINE (COMPAT_VMC2_DEFINE_ID | COMPAT_NOEXIT)
-#endif
-#ifdef PADEMU
-#define COMPAT_PADEMUCONFIG (PADCFG_PADEMU_CONFIG | COMPAT_NOEXIT)
 
+#ifdef PADEMU
 extern struct UIItem diaPadEmuConfig[];
 extern struct UIItem diaPadEmuInfo[];
 #endif
 
 extern struct UIItem diaNetConfig[];
-extern struct UIItem diaCompatConfig[];
 extern struct UIItem diaUIConfig[];
+extern struct UIItem diaAudioConfig[];
+extern struct UIItem diaCompatConfig[];
+extern struct UIItem diaVMCConfig[];
 extern struct UIItem diaGSConfig[];
 extern struct UIItem diaCheatConfig[];
 
 extern struct UIItem diaConfig[];
 extern struct UIItem diaAbout[];
-#ifdef VMC
 extern struct UIItem diaVMC[];
-#endif
 extern struct UIItem diaNetCompatUpdate[];
+extern struct UIItem diaParentalLockConfig[];
 
 #endif

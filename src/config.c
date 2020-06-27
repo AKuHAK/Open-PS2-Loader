@@ -9,9 +9,22 @@
 #include "include/ioman.h"
 #include <string.h>
 
+// FIXME: We should not need this function.
+//        Use newlib's 'stat' to get GMT time.
+#define NEWLIB_PORT_AWARE
+#include <fileXio_rpc.h> // iox_stat_t, fileXioGetStat
+int configGetStat(config_set_t *configSet, iox_stat_t *stat);
+
 static u32 currentUID = 0;
 static config_set_t configFiles[CONFIG_INDEX_COUNT];
 static char legacyNetConfigPath[256] = "mc?:SYS-CONF/IPCONFIG.DAT";
+static const char *configFilenames[CONFIG_INDEX_COUNT] = {
+    "conf_opl.cfg",
+    "conf_last.cfg",
+    "conf_apps.cfg",
+    "conf_network.cfg",
+    "conf_game.cfg",
+};
 
 static int strToColor(const char *string, unsigned char *color)
 {
@@ -92,6 +105,7 @@ static int parsePrefix(char *line, char *prefix)
     if (colpos && colpos != line) {
         // copy the name and the value
         strncpy(prefix, line, colpos - line);
+        prefix[colpos - line] = 0;
 
         return 1;
     } else {
@@ -145,23 +159,65 @@ static struct config_value_t *getConfigItemForName(config_set_t *configSet, cons
     return val;
 }
 
+static char cfgDevice[8];
+
+char *configGetDir(void)
+{
+    char *path = cfgDevice;
+    return path;
+}
+
+void configPrepareNotifications(char *prefix)
+{
+    int mcID;
+    char *colpos;
+
+    snprintf(cfgDevice, sizeof(cfgDevice), prefix);
+    if (!strncmp(cfgDevice, "mc?", 3)) {
+        mcID = getmcID();
+        cfgDevice[2] = mcID;
+    }
+
+    if ((colpos = strchr(cfgDevice, ':')) != NULL)
+        *(colpos + 1) = '\0';
+
+    showCfgPopup = 1;
+}
+
 void configInit(char *prefix)
 {
     char path[256];
+    int i;
 
     if (prefix)
         snprintf(legacyNetConfigPath, sizeof(legacyNetConfigPath), "%s/IPCONFIG.DAT", prefix);
     else
         prefix = gBaseMCDir;
 
-    snprintf(path, sizeof(path), "%s/conf_opl.cfg", prefix);
-    configAlloc(CONFIG_OPL, &configFiles[CONFIG_INDEX_OPL], path);
-    snprintf(path, sizeof(path), "%s/conf_last.cfg", prefix);
-    configAlloc(CONFIG_LAST, &configFiles[CONFIG_INDEX_LAST], path);
-    snprintf(path, sizeof(path), "%s/conf_apps.cfg", prefix);
-    configAlloc(CONFIG_APPS, &configFiles[CONFIG_INDEX_APPS], path);
-    snprintf(path, sizeof(path), "%s/conf_network.cfg", prefix);
-    configAlloc(CONFIG_NETWORK, &configFiles[CONFIG_INDEX_NETWORK], path);
+    for (i = 0; i < CONFIG_INDEX_COUNT; i++) {
+        snprintf(path, sizeof(path), "%s/%s", prefix, configFilenames[i]);
+        configAlloc(1 << i, &configFiles[i], path);
+    }
+
+    configPrepareNotifications(prefix);
+}
+
+void configSetMove(char *prefix)
+{
+    char path[256];
+    int i;
+
+    if (prefix)
+        snprintf(legacyNetConfigPath, sizeof(legacyNetConfigPath), "%s/IPCONFIG.DAT", prefix);
+    else
+        prefix = gBaseMCDir;
+
+    for (i = 0; i < CONFIG_INDEX_COUNT; i++) {
+        snprintf(path, sizeof(path), "%s/%s", prefix, configFilenames[i]);
+        configMove(&configFiles[i], path);
+    }
+
+    configPrepareNotifications(prefix);
 }
 
 void configEnd()
@@ -194,6 +250,13 @@ config_set_t *configAlloc(int type, config_set_t *configSet, char *fileName)
         configSet->filename = NULL;
     configSet->modified = 0;
     return configSet;
+}
+
+void configMove(config_set_t *configSet, const char *fileName)
+{
+    int length = strlen(fileName) + 1;
+    configSet->filename = realloc(configSet->filename, length);
+    memcpy(configSet->filename, fileName, length);
 }
 
 void configFree(config_set_t *configSet)
@@ -345,7 +408,7 @@ void configMerge(config_set_t *dest, const config_set_t *source)
     }
 }
 
-int configReadLegacyIP(void)
+static int configReadLegacyIP(void)
 {
     config_set_t *configSet;
     char temp[16];
@@ -354,14 +417,14 @@ int configReadLegacyIP(void)
     if (fd >= 0) {
         char ipconfig[256];
         int size = getFileSize(fd);
-        fileXioRead(fd, &ipconfig, size);
-        fileXioClose(fd);
+        read(fd, &ipconfig, size);
+        close(fd);
 
         sscanf(ipconfig, "%d.%d.%d.%d %d.%d.%d.%d %d.%d.%d.%d", &ps2_ip[0], &ps2_ip[1], &ps2_ip[2], &ps2_ip[3],
                &ps2_netmask[0], &ps2_netmask[1], &ps2_netmask[2], &ps2_netmask[3],
                &ps2_gateway[0], &ps2_gateway[1], &ps2_gateway[2], &ps2_gateway[3]);
 
-        configSet = &configFiles[CONFIG_NETWORK];
+        configSet = &configFiles[CONFIG_INDEX_NETWORK];
 
         snprintf(temp, sizeof(temp), "%d.%d.%d.%d", ps2_ip[0], ps2_ip[1], ps2_ip[2], ps2_ip[3]);
         configSetStr(configSet, CONFIG_NET_PS2_IP, temp);
@@ -372,7 +435,7 @@ int configReadLegacyIP(void)
         //The legacy format has no setting for the DNS server, so duplicate the gateway address.
         configSetStr(configSet, CONFIG_NET_PS2_DNS, temp);
 
-        return CONFIG_NETWORK;
+        return 1;
     }
 
     return 0;
@@ -443,7 +506,7 @@ static int configReadFileBuffer(file_buffer_t *fileBuffer, config_set_t *configS
         }
     }
     configSet->modified = 0;
-    return configSet->type;
+    return 1;
 }
 
 int configReadBuffer(config_set_t *configSet, const void *buffer, int size)
@@ -532,13 +595,15 @@ int configReadMulti(int types)
 
         if (configSet->type & types) {
             configClear(configSet);
-            result |= configRead(configSet);
+            if (configRead(configSet))
+                result |= configSet->type;
         }
     }
 
     //If the network configuration is to be loaded and one cannot be loaded, attempt to load from the legacy network config file.
     if ((types & CONFIG_NETWORK) && !(result & CONFIG_NETWORK))
-        result |= configReadLegacyIP();
+        if (configReadLegacyIP())
+            result |= CONFIG_NETWORK;
 
     return result;
 }
@@ -557,7 +622,6 @@ int configWriteMulti(int types)
     return result;
 }
 
-#ifdef VMC
 void configGetVMC(config_set_t *configSet, char *vmc, int length, int slot)
 {
     char gkey[CONFIG_KEY_NAME_LEN];
@@ -582,4 +646,4 @@ void configRemoveVMC(config_set_t *configSet, int slot)
     snprintf(gkey, sizeof(gkey), "%s_%d", CONFIG_ITEM_VMC, slot);
     configRemoveKey(configSet, gkey);
 }
-#endif
+

@@ -1,5 +1,5 @@
 # Hungarian translation by co5oos
-# For Open PS2 Loader 0.9.3+ betas - Official OPL Beta thread @http://psx-scene.com/forums/f150/open-ps2-loader-official-beta-revisions-releases-156209/
+# For Open PS2 Loader 0.9.3+ betas - Official OPL Beta thread @https://www.psx-place.com/threads/open-ps2-loader-official-beta-releases.21573/
 Hungarian
 Open PS2 Loader %s
 Változtatások mentése
@@ -7,7 +7,7 @@ Vissza
 Hálózat konfigurálás
 Haladó beállítások
 <Nincs érték>
-Beállítások mentve...
+Beállítások elmentve %s-be
 Hiba a beállítások írásában!
 Kilépés
 Beállítások
@@ -19,7 +19,7 @@ Alkalmazások
 Téma
 Nyelv
 A rendszer le fog állni.
-Kilépés a böngészőbe/OSDSYS-be?
+Kilépés a Browser-be?
 Frissítés visszavonása?
 %d: Merevlemez nem található
 %d: Merevlemez nincs leformázva
@@ -41,7 +41,7 @@ Kör
 Kereszt
 Játék Lista
 Játékbeállítások
-Összes beállítás eltávolítása
+Beállítások eltávolítása
 Játékhoz tartozó összes kulcs eltávolítva
 Görgetés
 Lassú
@@ -71,10 +71,10 @@ Manuális
 HDL szerver indítása
 HDL Szerver Elindul...
 HDL Szerver Fut...
-Failed to start HDL Server.
-HDL Server Unloading...
-IGR path
-Background color
+Az HDL Szerver elindítása Sikertelen.
+Az HDL Szerver kirakodása...
+IGR útvonala
+Háttér színe
 Szöveg szín
 - PS2 -
 - SMB Szerver -
@@ -106,7 +106,7 @@ Emlékezz a legutóbbi játékra
 Select Gomb
 Hiba, a játék töredezett
 Hiba, az elem futtatása sikertelen
-Teszt
+Változások tesztelése
 Hagyja üresen VENDÉG hitelesítéshez
 Postos Olvasás
 Egyidejű Mód
@@ -114,8 +114,8 @@ Syscalls kiakasztás
 Videók átugrása
 DVD-DL emulálás
 IGR letiltása
-Magas modul tárhely
-DEV9 modul elrejtése
+Nem Használt
+Nem Használt
 A méretváltoztatás leformázza a VMC-t
 Létrehoz
 Indít
@@ -143,12 +143,12 @@ Automatikus Merevlemez kikapcsolás
 Videó mód
 Párbeszédablak színe
 Kiválasztott színe
-Információ oldal megjelenítése
+Színek Visszaállítása
 Infó
 Testreszabott ELF
 Szín szelekció
 Újracsatlakozás
-Leave empty to list shares
+Hagyja üresen a megosztások listázásához
 ETH előtag elérési út
 Backspace
 Szóköz
@@ -182,6 +182,8 @@ Vízszintes-Pozíció
 Vízszintes Szabályozás
 Függőleges-Pozíció
 Függőleges Szabályozás
+Overscan
+Overscan Beállítása
 FMV Átugrása
 Átugorja a  Full Motion Videókat
 Csalás Beállítások
@@ -195,7 +197,7 @@ Hiba: A Csalás Fájl betöltése sikertelen
 Nem találhatóak csalások
 Alapértelmezett letöltése
 Hálózat frissítés
-Újra-letölti a meglévő feljegyzéseket?
+Létező rekordok felülírása
 Frissítés Sikertelen.
 Nem sikerült csatlakozni a frissítő szerverhez.
 Frissítés befejezve.
@@ -210,12 +212,12 @@ PS2 Logó
 Csak egy érvényes lemez logónál jelenik meg, amely egyezik a konzol régiójával
 PADEMU konfigurálás
 Pad Emulator Beállítások
-Pad Emulátor engedélyezése
+PadEmulator Engedélyezése
 Be/ki kapcsolja a PadEmulátor-t a kiválaszott játékhoz.
 Pad Emulátor mód
 Válassza ki a  Pad Emulátor módját.
-DualShock3 USB
-DualShock3 BT
+DualShock3/4 USB
+DualShock3/4 BT
 Port beállítások:
 Válassza ki a Pad Emulátor portot a beállításokhoz.
 Emuláció engedélyezése
@@ -223,8 +225,59 @@ Be/ki kapcsolja a Pad Emulátor-t a kiválasztott porthoz.
 Rezgés engedélyezése
 Be/ki kapcsolja a rezgést a Pad Emulátor kiválasztott portjához.
 Usb bluetooth adapter mac címe:
-DS3 Kontroller párosítva erre a mac címre :
+DS Kontroller a következő MAC címhez pároztatva:
 Párosítás
-DS3 kontroller párosítása
-DS3 kontroller párosítása bluetooth adapter mac címmel.
+DS Kontroller Pároztatása
+DS Kontroller Pároztatása Bluetooth adapter MAC címmel.
 Nincs csatlakoztatva
+Bluetooth adapter információ
+Több információ és támogatott funkciók mutátása
+HCI Verzió:
+LMP Verzió:
+Gyártó ID:
+Támogatási funkciók:
+Igen
+Nem
+A Bluetooth adapternek teljes mértékben kompatibilisnek kell lennie a DS3/DS4 kontrollerekkel.
+A Bluetooth adapter nem biztos, hogy megfelelően fog működni DS3/DS4 kontrollerekkel.
+Multitap emuláció Engedélyezése
+ki/be kapcsolja Multitap emulációt a kiválasztott játékhoz.
+Multitap emulátor ezen a porton
+Válassza ki a portot a Multitap emulációhoz.
+Megkerülés letiltása a hamisítvány DS3-hoz.
+Néhány hamis ds3-hoz megkerülés szükséges, ez az opció letiltja ezt.
+FIELD flipping emulálása
+Fix azon játékokhoz, melyek hibát produkálnak progresszív videó mód alatt.
+Gyerekzár Beállítások
+Gyerekzár Jelszó
+Hagyja üresen a gyerekzár kikapcsolásához.
+Írja be a gyerekzár jelszót
+Gyerekzár jelszó helytelen.
+Gyerekzás kikapcsolva.
+Build Opciók:
+Hiba - ez a jelszó nem használható.
+VMC %s fájl töredezett. Folytatás a %d foglalatban lévő Memória Kártyával?
+Hangbeállítások
+Hanghatások engedélyezése
+Boot Sound engedélyezése
+Hanghatások hangereje
+Boot Sound hangereje
+Videó mód változtatás jóváhagyása?
+Játéklista cachelés (HDD)
+Értesítések engedélyezése
+%s betöltve %s-ből
+Játék Menü
+Játékbeállítások elmentve.
+%s beállítások eltávolítva
+Engedélyezéskor felülírja a létező játék kompatibilitási beállításokat.
+Beállítások Mód
+Globális
+Játékonként
+Összes
+Válassza ki az eltávolítani való beállításokat.
+Támogatási Fórumok:
+Cím
+Műfaj
+Megjelenés
+Fejlesztő
+Leírás

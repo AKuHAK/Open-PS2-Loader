@@ -59,7 +59,8 @@ static void ResetIopSpecial(const char *args, unsigned int arglen)
 
     DIntr();
     ee_kmode_enter();
-    Old_SifSetReg(SIF_REG_SMFLAG, SIF_STAT_SIFINIT | SIF_STAT_CMDINIT);
+    Old_SifSetReg(SIF_REG_SMFLAG, SIF_STAT_SIFINIT);
+    Old_SifSetReg(SIF_REG_SMFLAG, SIF_STAT_CMDINIT);
     Old_SifSetReg(SIF_SYSREG_RPCINIT, 0);
     Old_SifSetReg(SIF_SYSREG_SUBADDR, (int)NULL);
     ee_kmode_exit();
@@ -85,7 +86,7 @@ static void ResetIopSpecial(const char *args, unsigned int arglen)
 #define PADEMU_ARG
 #endif
     if (GameMode == USB_MODE PADEMU_ARG) {
-        LoadOPLModule(OPL_MODULE_ID_USBD, 0, 11, "thpri=15,16");
+        LoadOPLModule(OPL_MODULE_ID_USBD, 0, 11, "thpri=2,3");
     }
     if (GameMode == ETH_MODE) {
         LoadOPLModule(OPL_MODULE_ID_SMSTCPIP, 0, 0, NULL);
@@ -144,7 +145,6 @@ int New_Reset_Iop(const char *arg, int arglen)
             GS_BGCOLOUR = 0x00FFFF; //Yellow
     }
 
-#ifdef VMC
     if (iop_reboot_count >= 2) {
 #ifdef PADEMU
         PadEmuSettings |= (LoadOPLModule(OPL_MODULE_ID_MCEMU, 0, 0, NULL) > 0) << 24;
@@ -152,19 +152,12 @@ int New_Reset_Iop(const char *arg, int arglen)
         LoadOPLModule(OPL_MODULE_ID_MCEMU, 0, 0, NULL);
 #endif
     }
-#endif
 
 #ifdef PADEMU
     if (iop_reboot_count >= 2 && EnablePadEmuOp) {
         LoadOPLModule(OPL_MODULE_ID_PADEMU, 0, 4, (char *)&PadEmuSettings);
     }
 #endif
-
-    /*	For HDD mode, CDVDMAN's name is set to DEV9 (so that the game can find DEV9 loaded) in order for network support to still work.
-		However, some games will stop working (for one reason or another) if they find DEV9 loaded when it should not...
-		SMB mode never has its CDVDMAN name changed to DEV9 because it cannot share the SMAP interface with the game.	*/
-    if (g_compat_mask & COMPAT_MODE_8)
-        ChangeModuleName("dev9", "cdvdman");
 
     DPRINTF("Exiting services...\n");
     SifExitIopHeap();
@@ -229,7 +222,8 @@ int Reset_Iop(const char *arg, int mode)
         return 0;
     }
 
-    Old_SifSetReg(SIF_REG_SMFLAG, SIF_STAT_SIFINIT | SIF_STAT_CMDINIT);
+    Old_SifSetReg(SIF_REG_SMFLAG, SIF_STAT_SIFINIT);
+    Old_SifSetReg(SIF_REG_SMFLAG, SIF_STAT_CMDINIT);
     Old_SifSetReg(SIF_SYSREG_RPCINIT, 0);
     Old_SifSetReg(SIF_SYSREG_SUBADDR, (int)NULL);
     ee_kmode_exit();

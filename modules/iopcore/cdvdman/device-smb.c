@@ -10,7 +10,6 @@
 #include "oplsmb.h"
 #include "smb.h"
 #include "smstcpip.h"
-#include "dev9.h"
 #include "atad.h"
 #include "ioplib_util.h"
 #include "cdvdman.h"
@@ -36,8 +35,9 @@
 
 extern struct cdvdman_settings_smb cdvdman_settings;
 
-struct irx_export_table _exp_dev9;
-struct irx_export_table _exp_oplsmb;
+extern struct irx_export_table _exp_oplsmb;
+
+extern int smb_io_sema;
 
 static void ps2ip_init(void);
 
@@ -45,9 +45,11 @@ static void ps2ip_init(void);
 // Note: recvfrom() used here is not a standard recvfrom() function.
 int (*plwip_close)(int s);                                                                                                                    // #6
 int (*plwip_connect)(int s, struct sockaddr *name, socklen_t namelen);                                                                        // #7
-int (*plwip_recvfrom)(int s, void *header, int hlen, void *payload, int plen, unsigned int flags, struct sockaddr *from, socklen_t *fromlen); // #10
+int (*plwip_recv)(int s, void *mem, int len, unsigned int flags);                                                                             // #9
+int (*plwip_recvfrom)(int s, void *mem, int hlen, void *payload, int plen, unsigned int flags, struct sockaddr *from, socklen_t *fromlen);    // #10
 int (*plwip_send)(int s, void *dataptr, int size, unsigned int flags);                                                                        // #11
 int (*plwip_socket)(int domain, int type, int protocol);                                                                                      // #13
+int (*plwip_setsockopt)(int s, int level, int optname, const void *optval, socklen_t optlen);                                                 // #19
 u32 (*pinet_addr)(const char *cp);                                                                                                            // #24
 
 static u32 ServerCapabilities;
@@ -60,9 +62,11 @@ static void ps2ip_init(void)
     // Set functions pointers here
     plwip_close = info.exports[6];
     plwip_connect = info.exports[7];
+    plwip_recv = info.exports[9];
     plwip_recvfrom = info.exports[10];
     plwip_send = info.exports[11];
     plwip_socket = info.exports[13];
+    plwip_setsockopt = info.exports[19];
     pinet_addr = info.exports[24];
 }
 
@@ -74,15 +78,12 @@ void smb_NegotiateProt(OplSmbPwHashFunc_t hash_callback)
 
 void DeviceInit(void)
 {
-    RegisterLibraryEntries(&_exp_dev9);
-    dev9d_init();
-
     RegisterLibraryEntries(&_exp_oplsmb);
 }
 
 void DeviceDeinit(void)
-{
-    smb_Disconnect();
+{   // Close all files and disconnect before IOP reboots. Note that this seems to help prevent VMC corruption in some games.
+    DeviceUnmount();
 }
 
 void DeviceFSInit(void)
@@ -118,6 +119,21 @@ void DeviceFSInit(void)
     }
 }
 
+void DeviceLock(void)
+{
+    WaitSema(smb_io_sema);
+}
+
+void DeviceUnmount(void)
+{
+    smb_CloseAll();
+    smb_Disconnect();
+}
+
+void DeviceStop(void)
+{
+}
+
 int DeviceReadSectors(u32 lsn, void *buffer, unsigned int sectors)
 {
     register u32 r, sectors_to_read, lbound, ubound, nlsn, offslsn;
@@ -143,6 +159,7 @@ int DeviceReadSectors(u32 lsn, void *buffer, unsigned int sectors)
             smb_ReadCD(offslsn, sectors_to_read, &p[r], i);
 
             r += sectors_to_read << 11;
+            offslsn += sectors_to_read;
             sectors_to_read = sectors;
             lsn = nlsn;
         }

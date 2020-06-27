@@ -4,6 +4,8 @@ Copyright 2013, Ifcaro & jimmikaelkael
 Licenced under Academic Free License version 3.0  
 Review LICENSE file for further details.  
 
+[![CI](https://github.com/ifcaro/Open-PS2-Loader/workflows/CI/badge.svg)](https://github.com/ifcaro/Open-PS2-Loader/actions?query=workflow%3ACI)
+
 ## Introduction
 
 Open PS2 Loader (OPL) is a 100% Open source game and application loader for
@@ -17,7 +19,13 @@ the project due to its open source nature.
 
 You can visit the Open PS2 Loader forum at:  
 
-http://psx-scene.com/forums/official-open-ps2-loader-forum/  
+http://psx-scene.com/forums/official-open-ps2-loader-forum/ 
+
+https://www.psx-place.com/forums/open-ps2-loader-opl.77/
+
+You can report compatibility game problems at:
+
+https://www.psx-place.com/threads/open-ps2-loader-game-bug-reports.19401/
 
 For updated compatibility list, you can visit OPL-CL site at:  
 
@@ -49,6 +57,7 @@ USB modes:
 | "CFG" | for saving per-game configuration files | all |
 | "ART" | for game art images | all |
 | "THM" | for themes support | all |
+| "LNG" | for translation support | all |
 | "CHT" | for cheats files | all |
 | "CFG-DEV" | for saving per-game configuration files, when used from a OPL dev build - aka beta build | all |
 

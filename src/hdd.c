@@ -3,6 +3,9 @@
 #include "include/ioman.h"
 #include "include/hddsupport.h"
 
+#define NEWLIB_PORT_AWARE
+#include <fileXio_rpc.h>
+
 typedef struct // size = 1024
 {
     u32 checksum; // HDL uses 0xdeadfeed magic here
@@ -36,6 +39,7 @@ int hddCheck(void)
 
     ret = fileXioDevctl("hdd0:", HDIOC_STATUS, NULL, 0, NULL, 0);
 
+    //0 = HDD connected and formatted, 1 = not formatted, 2 = HDD not usable, 3 = HDD not connected.
     if ((ret >= 3) || (ret < 0))
         return -1;
 
@@ -66,7 +70,7 @@ int hddSetTransferMode(int type, int mode)
 }
 
 //-------------------------------------------------------------------------
-int hddSetIdleTimeout(int timeout)
+void hddSetIdleTimeout(int timeout)
 {
     // From hdparm man:
     // A value of zero means "timeouts  are  disabled":  the
@@ -80,11 +84,16 @@ int hddSetIdleTimeout(int timeout)
     // 21 minutes plus 15 seconds.  Note that  some  older  drives  may
     // have very different interpretations of these values.
 
-    u8 args[16];
+    u8 standbytimer = (u8)timeout;
 
-    *(u32 *)&args[0] = timeout & 0xff;
+    fileXioDevctl("hdd0:", HDIOC_IDLE, &standbytimer, 1, NULL, 0);
+    fileXioDevctl("hdd1:", HDIOC_IDLE, &standbytimer, 1, NULL, 0);
+}
 
-    return fileXioDevctl("hdd0:", HDIOC_IDLE, args, 4, NULL, 0);
+void hddSetIdleImmediate(void)
+{
+    fileXioDevctl("hdd0:", HDIOC_IDLEIMM, NULL, 0, NULL, 0);
+    fileXioDevctl("hdd1:", HDIOC_IDLEIMM, NULL, 0, NULL, 0);
 }
 
 //-------------------------------------------------------------------------
@@ -124,12 +133,6 @@ static int hddWriteSectors(u32 lba, u32 nsectors, const void *buf)
 }
 
 //-------------------------------------------------------------------------
-int hddGetFormat(void)
-{
-    return fileXioDevctl("hdd0:", HDIOC_FORMATVER, NULL, 0, NULL, 0);
-}
-
-//-------------------------------------------------------------------------
 struct GameDataEntry
 {
     u32 lba, size;
@@ -155,9 +158,9 @@ static int hddGetHDLGameInfo(struct GameDataEntry *game, hdl_game_info_t *ginfo)
         ginfo->dma_type = hdl_header->dma_type;
         ginfo->dma_mode = hdl_header->dma_mode;
         ginfo->layer_break = hdl_header->layer1_start;
-        ginfo->disctype = hdl_header->discType;
+        ginfo->disctype = (u8)hdl_header->discType;
         ginfo->start_sector = game->lba;
-        ginfo->total_size_in_kb = game->size / 2; //size * 2048 / 1024 = 0.5x
+        ginfo->total_size_in_kb = game->size * 2; //size * 2048 / 1024 = 2x
     } else
         ret = -1;
 
@@ -216,7 +219,7 @@ int hddGetHDLGamelist(hdl_games_list_t *game_list)
                     pGameEntry->lba = dirent.stat.private_5 + (HDL_GAME_DATA_OFFSET + 4096) / 512;
                 }
 
-                pGameEntry->size += (dirent.stat.size / 4); //size in sectors * (512 / 2048)
+                pGameEntry->size += (dirent.stat.size / 4); //size in HDD sectors * (512 / 2048) = 0.25x
             }
         }
 
@@ -224,6 +227,8 @@ int hddGetHDLGamelist(hdl_games_list_t *game_list)
 
         if (head != NULL) {
             if ((game_list->games = malloc(sizeof(hdl_game_info_t) * count)) != NULL) {
+                memset(game_list->games, 0, sizeof(hdl_game_info_t) * count);
+
                 for (i = 0, current = head; i < count; i++, current = current->next) {
                     if ((ret = hddGetHDLGameInfo(current, &game_list->games[i])) != 0)
                         break;
@@ -292,7 +297,7 @@ int hddDeleteHDLGame(hdl_game_info_t *ginfo)
 
     sprintf(path, "hdd0:%s", ginfo->partition_name);
 
-    return fileXioRemove(path);
+    return unlink(path);
 }
 
 //-------------------------------------------------------------------------

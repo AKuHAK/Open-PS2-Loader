@@ -26,7 +26,6 @@ void mass_stor_readSector(unsigned int lba, unsigned short int nsectors, unsigne
 void mass_stor_writeSector(unsigned int lba, unsigned short int nsectors, const unsigned char *buffer);
 int mass_stor_configureDevice(void);
 int mass_stor_ReadCD(unsigned int lsn, unsigned int nsectors, void *buf, int part_num);
-
-#define MAX_USB_SECTORS 2
+int mass_stor_stop_unit(void);
 
 #endif

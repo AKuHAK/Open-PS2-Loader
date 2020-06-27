@@ -232,6 +232,7 @@ int ioPutRequest(int type, void *data)
 
     SignalSema(gEndSemaId);
 
+    // Worker thread cannot wake itself up (WakeupThread will return an error), but it will find the new request before sleeping.
     WakeupThread(gIOThreadId);
     return IO_OK;
 }
@@ -313,7 +314,8 @@ static char tbuf[2048];
 
 int ioPrintf(const char *format, ...)
 {
-    WaitSema(gIOPrintfSemaId);
+    if (isIORunning == 1)
+	    WaitSema(gIOPrintfSemaId);
 
     va_list args;
     va_start(args, format);
@@ -325,7 +327,9 @@ int ioPrintf(const char *format, ...)
 #endif
     va_end(args);
 
-    SignalSema(gIOPrintfSemaId);
+    if (isIORunning == 1)
+	    SignalSema(gIOPrintfSemaId);
+
     return ret;
 }
 

@@ -58,13 +58,9 @@ struct sys_mbox
 typedef struct ip_addr IPAddr;
 
 #define MODNAME "TCP/IP Stack"
-IRX_ID(MODNAME, 1, 3);
+IRX_ID(MODNAME, 1, 5);
 
 extern struct irx_export_table _exp_ps2ip;
-
-#ifdef PS2IP_DHCP
-static int iTimerDHCP = 0;
-#endif /* PS2IP_DHCP */
 
 #if LWIP_HAVE_LOOPIF
 static NetIF LoopIF;
@@ -85,7 +81,7 @@ static int inline IsMessageBoxEmpty(sys_mbox_t apMBox)
     return apMBox->u16Last == apMBox->u16First;
 } /* end IsMessageBoxEmpty */
 
-#ifdef INGAME_DRIVER
+#ifdef INTERRUPT_CTX_INPKT
 void PostInputMSG(sys_mbox_t pMBox, void *pvMSG)
 {
 
@@ -98,6 +94,7 @@ void PostInputMSG(sys_mbox_t pMBox, void *pvMSG)
 } /* end PostInputMSG */
 #endif
 
+#ifdef FULL_LWIP
 int ps2ip_getconfig(char *pszName, t_ip_info *pInfo)
 {
 
@@ -152,81 +149,9 @@ int ps2ip_setconfig(t_ip_info *pInfo)
     return 1;
 
 } /* end ps2ip_setconfig */
-
-#define ALARM_TCP 0x00000001
-#define ALARM_ARP 0x00000002
-#define ALARM_MSK (ALARM_TCP | ALARM_ARP)
-
-typedef struct AlarmData
-{
-
-    int m_EventFlag;
-    unsigned long m_EventMask;
-    iop_sys_clock_t m_Clock;
-
-} AlarmData;
-
-unsigned int _alarm(void *apArg)
-{
-
-    AlarmData *lpData = (AlarmData *)apArg;
-
-    iSetEventFlag(lpData->m_EventFlag, lpData->m_EventMask);
-
-    return lpData->m_Clock.lo;
-
-} /* end _alarm */
-
-static void TimerThread(void *apArg)
-{
-
-    AlarmData lTCPData;
-    AlarmData lARPData;
-    iop_event_t lEvent;
-
-    lEvent.attr = 0;
-    lEvent.bits = 0;
-    lTCPData.m_EventFlag =
-        lARPData.m_EventFlag = CreateEventFlag(&lEvent);
-    lTCPData.m_EventMask = ALARM_TCP;
-    lARPData.m_EventMask = ALARM_ARP;
-    USec2SysClock(TCP_TMR_INTERVAL * 1024, &lTCPData.m_Clock);
-    USec2SysClock(ARP_TMR_INTERVAL * 1024, &lARPData.m_Clock);
-
-    SetAlarm(&lTCPData.m_Clock, _alarm, &lTCPData);
-    SetAlarm(&lARPData.m_Clock, _alarm, &lARPData);
-
-    while (1) {
-
-        unsigned long lRes;
-
-        WaitEventFlag(lTCPData.m_EventFlag, ALARM_MSK, WEF_CLEAR | WEF_OR, &lRes);
-
-#if LWIP_TCP
-        if (lRes & ALARM_TCP)
-            tcp_tmr();
 #endif
-        if (lRes & ALARM_ARP)
-            etharp_tmr();
 
-    } /* end while */
-
-} /* end TimerThread */
-
-static void InitTimer(void)
-{
-
-    iop_thread_t lThread = {TH_C, 0, TimerThread, 0x800, SYS_THREAD_PRIO_BASE};
-    int lTID = CreateThread(&lThread);
-
-    if (lTID < 0)
-        ExitDeleteThread();
-
-    StartThread(lTID, NULL);
-
-} /* end InitTimer */
-
-#ifdef INGAME_DRIVER
+#ifdef INTERRUPT_CTX_INPKT
 typedef struct InputMSG
 {
     struct pbuf *pInput;
@@ -386,7 +311,6 @@ int _start(int argc, char **argv)
 #if LWIP_HAVE_LOOPIF
     AddLoopIF();
 #endif /* LWIP_HAVE_LOOPIF */
-    InitTimer();
 
     return MODULE_RESIDENT_END;
 
@@ -415,8 +339,11 @@ sys_mbox_t sys_mbox_new(void)
 {
 
     sys_mbox_t pMBox;
+    int OldState;
 
-    pMBox = (sys_mbox_t)AllocSysMemory(0, sizeof(struct sys_mbox), 0);
+    CpuSuspendIntr(&OldState);
+    pMBox = (sys_mbox_t)AllocSysMemory(ALLOC_FIRST, sizeof(struct sys_mbox), NULL);
+    CpuResumeIntr(OldState);
 
     if (!pMBox)
         return NULL;
@@ -449,6 +376,7 @@ void sys_mbox_post(sys_mbox_t pMBox, void *pvMSG)
 {
 
     sys_prot_t Flags;
+    sys_sem_t sem;
 
     if (!pMBox)
         return;
@@ -470,10 +398,12 @@ void sys_mbox_post(sys_mbox_t pMBox, void *pvMSG)
     pMBox->apvMSG[pMBox->u16Last] = pvMSG;
     pMBox->u16Last = GenNextMBoxIndex(pMBox->u16Last);
 
-    if (pMBox->iWaitFetch > 0)
-        SignalSema(pMBox->Mail);
+    sem = (pMBox->iWaitFetch > 0) ? pMBox->Mail : SYS_SEM_NULL;
 
     CpuResumeIntr(Flags);
+
+    if (sem != SYS_SEM_NULL)
+        SignalSema(sem);
 
 } /* end sys_mbox_post */
 
@@ -481,6 +411,7 @@ u32_t sys_arch_mbox_fetch(sys_mbox_t pMBox, void **ppvMSG, u32_t u32Timeout)
 {
 
     sys_prot_t Flags;
+    sys_sem_t sem = SYS_SEM_NULL;
     u32_t u32Time = 0;
 
     CpuSuspendIntr(&Flags);
@@ -507,13 +438,16 @@ u32_t sys_arch_mbox_fetch(sys_mbox_t pMBox, void **ppvMSG, u32_t u32Timeout)
 
     } /* end while */
 
-    *ppvMSG = pMBox->apvMSG[pMBox->u16First];
+    if (ppvMSG != NULL) //This pointer may be NULL.
+        *ppvMSG = pMBox->apvMSG[pMBox->u16First];
     pMBox->u16First = GenNextMBoxIndex(pMBox->u16First);
 
-    if (pMBox->iWaitPost > 0)
-        SignalSema(pMBox->Mail);
+    sem = (pMBox->iWaitPost > 0) ? pMBox->Mail : SYS_SEM_NULL;
 end:
     CpuResumeIntr(Flags);
+
+    if (sem != SYS_SEM_NULL)
+        SignalSema(sem);
 
     return u32Time;
 
@@ -522,7 +456,7 @@ end:
 sys_sem_t sys_sem_new(u8_t aCount)
 {
 
-    iop_sema_t lSema = {1, 1, aCount, 1};
+    iop_sema_t lSema = {SA_THPRI, 1, aCount, 1};
     int retVal;
 
     retVal = CreateSema(&lSema);
@@ -534,28 +468,58 @@ sys_sem_t sys_sem_new(u8_t aCount)
 
 } /* end sys_sem_new */
 
+static unsigned int TimeoutHandler(void* pvArg)
+{
+    iReleaseWaitThread((int)pvArg);
+    return 0;
+}
+
+static u32_t ComputeTimeDiff(const iop_sys_clock_t* pStart, const iop_sys_clock_t* pEnd)
+{
+    iop_sys_clock_t Diff;
+    u32 iSec, iUSec, iDiff;
+
+    Diff.lo = pEnd->lo-pStart->lo;
+    Diff.hi = pEnd->hi-pStart->hi - (pStart->lo>pEnd->lo);
+
+    SysClock2USec(&Diff, &iSec, &iUSec);
+    iDiff=(iSec * 1000) + (iUSec / 1000);
+
+    return((iDiff != 0) ? iDiff : 1);
+}
+
 u32_t sys_arch_sem_wait(sys_sem_t aSema, u32_t aTimeout)
 {
+    u32 WaitTime;
 
-    if (!aTimeout)
-        return WaitSema(aSema);
+    if (aTimeout == 0)
+        return(WaitSema(aSema) == 0 ? 0 : SYS_ARCH_TIMEOUT);
+    else if (aTimeout == 1)
+        return(PollSema(aSema) == 0 ? 0 : SYS_ARCH_TIMEOUT);
     else {
 
         iop_sys_clock_t lTimeout;
+        iop_sys_clock_t Start;
+        iop_sys_clock_t End;
         int lTID = GetThreadId();
 
-        USec2SysClock(aTimeout * 1024, &lTimeout);
-        SetAlarm(&lTimeout, (unsigned (*)(void *))iReleaseWaitThread, (void *)lTID);
+        GetSystemTime(&Start);
+        USec2SysClock(aTimeout * 1000, &lTimeout);
+        SetAlarm(&lTimeout, &TimeoutHandler, (void *)lTID);
 
         if (!WaitSema(aSema)) {
-            CancelAlarm((unsigned (*)(void *))iReleaseWaitThread, (void *)lTID);
-            --aTimeout;
+            CancelAlarm(&TimeoutHandler, (void *)lTID);
+            GetSystemTime(&End);
+
+            WaitTime = ComputeTimeDiff(&Start, &End);
+            if (WaitTime > aTimeout)
+              WaitTime = aTimeout;
         } else
-            aTimeout = SYS_ARCH_TIMEOUT;
+            WaitTime = SYS_ARCH_TIMEOUT;
 
     } /* end else */
 
-    return aTimeout;
+    return WaitTime;
 
 } /* end sys_arch_sem_wait */
 
