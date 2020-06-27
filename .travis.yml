@@ -1,3 +1,9 @@
+# Use 'generic' to be able to override CC/CXX for clang
+language: generic
+
+# Use a release with a longer normal LTS
+dist: xenial
+
 services:
   - docker
 
@@ -7,10 +13,20 @@ env:
    #   via the "travis encrypt" command using the project repo's public key
    - secure: "JL/1Sd+mbptKXtGXWcNusElWN4BoDMaZ43EDFUUtxIdyLpuYgBrxfVtaLzrwXiRrIUDnpNwuLR8KlJVuI+eKjiiFnS72lnNYJJL0tyXSejftp08plS5jxylcn+/VK6yAUcmyzqRqcHQfzK9GM70Ut7K1efoUBqCd5bHylMCS1u21BjFfDoGm9GYKdeUL7pZO2OL6I1c6EgDfKtbKiWeGKLUh2FB1ihqS8MpEmeka7FkiQvKteFyhJ6ZHV9rXQdgTE8eObsHg/rK5XVS713SuKaZYY+5xbfVCbHGWZlAVwJTBTq64Lmr9q7pwllcnCyiT7tCfjk/6M/PoNTpH5kmigd8Kaz+I1DdXgRtZiG2Yd5K1uJcqa1tMo8seoh5lgDMKnAa0bS2v15Irs4B6chUQHKXAwGtDSDvrJNeujjnaRi1SbW1uTSgbqMNX6PY4EcrABXV4IO118f/0Zqal92jS6vk52vD4edV8T+ctmmfd5l/O1ngDw4Ity/t0M7sXdChptZ7UUPQLs5B2a230JS9VuWTvt3vuM6ByDGZbMklukJPFX8EfPBcjVAd2CTTOhfcP6zi97vsNQZxoHCM+Q/SmsVQOiGo4JgPMN+MZmrjo2YP+UmBVQujBkZNPuZ4/8iyxMzRlnvscBBwidcD+vwOqyt6DrxZRgzchHg+6v8QZjRA="
 
-before_install:
-  - echo -n | openssl s_client -connect https://scan.coverity.com:443 | sed -ne '/-BEGIN CERTIFICATE-/,/-END CERTIFICATE-/p' | sudo tee -a /etc/ssl/certs/ca-
+#before_install:
+#  - echo -n | openssl s_client -connect https://scan.coverity.com:443 | sed -ne '/-BEGIN CERTIFICATE-/,/-END CERTIFICATE-/p' | sudo tee -a /etc/ssl/certs/ca-
 
 addons:
+  apt:
+    packages:
+      - libsdl2-dev
+      - libusb-1.0-0-dev
+      - qtbase5-dev
+      - qtdeclarative5-dev
+      - rake
+    sources:
+      - ubuntu-toolchain-r-test
+      - llvm-toolchain-xenial
   coverity_scan:
     project:
       name: "AKuHAK/Open-PS2-Loader"
