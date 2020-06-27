@@ -28,17 +28,16 @@ jobs:
         COVERITY_SCAN_BUILD_COMMAND="make"
         COVERITY_SCAN_TOKEN=${{ secrets.COVTOKEN }}
         PLATFORM=`uname`
-        TOOL_ARCHIVE=/tmp/cov-analysis-${PLATFORM}.tgz
+        TOOL_ARCHIVE=cov-analysis-${PLATFORM}.tgz
         TOOL_URL=https://scan.coverity.com/download/${PLATFORM}
-        TOOL_BASE=/tmp/coverity-scan-analysis
+        TOOL_DIR=coverity-scan-analysis
         UPLOAD_URL="https://scan.coverity.com/builds"
         SCAN_URL="https://scan.coverity.com"
         wget -nv -O $TOOL_ARCHIVE $TOOL_URL --post-data "project=$COVERITY_SCAN_PROJECT_NAME&token=$COVERITY_SCAN_TOKEN"
-        mkdir -p $TOOL_BASE
-        cd $TOOL_BASE
-        tar xzf $TOOL_ARCHIVE
-        cd $GITHUB_WORKSPACE
-        TOOL_DIR=`find $TOOL_BASE -type d -name 'cov-analysis*'`
+        mkdir -p $TOOL_DIR
+        cd $TOOL_DIR
+        tar xzf $TOOL_ARCHIVE --strip 1
+        cd ..
         export PATH=$TOOL_DIR/bin:$PATH
         echo -e "$TOOL_DIR"
         ls -l $TOOL_DIR
@@ -47,8 +46,9 @@ jobs:
         COV_BUILD_OPTIONS=""
         RESULTS_DIR="cov-int"
         eval "${COVERITY_SCAN_BUILD_COMMAND_PREPEND}"
-        COVERITY_UNSUPPORTED=1 $TOOL_DIR/cov-build --dir $RESULTS_DIR $COV_BUILD_OPTIONS $COVERITY_SCAN_BUILD_COMMAND
-        $TOOL_DIR/cov-import-scm --dir $RESULTS_DIR --scm git --log $RESULTS_DIR/scm_log.txt 2>&1
+        ls -l $TOOL_DIR/bin/
+        COVERITY_UNSUPPORTED=1 $TOOL_DIR/bin/cov-build --dir $RESULTS_DIR $COV_BUILD_OPTIONS $COVERITY_SCAN_BUILD_COMMAND
+        $TOOL_DIR/bin/cov-import-scm --dir $RESULTS_DIR --scm git --log $RESULTS_DIR/scm_log.txt 2>&1
         RESULTS_ARCHIVE=analysis-results.tgz
         tar czf $RESULTS_ARCHIVE $RESULTS_DIR
         SHA=`git rev-parse --short HEAD`
