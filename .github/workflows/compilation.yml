@@ -23,17 +23,12 @@ jobs:
       id: version
       run: echo "::set-output name=version::$(make oplversion)"
 
-    - name: Compile -> make clean release
-      run: |
-        make clean release
-        mv OPNPS2LD-*.ZIP OPNPS2LD-LATEST.ZIP
-
     - name: Upload release artifact
       if: ${{ success() }}
       uses: actions/upload-artifact@v2
       with:
         name: OPNPS2LD
-        path: OPNPS2LD-LATEST.ZIP
+        path: OPNPS2LD-*.ZIP
 
   build-variants:
     runs-on: ubuntu-latest
@@ -44,10 +39,11 @@ jobs:
         igs: [1]
         pademu: [1]
         rtl: [1]
+        np: [0, 1]
     steps:
     - name: Install dependencies
       run: |
-        apk add build-base git zip gawk
+        apk add build-base git gawk
 
     - uses: actions/checkout@v2
     - run: |
@@ -57,9 +53,9 @@ jobs:
       id: version
       run: echo "::set-output name=version::$(make oplversion)"
 
-    - name: Compile -> make RTL=1 IGS=1 PADEMU=1 DTL_T10000=1 NOT_PACKED=1 clean OPNPS2LD.ELF
+    - name: Compile -> make RTL=${{ matrix.rtl }} IGS=${{ matrix.igs }} PADEMU=${{ matrix.pademu }} DTL_T10000=${{ matrix.t10k }} NOT_PACKED=${{ matrix.np }}  clean OPNPS2LD.ELF
       run: |
-        make RTL=${{ matrix.rtl }} IGS=${{ matrix.igs }} PADEMU=${{ matrix.pademu }} DTL_T10000=${{ matrix.t10k }} clean OPNPS2LD.ELF
+        make RTL=${{ matrix.rtl }} IGS=${{ matrix.igs }} PADEMU=${{ matrix.pademu }} DTL_T10000=${{ matrix.t10k }} NOT_PACKED=${{ matrix.np }} clean OPNPS2LD.ELF
         mv OPNPS2LD.ELF OPNPS2LD-RTL=${{ matrix.rtl }}-IGS=${{ matrix.igs }}-PADEMU=${{ matrix.pademu }}-DTL_T10000=${{ matrix.t10k }}-${{ steps.version.outputs.version }}.ELF
 
     - name: Create detailed changelog
