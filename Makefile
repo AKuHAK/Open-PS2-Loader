@@ -91,8 +91,8 @@ EECORE_OBJS = ee_core.o ioprp.o util.o \
 		ingame_smstcpip.o smap_ingame.o smbman.o smbinit.o
 
 EE_BIN = opl.elf
-EE_BIN_STRIPPED = opl_stripped.elf
-EE_BIN_PACKED = OPNPS2LD.ELF
+EE_BIN_STRIPPED = opl_stripped
+EE_BIN_PACKED = OPNPS2LD
 EE_VPKD = OPNPS2LD-$(OPL_VERSION)
 EE_SRC_DIR = src/
 EE_OBJS_DIR = obj/
@@ -328,12 +328,12 @@ $(EE_OBJS_DIR):
 DETAILED_CHANGELOG:
 	sh make_changelog.sh
 
-$(EE_BIN_STRIPPED): $(EE_BIN)
+$(EE_BIN_STRIPPED).elf: $(EE_BIN)
 	echo "Stripping..."
 	$(EE_STRIP) -o $@ $<
 
 #ifneq ($(NOT_PACKED),1)
-$(EE_BIN_PACKED): $(EE_BIN_STRIPPED)
+$(EE_BIN_PACKED).ELF: $(EE_BIN_STRIPPED)
 	echo "Compressing..."
 	ps2-packer $< $@ > /dev/null
 
