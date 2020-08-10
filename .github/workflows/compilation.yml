@@ -54,10 +54,9 @@ jobs:
     strategy:
       matrix:
         t10k: [0, 1]
-        igs: [1]
-        pademu: [1]
-        rtl: [1]
-        np: [0, 1]
+        igs: [0, 1]
+        pademu: [0, 1]
+        rtl: [0, 1]
     steps:
     - name: Install dependencies
       run: |
@@ -71,10 +70,10 @@ jobs:
       id: version
       run: echo "::set-output name=version::$(make oplversion)"
 
-    - name: Compile -> make RTL=${{ matrix.rtl }} IGS=${{ matrix.igs }} PADEMU=${{ matrix.pademu }} DTL_T10000=${{ matrix.t10k }} NOT_PACKED=${{ matrix.np }}
+    - name: Compile -> make RTL=${{ matrix.rtl }} IGS=${{ matrix.igs }} PADEMU=${{ matrix.pademu }} DTL_T10000=${{ matrix.t10k }}
       run: |
-        make V=1 --trace SHELL='sh -x' RTL=${{ matrix.rtl }} IGS=${{ matrix.igs }} PADEMU=${{ matrix.pademu }} DTL_T10000=${{ matrix.t10k }} NOT_PACKED=${{ matrix.np }}
-        mv opl.elf OPNPS2LD-RTL=${{ matrix.rtl }}-IGS=${{ matrix.igs }}-PADEMU=${{ matrix.pademu }}-DTL_T10000=${{ matrix.t10k }}=NOT_PACKED=${{ matrix.np }}-${{ steps.version.outputs.version }}.ELF
+        make V=1 --trace SHELL='sh -x' RTL=${{ matrix.rtl }} IGS=${{ matrix.igs }} PADEMU=${{ matrix.pademu }} DTL_T10000=${{ matrix.t10k }} NOT_PACKED=1
+        mv opl.elf OPNPS2LD-RTL=${{ matrix.rtl }}-IGS=${{ matrix.igs }}-PADEMU=${{ matrix.pademu }}-DTL_T10000=${{ matrix.t10k }}-${{ steps.version.outputs.version }}.ELF
 
     - name: Upload variants artifact
       if: ${{ success() }}
@@ -82,7 +81,7 @@ jobs:
       with:
         name: OPNPS2LD-VARIANTS
         path: |
-          OPNPS2LD*.ELF
+          OPNPS2LD-RTL*.ELF
 
   create-release:
     needs: [build, build-variants]
