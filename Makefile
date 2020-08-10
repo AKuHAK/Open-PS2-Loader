@@ -194,7 +194,7 @@ all:
 	echo "Building Open PS2 Loader $(OPL_VERSION)..."
 	echo "-Interface"
 ifneq ($(NOT_PACKED),1)
-	$(MAKE) $(EE_BIN_PACKED)
+	$(MAKE) $(EE_BIN)
 else
 	$(MAKE) $(EE_BIN)
 endif
@@ -332,7 +332,7 @@ $(EE_BIN_STRIPPED): $(EE_BIN)
 	echo "Stripping..."
 	$(EE_STRIP) -o $@ $<
 
-ifneq ($(NOT_PACKED),1)
+#ifneq ($(NOT_PACKED),1)
 $(EE_BIN_PACKED): $(EE_BIN_STRIPPED)
 	echo "Compressing..."
 	ps2-packer $< $@ > /dev/null
@@ -343,9 +343,9 @@ $(EE_VPKD).ELF: $(EE_BIN_PACKED)
 $(EE_VPKD).ZIP: $(EE_VPKD).ELF DETAILED_CHANGELOG CREDITS LICENSE README.md
 	zip -r $@ $^
 	echo "Package Complete: $@"
-else
-#	$(MAKE) $(EE_BIN)
-endif
+#else
+	$(MAKE) $(EE_BIN)
+#endif
 
 ee_core/ee_core.elf: ee_core
 	echo "-EE core"
