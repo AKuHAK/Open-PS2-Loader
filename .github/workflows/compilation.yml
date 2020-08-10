@@ -56,7 +56,7 @@ jobs:
         t10k: [0, 1]
         igs: [0, 1]
         pademu: [0, 1]
-        rtl: [0, 1]
+        rtl: [1]
     steps:
     - name: Install dependencies
       run: |
@@ -101,7 +101,13 @@ jobs:
       uses: actions/download-artifact@v1
       with:
         name: OPNPS2LD-VARIANTS
-
+        
+    - name: Repack variants artifact
+      run: |
+        apk add p7zip
+        7z x OPNPS2LD-VARIANTS/OPNPS2LD-VARIANTS -O OPNPS2LD-VARIANTS-LATEST
+        7z a -t7z OPNPS2LD-VARIANTS-LATEST.7z OPNPS2LD-VARIANTS-LATEST
+        
     - name: Create release
       uses: marvinpinto/action-automatic-releases@latest
       with:
