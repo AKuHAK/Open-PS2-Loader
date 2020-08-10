@@ -1,0 +1,65 @@
+name: coverity-scan
+
+on:
+  push:
+  pull_request:
+  repository_dispatch:
+    types: [run_build]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    container: ps2dev/ps2dev:latest
+    steps:
+    - name: Install dependencies
+      run: |
+        apk add build-base git zip ruby
+
+    - uses: actions/checkout@v2
+    - run: |
+        git fetch --prune --unshallow
+
+    - name: Coverity scripts
+      run: |
+        COVERITY_SCAN_PROJECT_NAME="AKuHAK/Open-PS2-Loader"
+        COVERITY_SCAN_NOTIFICATION_EMAIL="akuhak@gmail.com"
+        COVERITY_SCAN_BRANCH_PATTERN="master"
+        COVERITY_SCAN_BUILD_COMMAND_PREPEND="make"
+        COVERITY_SCAN_BUILD_COMMAND="make"
+        COVERITY_SCAN_TOKEN=${{ secrets.COVTOKEN }}
+        PLATFORM=`uname`
+        TOOL_ARCHIVE=cov-analysis-${PLATFORM}.tgz
+        TOOL_URL=https://scan.coverity.com/download/${PLATFORM}
+        TOOL_DIR=coverity-scan-analysis
+        UPLOAD_URL="https://scan.coverity.com/builds"
+        SCAN_URL="https://scan.coverity.com"
+        wget -nv -P $TOOL_DIR -O $TOOL_ARCHIVE $TOOL_URL --post-data "project=$COVERITY_SCAN_PROJECT_NAME&token=$COVERITY_SCAN_TOKEN"
+        cd $TOOL_DIR
+        tar xzf $TOOL_ARCHIVE --strip 1
+        cd ..
+        export PATH=$TOOL_DIR/bin:$PATH
+        echo -e "$TOOL_DIR"
+        ls -l $TOOL_DIR
+        echo -e "echo 3"
+        echo -e "\033[33;1mRunning Coverity Scan Analysis Tool...\033[0m"
+        COV_BUILD_OPTIONS=""
+        RESULTS_DIR="cov-int"
+        eval "${COVERITY_SCAN_BUILD_COMMAND_PREPEND}"
+        ls -l $TOOL_DIR/bin/
+        COVERITY_UNSUPPORTED=1 $TOOL_DIR/bin/cov-build --dir $RESULTS_DIR $COV_BUILD_OPTIONS $COVERITY_SCAN_BUILD_COMMAND
+        $TOOL_DIR/bin/cov-import-scm --dir $RESULTS_DIR --scm git --log $RESULTS_DIR/scm_log.txt 2>&1
+        RESULTS_ARCHIVE=analysis-results.tgz
+        tar czf $RESULTS_ARCHIVE $RESULTS_DIR
+        SHA=`git rev-parse --short HEAD`
+        response=$(curl \
+          --silent --write-out "\n%{http_code}\n" \
+          --form project=$COVERITY_SCAN_PROJECT_NAME \
+          --form token=$COVERITY_SCAN_TOKEN \
+          --form email=$COVERITY_SCAN_NOTIFICATION_EMAIL \
+          --form file=@$RESULTS_ARCHIVE \
+          --form version=$SHA \
+          --form description="Github Actions build" \
+          $UPLOAD_URL)
+        status_code=$(echo "$response" | sed -n '$p')
+      env:
+        TOKEN: ${{ secrets.COVERITY_SCAN_TOKEN }}
