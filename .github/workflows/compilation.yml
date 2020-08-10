@@ -23,6 +23,10 @@ jobs:
       id: version
       run: echo "::set-output name=version::$(make oplversion)"
 
+    - name: Compile -> make clean release
+      run: |
+        make clean release
+ 
     - name: Upload release artifact
       if: ${{ success() }}
       uses: actions/upload-artifact@v2
