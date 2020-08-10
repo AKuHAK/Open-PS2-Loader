@@ -1,4 +1,4 @@
-name: CI
+name: CI-compile
 
 on:
   push:
@@ -38,6 +38,12 @@ jobs:
   build-variants:
     runs-on: ubuntu-latest
     container: ps2dev/ps2dev:latest
+    strategy:
+      matrix:
+        t10k: [0, 1]
+        igs: [0, 1]
+        pademu: [0, 1]
+        rtl: [0, 1]
     steps:
     - name: Install dependencies
       run: |
@@ -51,91 +57,13 @@ jobs:
       id: version
       run: echo "::set-output name=version::$(make oplversion)"
 
-    - name: Compile -> make clean OPNPS2LD.ELF
-      run: |
-        make clean OPNPS2LD.ELF
-        mv OPNPS2LD.ELF OPNPS2LD-${{ steps.version.outputs.version }}.ELF
-
-    - name: Compile -> make DTL_T10000=1 clean OPNPS2LD.ELF
-      run: |
-        make DTL_T10000=1 clean OPNPS2LD.ELF
-        mv OPNPS2LD.ELF OPNPS2LD-DTL_T10000-${{ steps.version.outputs.version }}.ELF
-
-    - name: Compile -> make PADEMU=1 clean OPNPS2LD.ELF
-      run: |
-        make PADEMU=1 clean OPNPS2LD.ELF
-        mv OPNPS2LD.ELF OPNPS2LD-PADEMU-${{ steps.version.outputs.version }}.ELF
-
-    - name: Compile -> make PADEMU=1 DTL_T10000=1 clean OPNPS2LD.ELF
-      run: |
-        make PADEMU=1 DTL_T10000=1 clean OPNPS2LD.ELF
-        mv OPNPS2LD.ELF OPNPS2LD-PADEMU-DTL_T10000-${{ steps.version.outputs.version }}.ELF
-
-    - name: Compile -> make IGS=1 clean OPNPS2LD.ELF
-      run: |
-        make IGS=1 clean OPNPS2LD.ELF
-        mv OPNPS2LD.ELF OPNPS2LD-IGS-${{ steps.version.outputs.version }}.ELF
-
-    - name: Compile -> make IGS=1 DTL_T10000=1 clean OPNPS2LD.ELF
-      run: |
-        make IGS=1 DTL_T10000=1 clean OPNPS2LD.ELF
-        mv OPNPS2LD.ELF OPNPS2LD-IGS-DTL_T10000-${{ steps.version.outputs.version }}.ELF
-
-    - name: Compile -> make IGS=1 PADEMU=1 clean OPNPS2LD.ELF
-      run: |
-        make IGS=1 PADEMU=1 clean OPNPS2LD.ELF
-        mv OPNPS2LD.ELF OPNPS2LD-IGS-PADEMU-${{ steps.version.outputs.version }}.ELF
-
-    - name: Compile -> make IGS=1 PADEMU=1 DTL_T10000=1 clean OPNPS2LD.ELF
-      run: |
-        make IGS=1 PADEMU=1 DTL_T10000=1 clean OPNPS2LD.ELF
-        mv OPNPS2LD.ELF OPNPS2LD-IGS-PADEMU-DTL_T10000-${{ steps.version.outputs.version }}.ELF
-
-    - name: Compile -> make RTL=1 clean OPNPS2LD.ELF
-      run: |
-        make RTL=1 clean OPNPS2LD.ELF
-        mv OPNPS2LD.ELF OPNPS2LD-RTL-${{ steps.version.outputs.version }}.ELF
-
-    - name: Compile -> make RTL=1 DTL_T10000=1 clean OPNPS2LD.ELF
-      run: |
-        make RTL=1 DTL_T10000=1 clean OPNPS2LD.ELF
-        mv OPNPS2LD.ELF OPNPS2LD-RTL-DTL_T10000-${{ steps.version.outputs.version }}.ELF
-
-    - name: Compile -> make RTL=1 PADEMU=1 clean OPNPS2LD.ELF
-      run: |
-        make RTL=1 PADEMU=1 clean OPNPS2LD.ELF
-        mv OPNPS2LD.ELF OPNPS2LD-RTL-PADEMU-${{ steps.version.outputs.version }}.ELF
-
-    - name: Compile -> make RTL=1 PADEMU=1 DTL_T10000=1 clean OPNPS2LD.ELF
-      run: |
-        make RTL=1 PADEMU=1 DTL_T10000=1 clean OPNPS2LD.ELF
-        mv OPNPS2LD.ELF OPNPS2LD-RTL-PADEMU-DTL_T10000-${{ steps.version.outputs.version }}.ELF
-
-    - name: Compile -> make RTL=1 IGS=1 clean OPNPS2LD.ELF
-      run: |
-        make RTL=1 IGS=1 clean OPNPS2LD.ELF
-        mv OPNPS2LD.ELF OPNPS2LD-RTL-IGS-${{ steps.version.outputs.version }}.ELF
-
-    - name: Compile -> make RTL=1 IGS=1 DTL_T10000=1 clean OPNPS2LD.ELF
-      run: |
-        make RTL=1 IGS=1 DTL_T10000=1 clean OPNPS2LD.ELF
-        mv OPNPS2LD.ELF OPNPS2LD-RTL-IGS-DTL_T10000-${{ steps.version.outputs.version }}.ELF
-
-    - name: Compile -> make RTL=1 IGS=1 PADEMU=1 clean OPNPS2LD.ELF
-      run: |
-        make RTL=1 IGS=1 PADEMU=1 clean OPNPS2LD.ELF
-        mv OPNPS2LD.ELF OPNPS2LD-RTL-IGS-PADEMU-${{ steps.version.outputs.version }}.ELF
-
     - name: Compile -> make RTL=1 IGS=1 PADEMU=1 DTL_T10000=1 clean OPNPS2LD.ELF
       run: |
-        make RTL=1 IGS=1 PADEMU=1 DTL_T10000=1 clean OPNPS2LD.ELF
-        mv OPNPS2LD.ELF OPNPS2LD-RTL-IGS-PADEMU-DTL_T10000-${{ steps.version.outputs.version }}.ELF
+        make RTL=${{ matrix.rtl }} IGS=${{ matrix.igs }} PADEMU=${{ matrix.pademu }} DTL_T10000=${{ matrix.t10k }} clean OPNPS2LD.ELF
+        mv OPNPS2LD.ELF OPNPS2LD-RTL=${{ matrix.rtl }}-IGS=${{ matrix.igs }}-PADEMU=${{ matrix.pademu }}-DTL_T10000=${{ matrix.t10k }}-${{ steps.version.outputs.version }}.ELF
 
     - name: Create detailed changelog
       run: sh ./make_changelog.sh
-
-    - name: Create zip archive
-      run: zip -r OPNPS2LD-VARIANTS-LATEST.ZIP OPNPS2LD*.ELF DETAILED_CHANGELOG CREDITS LICENSE README.md
 
     - name: Upload variants artifact
       if: ${{ success() }}
@@ -143,7 +71,7 @@ jobs:
       with:
         name: OPNPS2LD-VARIANTS
         path: |
-          OPNPS2LD-VARIANTS-LATEST.ZIP
+          OPNPS2LD*.ELF DETAILED_CHANGELOG CREDITS LICENSE README.md
 
   create-release:
     needs: [build, build-variants]
