@@ -333,11 +333,11 @@ $(EE_BIN_STRIPPED).elf: $(EE_BIN)
 	$(EE_STRIP) -o $@ $<
 
 #ifneq ($(NOT_PACKED),1)
-$(EE_BIN_PACKED).ELF: $(EE_BIN_STRIPPED)
+$(EE_BIN_PACKED).ELF: $(EE_BIN_STRIPPED).elf
 	echo "Compressing..."
 	ps2-packer $< $@ > /dev/null
 
-$(EE_VPKD).ELF: $(EE_BIN_PACKED)
+$(EE_VPKD).ELF: $(EE_BIN_PACKED).ELF
 	cp -f $< $@
 
 $(EE_VPKD).ZIP: $(EE_VPKD).ELF DETAILED_CHANGELOG CREDITS LICENSE README.md
