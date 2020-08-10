@@ -196,7 +196,8 @@ all:
 ifneq ($(NOT_PACKED),1)
 	$(MAKE) $(EE_BIN_PACKED)
 else
-	$(MAKE) $(EE_BIN)
+#	$(MAKE) $(EE_BIN)
+	$(MAKE) $(EE_BIN_PACKED)
 endif
 
 release:
