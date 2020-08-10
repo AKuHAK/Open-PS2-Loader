@@ -91,11 +91,9 @@ EECORE_OBJS = ee_core.o ioprp.o util.o \
 		ingame_smstcpip.o smap_ingame.o smbman.o smbinit.o
 
 EE_BIN = opl.elf
-ifneq ($(NOT_PACKED),1)
-EE_STRIPPED = opl_stripped
-EE_BIN_PACKED = OPNPS2LD
+EE_BIN_STRIPPED = opl_stripped.elf
+EE_BIN_PACKED = OPNPS2LD.ELF
 EE_VPKD = OPNPS2LD-$(OPL_VERSION)
-endif
 EE_SRC_DIR = src/
 EE_OBJS_DIR = obj/
 EE_ASM_DIR = asm/
@@ -196,7 +194,7 @@ all:
 	echo "Building Open PS2 Loader $(OPL_VERSION)..."
 	echo "-Interface"
 ifneq ($(NOT_PACKED),1)
-	$(MAKE) $(EE_BIN)
+	$(MAKE) $(EE_BIN_PACKED)
 else
 	$(MAKE) $(EE_BIN)
 endif
@@ -224,7 +222,7 @@ deci2_debug:
 clean:
 	echo "Cleaning..."
 	echo "-Interface"
-	rm -fr $(MAPFILE) $(EE_BIN) $(EE_BIN_PACKED) $(EE_STRIPPED) $(EE_VPKD).* $(EE_OBJS_DIR) $(EE_ASM_DIR)
+	rm -fr $(MAPFILE) $(EE_BIN) $(EE_BIN_PACKED) $(EE_BIN_STRIPPED) $(EE_VPKD).* $(EE_OBJS_DIR) $(EE_ASM_DIR)
 	echo "-EE core"
 	$(MAKE) -C ee_core clean
 	echo "-Elf Loader"
@@ -330,25 +328,20 @@ $(EE_OBJS_DIR):
 DETAILED_CHANGELOG:
 	sh make_changelog.sh
 
-ifneq ($(NOT_PACKED),1)
-$(EE_STRIPPED).elf: $(EE_BIN)
+$(EE_BIN_STRIPPED): $(EE_BIN)
 	echo "Stripping..."
 	$(EE_STRIP) -o $@ $<
 
-$(EE_BIN_PACKED).ELF: $(EE_STRIPPED).elf
+$(EE_BIN_PACKED): $(EE_BIN_STRIPPED)
 	echo "Compressing..."
-#	ps2-packer $< $@ > /dev/null
-	ps2-packer $< $@
+	ps2-packer $< $@ > /dev/null
 
-$(EE_VPKD).ELF: $(EE_BIN_PACKED).ELF
+$(EE_VPKD).ELF: $(EE_BIN_PACKED)
 	cp -f $< $@
 
 $(EE_VPKD).ZIP: $(EE_VPKD).ELF DETAILED_CHANGELOG CREDITS LICENSE README.md
 	zip -r $@ $^
 	echo "Package Complete: $@"
-#else
-	$(MAKE) $(EE_BIN)
-endif
 
 ee_core/ee_core.elf: ee_core
 	echo "-EE core"
