@@ -335,7 +335,8 @@ $(EE_BIN_STRIPPED).elf: $(EE_BIN)
 #ifneq ($(NOT_PACKED),1)
 $(EE_BIN_PACKED).ELF: $(EE_BIN_STRIPPED).elf
 	echo "Compressing..."
-	ps2-packer $< $@ > /dev/null
+#	ps2-packer $< $@ > /dev/null
+	ps2-packer $< $@
 
 $(EE_VPKD).ELF: $(EE_BIN_PACKED).ELF
 	cp -f $< $@
