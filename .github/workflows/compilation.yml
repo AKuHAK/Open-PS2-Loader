@@ -28,7 +28,8 @@ jobs:
       uses: actions/upload-artifact@v2
       with:
         name: OPNPS2LD
-        path: OPNPS2LD-*.ZIP
+        path: |
+          OPNPS2LD-*.ZIP
 
   build-variants:
     runs-on: ubuntu-latest
