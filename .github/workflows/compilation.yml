@@ -57,7 +57,7 @@ jobs:
       id: version
       run: echo "::set-output name=version::$(make oplversion)"
 
-    - name: Compile -> make RTL=${{ matrix.rtl }} IGS=${{ matrix.igs }} PADEMU=${{ matrix.pademu }} DTL_T10000=${{ matrix.t10k }} NOT_PACKED=${{ matrix.np }} OPNPS2LD.ELF
+    - name: Compile -> make RTL=${{ matrix.rtl }} IGS=${{ matrix.igs }} PADEMU=${{ matrix.pademu }} DTL_T10000=${{ matrix.t10k }} NOT_PACKED=${{ matrix.np }}
       run: |
         make V=1 --trace SHELL='sh -x' RTL=${{ matrix.rtl }} IGS=${{ matrix.igs }} PADEMU=${{ matrix.pademu }} DTL_T10000=${{ matrix.t10k }} NOT_PACKED=${{ matrix.np }} OPNPS2LD.ELF
         mv OPNPS2LD.ELF OPNPS2LD-RTL=${{ matrix.rtl }}-IGS=${{ matrix.igs }}-PADEMU=${{ matrix.pademu }}-DTL_T10000=${{ matrix.t10k }}=NOT_PACKED=${{ matrix.np }}-${{ steps.version.outputs.version }}.ELF
