@@ -91,9 +91,11 @@ EECORE_OBJS = ee_core.o ioprp.o util.o \
 		ingame_smstcpip.o smap_ingame.o smbman.o smbinit.o
 
 EE_BIN = opl.elf
+ifneq ($(NOT_PACKED),1)
 EE_STRIPPED = opl_stripped
 EE_BIN_PACKED = OPNPS2LD
 EE_VPKD = OPNPS2LD-$(OPL_VERSION)
+endif
 EE_SRC_DIR = src/
 EE_OBJS_DIR = obj/
 EE_ASM_DIR = asm/
