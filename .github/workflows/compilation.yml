@@ -104,7 +104,7 @@ jobs:
         
     - name: Repack variants artifact
       run: |
-        apk add p7zip
+        sudo apt install p7zip
         7z x OPNPS2LD-VARIANTS/OPNPS2LD-VARIANTS -O OPNPS2LD-VARIANTS-LATEST
         7z a -t7z OPNPS2LD-VARIANTS-LATEST.7z OPNPS2LD-VARIANTS-LATEST
         
