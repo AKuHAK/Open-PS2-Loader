@@ -60,7 +60,7 @@ jobs:
     - name: Compile -> make RTL=${{ matrix.rtl }} IGS=${{ matrix.igs }} PADEMU=${{ matrix.pademu }} DTL_T10000=${{ matrix.t10k }} NOT_PACKED=${{ matrix.np }}
       run: |
         make V=1 --trace SHELL='sh -x' RTL=${{ matrix.rtl }} IGS=${{ matrix.igs }} PADEMU=${{ matrix.pademu }} DTL_T10000=${{ matrix.t10k }} NOT_PACKED=${{ matrix.np }}
-        mv OPNPS2LD.ELF OPNPS2LD-RTL=${{ matrix.rtl }}-IGS=${{ matrix.igs }}-PADEMU=${{ matrix.pademu }}-DTL_T10000=${{ matrix.t10k }}=NOT_PACKED=${{ matrix.np }}-${{ steps.version.outputs.version }}.ELF
+        mv opl.elf OPNPS2LD-RTL=${{ matrix.rtl }}-IGS=${{ matrix.igs }}-PADEMU=${{ matrix.pademu }}-DTL_T10000=${{ matrix.t10k }}=NOT_PACKED=${{ matrix.np }}-${{ steps.version.outputs.version }}.ELF
 
     - name: Create detailed changelog
       run: sh ./make_changelog.sh
