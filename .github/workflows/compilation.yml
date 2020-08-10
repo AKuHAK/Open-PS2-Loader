@@ -34,6 +34,20 @@ jobs:
         name: OPNPS2LD
         path: OPNPS2LD-*.ZIP
 
+    - name: Create detailed changelog
+      run: sh ./make_changelog.sh
+
+    - name: Upload variants artifact changelog
+      if: ${{ success() }}
+      uses: actions/upload-artifact@v2
+      with:
+        name: OPNPS2LD-VARIANTS
+        path: |
+          DETAILED_CHANGELOG
+          CREDITS
+          LICENSE
+          README.md
+
   build-variants:
     runs-on: ubuntu-latest
     container: ps2dev/ps2dev:latest
@@ -62,9 +76,6 @@ jobs:
         make V=1 --trace SHELL='sh -x' RTL=${{ matrix.rtl }} IGS=${{ matrix.igs }} PADEMU=${{ matrix.pademu }} DTL_T10000=${{ matrix.t10k }} NOT_PACKED=${{ matrix.np }}
         mv opl.elf OPNPS2LD-RTL=${{ matrix.rtl }}-IGS=${{ matrix.igs }}-PADEMU=${{ matrix.pademu }}-DTL_T10000=${{ matrix.t10k }}=NOT_PACKED=${{ matrix.np }}-${{ steps.version.outputs.version }}.ELF
 
-    - name: Create detailed changelog
-      run: sh ./make_changelog.sh
-
     - name: Upload variants artifact
       if: ${{ success() }}
       uses: actions/upload-artifact@v2
@@ -72,10 +83,6 @@ jobs:
         name: OPNPS2LD-VARIANTS
         path: |
           OPNPS2LD*.ELF
-          DETAILED_CHANGELOG
-          CREDITS
-          LICENSE
-          README.md
 
   create-release:
     needs: [build, build-variants]
