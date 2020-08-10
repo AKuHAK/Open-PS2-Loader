@@ -54,9 +54,9 @@ jobs:
     strategy:
       matrix:
         t10k: [0, 1]
-        igs: [0, 1]
-        pademu: [0, 1]
-        rtl: [0, 1]
+        igs: [1]
+        pademu: [1]
+        rtl: [1]
         np: [0, 1]
     steps:
     - name: Install dependencies
