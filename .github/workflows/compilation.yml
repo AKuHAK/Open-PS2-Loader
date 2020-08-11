@@ -54,7 +54,7 @@ jobs:
     strategy:
       matrix:
         t10k: [0, 1]
-        igs: [0, 1]
+        igs: [1]
         pademu: [0, 1]
         rtl: [1]
     steps:
@@ -104,8 +104,7 @@ jobs:
         
     - name: Repack variants artifact
       run: |
-        sudo apt install p7zip
-        7z x OPNPS2LD-VARIANTS/OPNPS2LD-VARIANTS -O OPNPS2LD-VARIANTS-LATEST
+        7z x OPNPS2LD-VARIANTS/OPNPS2LD-VARIANTS -o OPNPS2LD-VARIANTS-LATEST
         7z a -t7z OPNPS2LD-VARIANTS-LATEST.7z OPNPS2LD-VARIANTS-LATEST
         
     - name: Create release
