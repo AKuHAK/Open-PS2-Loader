@@ -25,7 +25,7 @@ jobs:
 
     - name: Compile -> make clean release
       run: |
-        make clean release
+        make --trace clean release
         mv OPNPS2LD-*.ZIP OPNPS2LD.ZIP
  
     - name: Upload release artifact
@@ -54,10 +54,10 @@ jobs:
     container: ps2dev/ps2dev:latest
     strategy:
       matrix:
-        t10k: ["", DTL_T10000=1]
-        igs: ["", IGS=1]
-        pademu: ["", PADEMU=1]
         rtl: ["", RTL=1]
+        pademu: ["", PADEMU=1]
+        igs: ["", IGS=1]
+        t10k: ["", DTL_T10000=1]
     steps:
     - name: Install dependencies
       run: |
@@ -102,7 +102,7 @@ jobs:
     - name: Prepare artifacts for release
       run: |
         mv OPNPS2LD OPNPS2LD-LATEST.ZIP
-        7z a -t7z OPNPS2LD-VARIANTS-LATEST.7z -r OPNPS2LD-VARIANTS/*
+        7z a -t7z OPNPS2LD-VARIANTS-LATEST.7z OPNPS2LD-VARIANTS/*
         
     - name: Create release
       uses: marvinpinto/action-automatic-releases@latest
