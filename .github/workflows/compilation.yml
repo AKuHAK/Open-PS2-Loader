@@ -53,10 +53,10 @@ jobs:
     container: ps2dev/ps2dev:latest
     strategy:
       matrix:
-        t10k: [0, 1]
-        igs: [1]
+        t10k: [DTL_T10000=0, DTL_T10000=1]
+        igs: [0, 1]
         pademu: [0, 1]
-        rtl: [1]
+        rtl: [0, 1]
     steps:
     - name: Install dependencies
       run: |
@@ -70,10 +70,10 @@ jobs:
       id: version
       run: echo "::set-output name=version::$(make oplversion)"
 
-    - name: Compile -> make RTL=${{ matrix.rtl }} IGS=${{ matrix.igs }} PADEMU=${{ matrix.pademu }} DTL_T10000=${{ matrix.t10k }}
+    - name: Compile -> make RTL=${{ matrix.rtl }} IGS=${{ matrix.igs }} PADEMU=${{ matrix.pademu }} ${{ matrix.t10k }} NOT_PACKED=1
       run: |
-        make V=1 --trace SHELL='sh -x' RTL=${{ matrix.rtl }} IGS=${{ matrix.igs }} PADEMU=${{ matrix.pademu }} DTL_T10000=${{ matrix.t10k }} NOT_PACKED=1
-        mv opl.elf OPNPS2LD-RTL=${{ matrix.rtl }}-IGS=${{ matrix.igs }}-PADEMU=${{ matrix.pademu }}-DTL_T10000=${{ matrix.t10k }}-${{ steps.version.outputs.version }}.ELF
+        make V=1 --trace SHELL='sh -x' RTL=${{ matrix.rtl }} IGS=${{ matrix.igs }} PADEMU=${{ matrix.pademu }} ${{ matrix.t10k }} NOT_PACKED=1
+        mv opl.elf OPNPS2LD-RTL=${{ matrix.rtl }}-IGS=${{ matrix.igs }}-PADEMU=${{ matrix.pademu }}-${{ matrix.t10k }}-${{ steps.version.outputs.version }}.ELF
 
     - name: Upload variants artifact
       if: ${{ success() }}
@@ -110,5 +110,5 @@ jobs:
         automatic_release_tag: "latest"
         title: "Latest development builds"
         files: |
-          OPNPS2LD/OPNPS2LD-LATEST.ZIP
+          OPNPS2LD/
           OPNPS2LD-VARIANTS-LATEST.7z
