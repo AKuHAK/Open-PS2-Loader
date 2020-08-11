@@ -88,10 +88,6 @@ jobs:
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/master'
     steps:
-    - uses: actions/checkout@v2
-    - run: |
-        git fetch --prune --unshallow
-
     - name: Download release artifact
       uses: actions/download-artifact@v1
       with:
@@ -105,8 +101,7 @@ jobs:
     - name: Repack variants artifact with 7z
       run: |
         ls -R
-        7z x OPNPS2LD-VARIANTS.ZIP -oOPNPS2LD-VARIANTS-LATEST/
-        7z a -t7z OPNPS2LD-VARIANTS-LATEST.7z OPNPS2LD-VARIANTS-LATEST
+        7z a -t7z OPNPS2LD-VARIANTS-LATEST.7z OPNPS2LD-VARIANTS/*
         
     - name: Create release
       uses: marvinpinto/action-automatic-releases@latest
@@ -116,4 +111,4 @@ jobs:
         title: "Latest development builds"
         files: |
           OPNPS2LD/OPNPS2LD-LATEST.ZIP
-          OPNPS2LD-VARIANTS/OPNPS2LD-VARIANTS-LATEST.ZIP
+          OPNPS2LD-VARIANTS-LATEST.7z
