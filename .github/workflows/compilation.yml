@@ -102,9 +102,9 @@ jobs:
       with:
         name: OPNPS2LD-VARIANTS
         
-    - name: Repack variants artifact
+    - name: Repack variants artifact with 7z
       run: |
-        7z x OPNPS2LD-VARIANTS/OPNPS2LD-VARIANTS -o OPNPS2LD-VARIANTS-LATEST
+        7z x OPNPS2LD-VARIANTS/OPNPS2LD-VARIANTS -oOPNPS2LD-VARIANTS-LATEST/
         7z a -t7z OPNPS2LD-VARIANTS-LATEST.7z OPNPS2LD-VARIANTS-LATEST
         
     - name: Create release
