@@ -82,7 +82,7 @@ jobs:
       with:
         name: OPNPS2LD-VARIANTS
         path: |
-          OPNPS2LD-RTL*.ELF
+          OPNPS2LD*.ELF
 
   create-release:
     needs: [build, build-variants]
@@ -93,6 +93,7 @@ jobs:
       uses: actions/download-artifact@v1
       with:
         name: OPNPS2LD
+        path: OPNPS2LD-LATEST
 
     - name: Download variants artifact
       uses: actions/download-artifact@v1
@@ -110,5 +111,5 @@ jobs:
         automatic_release_tag: "latest"
         title: "Latest development builds"
         files: |
-          OPNPS2LD
+          OPNPS2LD-LATEST
           OPNPS2LD-VARIANTS-LATEST.7z
