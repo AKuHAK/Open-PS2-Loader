@@ -55,9 +55,9 @@ jobs:
     strategy:
       matrix:
         t10k: ["", DTL_T10000=1]
-        igs: [IGS=0, IGS=1]
-        pademu: [PADEMU=0, PADEMU=1]
-        rtl: [RTL=0, RTL=1]
+        igs: ["", IGS=1]
+        pademu: ["", PADEMU=1]
+        rtl: ["", RTL=1]
     steps:
     - name: Install dependencies
       run: |
@@ -74,7 +74,7 @@ jobs:
     - name: Compile -> make ${{ matrix.t10k }} ${{ matrix.igs }} ${{ matrix.pademu }} ${{ matrix.rtl }} NOT_PACKED=1
       run: |
         make --trace ${{ matrix.t10k }} ${{ matrix.igs }} ${{ matrix.pademu }} ${{ matrix.rtl }} NOT_PACKED=1
-        mv opl.elf OPNPS2LD_${{ matrix.t10k }}_${{ matrix.igs }}_${{ matrix.pademu }}_${{ matrix.rtl }}-${{ steps.version.outputs.version }}.ELF
+        mv opl.elf OPNPS2LD-${{ matrix.t10k }}-${{ matrix.igs }}-${{ matrix.pademu }}-${{ matrix.rtl }}-${{ steps.version.outputs.version }}.ELF
 
     - name: Upload variants artifact
       if: ${{ success() }}
