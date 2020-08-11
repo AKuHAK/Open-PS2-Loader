@@ -26,18 +26,19 @@ jobs:
     - name: Compile -> make clean release
       run: |
         make clean release
+        mv OPNPS2LD-*.ZIP OPNPS2LD.ZIP
  
     - name: Upload release artifact
       if: ${{ success() }}
       uses: actions/upload-artifact@v2
       with:
         name: OPNPS2LD
-        path: OPNPS2LD-*.ZIP
+        path: OPNPS2LD.ZIP
 
     - name: Create detailed changelog
       run: sh ./make_changelog.sh
 
-    - name: Upload variants artifact changelog
+    - name: Upload changelog for variants artifact 
       if: ${{ success() }}
       uses: actions/upload-artifact@v2
       with:
@@ -54,9 +55,9 @@ jobs:
     strategy:
       matrix:
         t10k: [DTL_T10000=0, DTL_T10000=1]
-        igs: [0, 1]
-        pademu: [0, 1]
-        rtl: [0, 1]
+        igs: [IGS=0, IGS=1]
+        pademu: [PADEMU=0, PADEMU=1]
+        rtl: [RTL=0, RTL=1]
     steps:
     - name: Install dependencies
       run: |
@@ -70,10 +71,10 @@ jobs:
       id: version
       run: echo "::set-output name=version::$(make oplversion)"
 
-    - name: Compile -> make RTL=${{ matrix.rtl }} IGS=${{ matrix.igs }} PADEMU=${{ matrix.pademu }} ${{ matrix.t10k }} NOT_PACKED=1
+    - name: Compile -> make ${{ matrix.t10k }} ${{ matrix.igs }} ${{ matrix.pademu }} ${{ matrix.rtl }} NOT_PACKED=1
       run: |
-        make V=1 --trace SHELL='sh -x' RTL=${{ matrix.rtl }} IGS=${{ matrix.igs }} PADEMU=${{ matrix.pademu }} ${{ matrix.t10k }} NOT_PACKED=1
-        mv opl.elf OPNPS2LD-RTL=${{ matrix.rtl }}-IGS=${{ matrix.igs }}-PADEMU=${{ matrix.pademu }}-${{ matrix.t10k }}-${{ steps.version.outputs.version }}.ELF
+        make --trace ${{ matrix.t10k }} ${{ matrix.igs }} ${{ matrix.pademu }} ${{ matrix.rtl }} NOT_PACKED=1
+        mv opl.elf OPNPS2LD_${{ matrix.t10k }}_${{ matrix.igs }}_${{ matrix.pademu }}_${{ matrix.rtl }}-${{ steps.version.outputs.version }}.ELF
 
     - name: Upload variants artifact
       if: ${{ success() }}
@@ -100,7 +101,6 @@ jobs:
         
     - name: Repack variants artifact with 7z
       run: |
-        ls -R
         7z a -t7z OPNPS2LD-VARIANTS-LATEST.7z OPNPS2LD-VARIANTS/*
         
     - name: Create release
@@ -110,5 +110,5 @@ jobs:
         automatic_release_tag: "latest"
         title: "Latest development builds"
         files: |
-          OPNPS2LD/
+          OPNPS2LD
           OPNPS2LD-VARIANTS-LATEST.7z
