@@ -47,14 +47,15 @@ jobs:
           README.md
 
   build-variants:
-    runs-on: ubuntu-latest
-    container: ps2dev/ps2dev:latest
     strategy:
       matrix:
         rtl: ["", RTL=1]
         pademu: ["", PADEMU=1]
         igs: ["", IGS=1]
         t10k: ["", DTL_T10000=1]
+        docker: [ps2dev,fjtrujy]
+    runs-on: ubuntu-latest
+    container: ${{ matrix.docker }}/ps2dev:latest
     steps:
     - name: Install dependencies
       run: |
@@ -81,7 +82,7 @@ jobs:
       if: ${{ success() }}
       uses: actions/upload-artifact@v2
       with:
-        name: OPNPS2LD-VARIANTS
+        name: OPNPS2LD-VARIANTS-${{ matrix.docker }}
         path: |
           OPNPS2LD*.ELF
 
