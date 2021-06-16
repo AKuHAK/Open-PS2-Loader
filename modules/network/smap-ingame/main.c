@@ -36,6 +36,14 @@ static NetIF NIF;
 #define ERR_CONN -6  //Not connected
 #define ERR_IF   -11 //Low-level netif error
 
+#if !defined(USE_GP_REGISTER)
+#if __GNUC__ > 3
+#define USE_GP_REGISTER 0
+#else
+#define USE_GP_REGISTER 1
+#endif
+#endif
+
 //SMapLowLevelOutput():
 
 //This function is called by the TCP/IP stack when a low-level packet should be sent. It'll be invoked in the context of the

@@ -57,6 +57,14 @@ static unsigned int EnableAutoNegotiation = 1;
 static unsigned int EnablePinStrapConfig = 0;
 static unsigned int SmapConfiguration = 0x5E0;
 
+#if !defined(USE_GP_REGISTER)
+#if __GNUC__ > 3
+#define USE_GP_REGISTER 0
+#else
+#define USE_GP_REGISTER 1
+#endif
+#endif
+
 static void _smap_write_phy(volatile u8 *emac3_regbase, unsigned int address, u16 value)
 {
     u32 PHYRegisterValue;
