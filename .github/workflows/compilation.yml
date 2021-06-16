@@ -43,6 +43,7 @@ jobs:
 
   build-variants:
     strategy:
+      fail-fast: false
       matrix:
         rtl: ["", RTL=1]
         pademu: ["", PADEMU=1]
