@@ -52,9 +52,6 @@ jobs:
         docker: ['ps2dev', 'fjtrujy']
     runs-on: ubuntu-latest
     container: ${{ matrix.docker }}/ps2dev:latest
-    env:
-      IOP_TOOL_PREFIX: mipsel-ps2-irx-
-      IOP_PREFIX: mipsel-ps2-irx-
     steps:
     - name: Install dependencies
       run: apk add build-base git
