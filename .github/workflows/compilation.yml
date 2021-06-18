@@ -49,7 +49,7 @@ jobs:
         pademu: ["", PADEMU=1]
         igs: ["", IGS=1]
         t10k: ["", DTL_T10000=1]
-        debug: [""] ["", DEBUG=1]
+        debug: ["", DEBUG=1]
         docker: ['ps2dev', 'fjtrujy']
     runs-on: ubuntu-latest
     container: ${{ matrix.docker }}/ps2dev:latest
