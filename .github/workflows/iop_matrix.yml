@@ -39,7 +39,7 @@ jobs:
       run: |
         echo "IOP_TOOL_PREFIX=mipsel-ps2-irx-" >> $GITHUB_ENV
         echo "IOP_PREFIX=mipsel-ps2-irx-" >> $GITHUB_ENV
-        git clone https://github.com/akuhak/ps2toolchain-iop -b patch-3
+        git clone https://github.com/akuhak/ps2toolchain-iop -b patch-3 && cd ps2toolchain-iop
         BINUTILS_BRANCH_NAME=${{ matrix.binutils_branch }} GCC_BRANCH_NAME=${{ matrix.gcc_branch }} ./toolchain.sh
         git clone https://github.com/ps2dev/ps2sdk && cd ps2sdk
         make --quiet clean && make --quiet && make --quiet install && make --quiet clean
