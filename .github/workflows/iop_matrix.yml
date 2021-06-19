@@ -1,4 +1,4 @@
-name: CI-compile
+name: CI-compile-iop-matrix
 
 on:
   push:
@@ -8,40 +8,6 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
-    container: ps2dev/ps2dev:latest
-    steps:
-    - name: Install dependencies
-      run: apk add build-base git zip gawk
-
-    - name: git checkout
-      uses: actions/checkout@v2
-
-    - name: Compile -> make clean release
-      run: make --trace clean release
-
-    - name: Create detailed changelog
-      run: sh ./make_changelog.sh
-
-    - name: Upload release artifact ELF
-      if: ${{ success() }}
-      uses: actions/upload-artifact@v2
-      with:
-        name: OPNPS2LD
-        path: OPNPS2LD-*.ELF
-
-    - name: Upload release artifact info
-      if: ${{ success() }}
-      uses: actions/upload-artifact@v2
-      with:
-        name: INFO
-        path: |
-          DETAILED_CHANGELOG
-          CREDITS
-          LICENSE
-          README.md
-          
-  build-variants:
     strategy:
       fail-fast: false
       matrix:
