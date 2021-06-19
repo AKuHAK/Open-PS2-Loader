@@ -46,7 +46,7 @@ jobs:
         ls -l
         export BINUTILS_BRANCH_NAME=${{ matrix.binutils_branch }}
         export GCC_BRANCH_NAME=${{ matrix.gcc_branch }}
-        sh ./toolchain.sh
+        ./toolchain.sh
         ls -l
         git clone https://github.com/ps2dev/ps2sdk && cd ps2sdk
         make --quiet clean && make --quiet && make --quiet install && make --quiet clean
