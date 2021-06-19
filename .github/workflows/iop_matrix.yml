@@ -1,0 +1,97 @@
+name: CI-compile
+
+on:
+  push:
+  pull_request:
+  repository_dispatch:
+    types: [run_build]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    container: ps2dev/ps2dev:latest
+    steps:
+    - name: Install dependencies
+      run: apk add build-base git zip gawk
+
+    - name: git checkout
+      uses: actions/checkout@v2
+
+    - name: Compile -> make clean release
+      run: make --trace clean release
+
+    - name: Create detailed changelog
+      run: sh ./make_changelog.sh
+
+    - name: Upload release artifact ELF
+      if: ${{ success() }}
+      uses: actions/upload-artifact@v2
+      with:
+        name: OPNPS2LD
+        path: OPNPS2LD-*.ELF
+
+    - name: Upload release artifact info
+      if: ${{ success() }}
+      uses: actions/upload-artifact@v2
+      with:
+        name: INFO
+        path: |
+          DETAILED_CHANGELOG
+          CREDITS
+          LICENSE
+          README.md
+          
+  build-variants:
+    strategy:
+      fail-fast: false
+      matrix:
+        rtl: [""]
+        pademu: [PADEMU=1]
+        igs: [""]
+        t10k: [""]
+        docker: ['ps2dev', 'fjtrujy']
+        binutils_branch: ['iop-v2.14', 'iop-v2.25.1', 'iop-v2.26.1', 'iop-v2.28', 'iop-v2.28', 'iop-v2.32', 'iop-v2.34', 'iop-v2.35.2']
+        gcc_branch: ['iop-v3.2.3', 'iop-v11.1.0']
+        
+    runs-on: ubuntu-latest
+    container: ${{ matrix.docker }}/ps2dev:latest
+    steps:
+    - name: Install dependencies
+      run: |
+        apk add build-base git
+        wget -O ${PS2SDK}/samples/Makefile.iopglobal https://raw.githubusercontent.com/ps2dev/ps2sdk/master/samples/Makefile.iopglobal_sample
+        
+    - name: git checkout
+      uses: actions/checkout@v2
+
+    - name: Get version
+      id: version
+      run: echo "::set-output name=version::$(make oplversion)"
+
+    - name: Set up environment and install specific iop version
+      if: matrix.docker == 'fjtrujy'
+      run: |
+        echo "IOP_TOOL_PREFIX=mipsel-ps2-irx-" >> $GITHUB_ENV
+        echo "IOP_PREFIX=mipsel-ps2-irx-" >> $GITHUB_ENV
+        git clone https://github.com/akuhak/ps2toolchain-iop -b patch-3
+        BINUTILS_BRANCH_NAME=${{ matrix.binutils_branch }} GCC_BRANCH_NAME=${{ matrix.gcc_branch }} ./toolchain.sh
+        git clone https://github.com/ps2dev/ps2sdk && cd ps2sdk
+        make --quiet clean && make --quiet && make --quiet install && make --quiet clean
+        git clone https://github.com/ps2dev/gsKit && cd gsKit
+        make --quiet clean && make --quiet && make --quiet install && make --quiet clean
+        git clone https://github.com/ps2dev/ps2sdk-ports && cd ps2sdk-ports
+        make --quiet                
+        
+    - name: Compile -> make ${{ matrix.t10k }} ${{ matrix.igs }} ${{ matrix.pademu }} ${{ matrix.rtl }} NOT_PACKED=1
+      run: |
+        make --trace ${{ matrix.t10k }} ${{ matrix.igs }} ${{ matrix.pademu }} ${{ matrix.rtl }} NOT_PACKED=1
+        mv opl.elf OPNPS2LD-${{ steps.version.outputs.version }}-binutils-${{ matrix.binutils_branch }}-gcc-${{ matrix.gcc_branch }}.ELF
+        
+    - name: Create detailed changelog
+      run: sh ./make_changelog.sh
+
+    - name: Upload variants artifact ELF
+      uses: actions/upload-artifact@v2
+      with:
+        name: OPNPS2LD-VARIANTS-${{ matrix.docker }}
+        path: OPNPS2LD*.ELF
