@@ -44,7 +44,7 @@ jobs:
         ls -l
         cd ps2toolchain-iop
         ls -l
-        BINUTILS_BRANCH_NAME=${{ matrix.binutils_branch }} GCC_BRANCH_NAME=${{ matrix.gcc_branch }} ./toolchain.sh
+        sh BINUTILS_BRANCH_NAME=${{ matrix.binutils_branch }} GCC_BRANCH_NAME=${{ matrix.gcc_branch }} ./toolchain.sh
         ls -l
         git clone https://github.com/ps2dev/ps2sdk && cd ps2sdk
         make --quiet clean && make --quiet && make --quiet install && make --quiet clean
