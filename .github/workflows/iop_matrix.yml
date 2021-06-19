@@ -15,7 +15,7 @@ jobs:
         pademu: [PADEMU=1]
         igs: [""]
         t10k: [""]
-        docker: ['ps2dev', 'fjtrujy']
+        docker: ['fjtrujy']
         binutils_branch: ['iop-v2.14', 'iop-v2.25.1', 'iop-v2.26.1', 'iop-v2.28', 'iop-v2.28', 'iop-v2.32', 'iop-v2.34', 'iop-v2.35.2']
         gcc_branch: ['iop-v3.2.3', 'iop-v11.1.0']
         
@@ -39,8 +39,13 @@ jobs:
       run: |
         echo "IOP_TOOL_PREFIX=mipsel-ps2-irx-" >> $GITHUB_ENV
         echo "IOP_PREFIX=mipsel-ps2-irx-" >> $GITHUB_ENV
-        git clone https://github.com/akuhak/ps2toolchain-iop -b patch-3 && cd ps2toolchain-iop
+        ls -l
+        git clone https://github.com/akuhak/ps2toolchain-iop -b patch-3
+        ls -l
+        cd ps2toolchain-iop
+        ls -l
         BINUTILS_BRANCH_NAME=${{ matrix.binutils_branch }} GCC_BRANCH_NAME=${{ matrix.gcc_branch }} ./toolchain.sh
+        ls -l
         git clone https://github.com/ps2dev/ps2sdk && cd ps2sdk
         make --quiet clean && make --quiet && make --quiet install && make --quiet clean
         git clone https://github.com/ps2dev/gsKit && cd gsKit
