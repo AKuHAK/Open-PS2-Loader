@@ -51,14 +51,42 @@ jobs:
       with:
         name: OPNPS2LD-VARIANTS-${{ steps.version.outputs.version }}-${{ matrix.docker }}
         path: OPNPS2LD*.ELF
-        
+  
+  build-debug:
+    strategy:
+      fail-fast: false
+      matrix:
+        debug: [debug, iopcore_debug, eesio_debug, ingame_debug, deci2_debug]
+        docker: ['ps2dev', 'fjtrujy']
+    runs-on: ubuntu-latest
+    container: ${{ matrix.docker }}/ps2dev:latest
+    steps:
+    - name: Install dependencies
+      run: |
+        apk add build-base git
+        wget -O ${PS2SDK}/samples/Makefile.iopglobal https://raw.githubusercontent.com/ps2dev/ps2sdk/master/samples/Makefile.iopglobal_sample
+
+    - name: git checkout
+      uses: actions/checkout@v2
+
+    - name: Get version
+      id: version
+      run: echo "::set-output name=version::$(make oplversion)"
+
+    - name: Set up environment
+      if: matrix.docker == 'fjtrujy'
+      run: |
+        echo "IOP_TOOL_PREFIX=mipsel-ps2-irx-" >> $GITHUB_ENV
+        echo "IOP_PREFIX=mipsel-ps2-irx-" >> $GITHUB_ENV
+    
     - name: Compile -> make debug
       run: |
         make clean
-        make debug --trace
+        make ${{ matrix.debug }} --trace
+        mv opl.elf opl-${{ matrix.debug }}.elf
 
     - name: Upload variants artifact ELF
       uses: actions/upload-artifact@v2
       with:
         name: opl-debug-${{ steps.version.outputs.version }}-${{ matrix.docker }}
-        path: opl.elf
+        path: opl-*.elf
