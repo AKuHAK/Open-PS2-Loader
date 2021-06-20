@@ -49,5 +49,16 @@ jobs:
     - name: Upload variants artifact ELF
       uses: actions/upload-artifact@v2
       with:
-        name: OPNPS2LD-VARIANTS-${{ matrix.docker }}
+        name: OPNPS2LD-VARIANTS-${{ steps.version.outputs.version }}-${{ matrix.docker }}
         path: OPNPS2LD*.ELF
+        
+    - name: Compile -> make debug
+      run: |
+        make clean
+        make debug --trace
+
+    - name: Upload variants artifact ELF
+      uses: actions/upload-artifact@v2
+      with:
+        name: opl-debug-${{ steps.version.outputs.version }}-${{ matrix.docker }}
+        path: opl.elf
