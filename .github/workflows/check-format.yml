@@ -6,7 +6,7 @@ on:
     paths:
       - '**.h'
       - '**.c'
-      - '.github/workflows/main.yml'
+      - '.github/workflows/check-format.yml'
       - '.clang-format'
 
 jobs:
