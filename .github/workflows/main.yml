@@ -4,6 +4,11 @@ name: CI-format-check
 on:
   push:
   pull_request:
+    paths:
+      - '**.h'
+      - '**.c'
+      - '.github/workflows/main.yml'
+      - '.clang-format'
 
 jobs:
   check-format:
@@ -11,7 +16,7 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
-    - uses: DoozyX/clang-format-lint-action@latest
+    - uses: DoozyX/clang-format-lint-action@v0
       with:
         source: '.'
         extensions: 'h,cpp,c'
