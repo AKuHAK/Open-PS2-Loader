@@ -8,7 +8,7 @@
 	However, OPL does not need any of that, so it can be made simpler.	*/
 
 #include <errno.h>
-#include <kernel.h>
+#include   <kernel.h>
 #include <libcdvd.h>
 #include <limits.h>
 #include <string.h>
@@ -25,7 +25,7 @@
 #define SONY_SYSDATA_ICON_SYS_SIZE 1776
 
 extern unsigned char icon_sys_A[];
-extern unsigned char icon_sys_J[];
+extern unsigned char   icon_sys_J[];
 extern unsigned char icon_sys_C[];
 
 #define DEBUG_PRINTF(args...)
@@ -37,7 +37,7 @@ int CreateSystemDataFolder(const char *path, char FolderRegionLetter)
     void *icon;
 
     sprintf(fullpath, "%s/icon.sys", path);
-    if ((fd = open(fullpath, O_RDONLY)) < 0) {
+    if   ( ( fd = open(fullpath, O_RDONLY)) < 0) {
         mkdir(path, 0777);
         if ((fd = open(fullpath, O_CREAT | O_TRUNC | O_WRONLY)) >= 0) {
             switch (FolderRegionLetter) {
