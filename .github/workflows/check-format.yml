@@ -2,6 +2,11 @@ name: CI-format-check
 
 on:
   push:
+    paths:
+      - '**.h'
+      - '**.c'
+      - '.github/workflows/check-format.yml'
+      - '.clang-format'
   pull_request:
     paths:
       - '**.h'
