@@ -9,7 +9,7 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    container: ps2dev/ps2dev:v1.3.0
+    container: ps2dev/ps2dev:v1.2.0
     steps:
     - name: Install dependencies
       run: |
@@ -54,7 +54,7 @@ jobs:
         igs: ["", IGS=1]
         t10k: ["", DTL_T10000=1]
     runs-on: ubuntu-latest
-    container: ps2dev/ps2dev:latest
+    container: ps2dev/ps2dev:v1.2.0
     steps:
     - name: Install dependencies
       run: apk add build-base git zip gawk
@@ -88,7 +88,7 @@ jobs:
       matrix:
         debug: [debug, iopcore_debug, ingame_debug, deci2_debug] # eesio_debug broken
     runs-on: ubuntu-latest
-    container: ps2dev/ps2dev:latest
+    container: ps2dev/ps2dev:v1.2.0
     steps:
     - name: Install dependencies
       run: apk add build-base git zip gawk
