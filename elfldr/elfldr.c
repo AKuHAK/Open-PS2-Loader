@@ -71,7 +71,7 @@ int main(int argc, char *argv[])
 
     exd.epc = 0;
 
-    //clear memory.
+    // clear memory.
     InitializeUserMemory(0x00100000, GetMemorySize());
     FlushCache(0);
 
@@ -82,7 +82,7 @@ int main(int argc, char *argv[])
     SifLoadFileExit();
 
     if (result == 0 && exd.epc != 0) {
-        //Final IOP reset, to fill the IOP with the default modules.
+        // Final IOP reset, to fill the IOP with the default modules.
         while (!SifIopReset("", 0)) {
         };
 
@@ -93,7 +93,7 @@ int main(int argc, char *argv[])
         };
 
         SifInitRpc(0);
-        //Load modules.
+        // Load modules.
         SifLoadFileInit();
         SifLoadModule("rom0:SIO2MAN", 0, NULL);
         SifLoadModule("rom0:MCMAN", 0, NULL);
