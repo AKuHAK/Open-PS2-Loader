@@ -6,10 +6,12 @@
 # Copyright 2001-2004, ps2dev - http://www.ps2dev.org
 # Licenced under Academic Free License version 2.0
 # Review ps2sdk README & LICENSE files for further details.
-#
-# $Id: ioptrap.c 1619 2009-10-07 04:54:58Z Herben $
-# IOP exception handling.
 */
+
+/**
+ * @file
+ * IOP exception handling.
+ */
 
 #include "types.h"
 #include "defs.h"
@@ -176,14 +178,14 @@ void trap(exception_type_t type, struct exception_frame *ex)
         return;
     }
     TRAP_PRINTF("IOP Exception : %s\n", exception_type_name[type]);
-    TRAP_PRINTF("EPC=%08x CAUSE=%08x SR=%08x BADVADDR=%08x DCIC=%08x\n", (int)ex->epc, (int)ex->cause, (int)ex->sr, (int)ex->badvaddr, (int)ex->dcic);
+    TRAP_PRINTF("EPC=%08x CAUSE=%08x SR=%08x BADVADDR=%08x DCIC=%08x\n", ex->epc, ex->cause, ex->sr, ex->badvaddr, ex->dcic);
     if ((module = ExceptionGetModuleName(ex->epc, &r_addr)))
         TRAP_PRINTF("module %s at unreloc offset %08lX\n", module, r_addr);
     if ((module = ExceptionGetModuleName(ex->regs[31], &r_addr)))
         TRAP_PRINTF("ra module %s at unreloc offset %08lX\n", module, r_addr);
     for (i = 0; i != 32; i += 4) {
         TRAP_PRINTF("r[%02d]=%08x r[%02d]=%08x r[%02d]=%08x r[%02d]=%08x\n",
-                    (int)i, (int)ex->regs[i], (int)i + 1, (int)ex->regs[i + 1], (int)i + 2, (int)ex->regs[i + 2], (int)i + 3, (int)ex->regs[i + 3]);
+                    i, ex->regs[i], i + 1, ex->regs[i + 1], i + 2, ex->regs[i + 2], i + 3, ex->regs[i + 3]);
     }
 
     if (handlers[type]) {
@@ -211,7 +213,7 @@ static void trigger()
         dbg_jmp_buf_setup  = 1;
         *(u32 *)0xdeadbeef = 0xfeedface;
     } else {
-        printf("exception occurred in command, v=%08x\n", (int)v);
+        printf("exception occurred in command, v=%08x\n", v);
     }
     dbg_jmp_buf_setup = 0;
     printf("done.\n");
@@ -261,16 +263,19 @@ int _start(int argc, char **argv)
 {
     int rv;
 
+    (void)argc;
+    (void)argv;
+
     if (RegisterLibraryEntries(&_exp_ioptrap) != 0)
         return 1;
 
     memset(handlers, 0, sizeof(trap_exception_handler_t) * 16);
     printf("ioptrap starts.\n");
-    if ((rv = RegisterDefaultExceptionHandler(def_exc_handler)) < 0) {
+    if ((rv = RegisterDefaultExceptionHandler((exception_handler_t)def_exc_handler)) < 0) {
         printf("RegisterDefaultExceptionHandler failed, rv=%d\n", rv);
         return 1;
     }
-    if ((rv = RegisterPriorityExceptionHandler(IOP_EXCEPTION_HDB, 0, bp_exc_handler)) < 0) {
+    if ((rv = RegisterPriorityExceptionHandler(IOP_EXCEPTION_HDB, 0, (exception_handler_t)bp_exc_handler)) < 0) {
         // shouldn't we release the default exception handler here... ?
         printf("RegisterDefaultExceptionHandler failed, rv=%d\n", rv);
         return 1;
