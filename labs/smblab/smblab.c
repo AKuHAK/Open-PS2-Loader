@@ -89,16 +89,16 @@ static ps2time_t *smbtime2ps2time(s64 smbtime, ps2time_t *ps2time)
     UnixSystemTime = (s64)(((smbtime + 5000000) / 10000000) - 11644473600);
 
     dayclock = UnixSystemTime % 86400;
-    dayno = UnixSystemTime / 86400;
+    dayno    = UnixSystemTime / 86400;
 
-    ps2time->sec = dayclock % 60;
-    ps2time->min = (dayclock % 3600) / 60;
+    ps2time->sec  = dayclock % 60;
+    ps2time->min  = (dayclock % 3600) / 60;
     ps2time->hour = dayclock / 3600;
     while (dayno >= (isYearLeap(year) ? 366 : 365)) {
         dayno -= (isYearLeap(year) ? 366 : 365);
         year++;
     }
-    ps2time->year = year;
+    ps2time->year  = year;
     ps2time->month = 0;
     while (dayno >= mdtab[isYearLeap(year)][ps2time->month]) {
         dayno -= mdtab[isYearLeap(year)][ps2time->month];
@@ -297,7 +297,7 @@ int main(int argc, char *argv[2])
     smbGetShareList_in_t getsharelist;
 
     getsharelist.EE_addr = (void *)&sharelist[0];
-    getsharelist.maxent = 128;
+    getsharelist.maxent  = 128;
 
     DPRINTF("GETSHARELIST... ");
     ret = fileXioDevctl("smb:", SMB_DEVCTL_GETSHARELIST, (void *)&getsharelist, sizeof(getsharelist), NULL, 0);
@@ -375,8 +375,8 @@ int main(int argc, char *argv[2])
         smbtime2ps2time(smb_mtime, (ps2time_t *)&mtime);
 
         s64 hisize = stats.hisize;
-        hisize = hisize << 32;
-        s64 size = hisize | stats.size;
+        hisize     = hisize << 32;
+        s64 size   = hisize | stats.size;
 
         DPRINTF("size = %ld, mode = %04x\n", size, stats.mode);
 
@@ -466,7 +466,7 @@ int main(int argc, char *argv[2])
     if (fd >= 0) {
         // 64bit filesize test
         s64 filesize = fileXioLseek64(fd, 0, SEEK_END);
-        u8 *p = (u8 *)&filesize;
+        u8 *p        = (u8 *)&filesize;
         DPRINTF("filesize = ");
         for (i = 0; i < 8; i++) {
             DPRINTF("%02X ", p[i]);

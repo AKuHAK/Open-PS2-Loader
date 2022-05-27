@@ -1,15 +1,15 @@
 /****************************************************************/ /**
- *
- * @file lwnbd.c
- *
- * @author   Ronan Bignaux <ronan@aimao.org>
- *
- * @brief    Network Block Device Protocol server
- *
- * Copyright (c) Ronan Bignaux. 2021
- * All rights reserved.
- *
- ********************************************************************/
+                                                                    *
+                                                                    * @file lwnbd.c
+                                                                    *
+                                                                    * @author   Ronan Bignaux <ronan@aimao.org>
+                                                                    *
+                                                                    * @brief    Network Block Device Protocol server
+                                                                    *
+                                                                    * Copyright (c) Ronan Bignaux. 2021
+                                                                    * All rights reserved.
+                                                                    *
+                                                                    ********************************************************************/
 
 /*
  * Redistribution and use in source and binary forms, with or without
@@ -61,7 +61,7 @@ void nbd_context_ctor(nbd_context *const me)
                                                     &nbd_context_read_,
                                                     &nbd_context_write_,
                                                     &nbd_context_flush_};
-    me->vptr = &nbdopts; /* "hook" the vptr to the nbdopts */
+    me->vptr                                     = &nbdopts; /* "hook" the vptr to the nbdopts */
 }
 
 /* nbd_context class implementations of its virtual functions... */
@@ -106,7 +106,7 @@ nbd_context *nbd_context_getDefaultExportByName(nbd_context **nbd_contexts, cons
 uint32_t nbd_recv(int s, void *mem, size_t len, int flags)
 {
     ssize_t bytesRead;
-    uint32_t left = len;
+    uint32_t left      = len;
     uint32_t totalRead = 0;
 
     //        LWIP_DEBUGF(NBD_DEBUG | LWIP_DBG_STATE("nbd_recv(-, 0x%X, %d)\n", (int)mem, size);
@@ -136,8 +136,8 @@ int nbd_init(nbd_context **ctx)
     register err_t r;
     nbd_context *nego_ctx = NULL;
 
-    peer.sin_family = AF_INET;
-    peer.sin_port = htons(NBD_SERVER_PORT);
+    peer.sin_family      = AF_INET;
+    peer.sin_port        = htons(NBD_SERVER_PORT);
     peer.sin_addr.s_addr = htonl(INADDR_ANY);
 
     while (1) {
@@ -156,7 +156,7 @@ int nbd_init(nbd_context **ctx)
 
         while (1) {
 
-            addrlen = sizeof(peer);
+            addrlen       = sizeof(peer);
             client_socket = accept(tcp_socket, (struct sockaddr *)&peer,
                                    &addrlen);
             if (client_socket < 0)

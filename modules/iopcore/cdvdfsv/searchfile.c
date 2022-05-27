@@ -42,29 +42,29 @@ static void *cbrpc_cdsearchfile(int fno, void *buf, int size)
     int r;
     void *ee_addr;
     char *p;
-    SearchFilePkt_t *pkt = (SearchFilePkt_t *)buf;
+    SearchFilePkt_t *pkt   = (SearchFilePkt_t *)buf;
     SearchFilePkt2_t *pkt2 = (SearchFilePkt2_t *)buf;
     SearchFilePktl_t *pktl = (SearchFilePktl_t *)buf;
     int pktsize;
 
     if (size == sizeof(SearchFilePkt2_t)) {
-        ee_addr = (void *)pkt2->dest; // Search File: Called from Not Dual_layer Version
-        p = (void *)&pkt2->name[0];
-        pktsize = sizeof(sceCdlFILE) + sizeof(u32);
-        r = sceCdSearchFile((sceCdlFILE *)buf, p);
+        ee_addr    = (void *)pkt2->dest; // Search File: Called from Not Dual_layer Version
+        p          = (void *)&pkt2->name[0];
+        pktsize    = sizeof(sceCdlFILE) + sizeof(u32);
+        r          = sceCdSearchFile((sceCdlFILE *)buf, p);
         pkt2->flag = 0;
     } else {
         if (size > sizeof(SearchFilePkt2_t)) { // Search File: Called from Dual_layer Version
-            ee_addr = (void *)pktl->dest;
-            p = (char *)&pktl->name[0];
-            pktsize = sizeof(sceCdlFILE) + sizeof(u32);
-            r = sceCdLayerSearchFile((sceCdlFILE *)buf, p, pktl->layer);
+            ee_addr    = (void *)pktl->dest;
+            p          = (char *)&pktl->name[0];
+            pktsize    = sizeof(sceCdlFILE) + sizeof(u32);
+            r          = sceCdLayerSearchFile((sceCdlFILE *)buf, p, pktl->layer);
             pktl->flag = 0;
         } else { // Search File: Called from Old Library
             ee_addr = (void *)pkt->dest;
-            p = (char *)&pkt->name[0];
+            p       = (char *)&pkt->name[0];
             pktsize = sizeof(sceCdlFILE);
-            r = sceCdSearchFile((sceCdlFILE *)buf, p);
+            r       = sceCdSearchFile((sceCdlFILE *)buf, p);
         }
     }
 

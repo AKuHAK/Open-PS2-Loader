@@ -13,7 +13,7 @@ static u32 Mcpage_to_Apasector(int mc_num, u32 mc_page)
     register int i;
     register u32 sector_to_read, lbound, ubound;
 
-    ubound = 0;
+    ubound         = 0;
     sector_to_read = 0;
 
     for (i = 0; i < 10; i++) {

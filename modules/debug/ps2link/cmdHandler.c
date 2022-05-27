@@ -120,7 +120,7 @@ pkoSetSifDma(void *dest, void *src, unsigned int length, unsigned int mode)
     int oldIrq;
     int id;
 
-    sendData.src = (unsigned int *)src;
+    sendData.src  = (unsigned int *)src;
     sendData.dest = (unsigned int *)dest;
     sendData.size = length;
     sendData.attr = mode;
@@ -249,9 +249,9 @@ cmdListener(int sock)
     while (1) {
 
         addrlen = sizeof(remote_addr);
-        len = recvfrom(sock, &recvbuf[0], BUF_SIZE, 0,
-                       (struct sockaddr *)&remote_addr,
-                       &addrlen);
+        len     = recvfrom(sock, &recvbuf[0], BUF_SIZE, 0,
+                           (struct sockaddr *)&remote_addr,
+                           &addrlen);
         dbgprintf("IOP cmd: received packet (%d)\n", len);
 
         if (len < 0) {
@@ -263,7 +263,7 @@ cmdListener(int sock)
         }
 
         header = (pko_pkt_hdr *)recvbuf;
-        cmd = ntohl(header->cmd);
+        cmd    = ntohl(header->cmd);
         switch (cmd) {
 
             case PKO_EXECIOP_CMD:
@@ -345,9 +345,9 @@ cmdThread(void *arg)
     }
 
     memset((void *)&serv_addr, 0, sizeof(serv_addr));
-    serv_addr.sin_family = AF_INET;
+    serv_addr.sin_family      = AF_INET;
     serv_addr.sin_addr.s_addr = htonl(INADDR_ANY);
-    serv_addr.sin_port = htons(PKO_CMD_PORT);
+    serv_addr.sin_port        = htons(PKO_CMD_PORT);
 
     ret = bind(sock, (struct sockaddr *)&serv_addr, sizeof(serv_addr));
     if (ret < 0) {
@@ -376,11 +376,11 @@ int cmdHandlerInit(void)
     SifInitRpc(0);
     SetPowerButtonHandler(cmdPowerOff, NULL);
 
-    thread.attr = 0x02000000;
-    thread.option = 0;
-    thread.thread = (void *)cmdThread;
+    thread.attr      = 0x02000000;
+    thread.option    = 0;
+    thread.thread    = (void *)cmdThread;
     thread.stacksize = 0x800;
-    thread.priority = 60; // 0x1e;
+    thread.priority  = 60; // 0x1e;
 
     pid = CreateThread(&thread);
     if (pid >= 0) {

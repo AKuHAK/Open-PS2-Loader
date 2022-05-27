@@ -49,9 +49,9 @@ const u8 xortable[256] = {
 // clang-format on
 
 PtrSecrAuthCard pSecrAuthCard[MCEMU_PORTS] = {DummySecrAuthCard, DummySecrAuthCard}; /* Pointer to SecrAuthCard() handler */
-McImageSpec vmcSpec[MCEMU_PORTS] = {{0xC0DEFAC0}, {0xC0DEFAC1}};                     /* Virtual Memory Card Informations */
-MemoryCard memcards[MCEMU_PORTS] = {{0}, {0}};                                       /* Memory Card descriptors */
-void *pFastBuf = NULL;                                                               /* Pointer to Fast I/O buffer */
+McImageSpec vmcSpec[MCEMU_PORTS]           = {{0xC0DEFAC0}, {0xC0DEFAC1}};           /* Virtual Memory Card Informations */
+MemoryCard memcards[MCEMU_PORTS]           = {{0}, {0}};                             /* Memory Card descriptors */
+void *pFastBuf                             = NULL;                                   /* Pointer to Fast I/O buffer */
 
 PtrRegisterLibraryEntires pRegisterLibraryEntires; /* Pointer to RegisterLibraryEntires routine */
 Sio2McProc pSio2man25, pSio2man51;                 /* Pointers to SIO2MAN routines */

@@ -2,7 +2,7 @@
 #include "zso.h"
 
 // block offset cache, reduces IO access
-u32 *ziso_idx_cache = NULL;
+u32 *ziso_idx_cache      = NULL;
 int ziso_idx_start_block = -1;
 
 // header data that we need for the reader
@@ -15,7 +15,7 @@ u8 *ziso_tmp_buf = NULL;
 void ziso_init(ZISO_header *header, u32 first_block)
 {
     // read header information
-    ziso_align = header->align;
+    ziso_align           = header->align;
     ziso_idx_start_block = -1;
     // calculate number of blocks without using uncompressed_size (avoid 64bit division)
     ziso_total_block = ((((first_block & 0x7FFFFFFF) << ziso_align) - sizeof(ZISO_header)) / 4) - 1;
@@ -43,14 +43,14 @@ int ziso_read_sector(u8 *addr, u32 lsn, unsigned int count)
         return 0; // can't seek beyond file
     }
 
-    u32 size = count * 2048;
+    u32 size  = count * 2048;
     u32 o_lsn = lsn;
     u8 *c_buf = NULL;
 
     {
         // refresh index table if needed
         u32 starting_block = lsn;
-        u32 ending_block = lsn + count + 1;
+        u32 ending_block   = lsn + count + 1;
         if (ziso_idx_start_block < 0 || starting_block < ziso_idx_start_block || ending_block >= ziso_idx_start_block + ZISO_IDX_MAX_ENTRIES) {
             read_raw_data(ziso_idx_cache, ZISO_IDX_MAX_ENTRIES * sizeof(u32), starting_block * 4 + sizeof(ZISO_header), 0);
             ziso_idx_start_block = starting_block;
@@ -89,11 +89,11 @@ int ziso_read_sector(u8 *addr, u32 lsn, unsigned int count)
 
         // read compressed block offset and size
         u32 b_offset = ziso_idx_cache[lsn - ziso_idx_start_block];
-        u32 b_size = ziso_idx_cache[lsn - ziso_idx_start_block + 1];
-        u32 topbit = b_offset & 0x80000000; // extract top bit for decompressor
-        b_offset = (b_offset & 0x7FFFFFFF); // remove top bit
-        b_size = (b_size & 0x7FFFFFFF);     // remove top bit
-        b_size = (b_size - b_offset) << ziso_align;
+        u32 b_size   = ziso_idx_cache[lsn - ziso_idx_start_block + 1];
+        u32 topbit   = b_offset & 0x80000000;   // extract top bit for decompressor
+        b_offset     = (b_offset & 0x7FFFFFFF); // remove top bit
+        b_size       = (b_size & 0x7FFFFFFF);   // remove top bit
+        b_size       = (b_size - b_offset) << ziso_align;
 
         // prevent reading more than a sector (eliminates padding if any)
         int r = MIN(b_size, 2048);

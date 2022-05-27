@@ -35,12 +35,12 @@ int _start(int argc, char *argv[])
 
     oplRegisterShutdownCallback(&mcemuShutdown);
 
-    param.attr = TH_C;
-    param.thread = StartNow;
-    param.priority = 0x4f;
+    param.attr      = TH_C;
+    param.thread    = StartNow;
+    param.priority  = 0x4f;
     param.stacksize = 0xB00;
-    param.option = 0;
-    thid = CreateThread(&param);
+    param.option    = 0;
+    thid            = CreateThread(&param);
     StartThread(thid, 0);
     while (!((readyToGo == 1) || (readyToGo == 0))) {
         DelayThread(100 * 1000);
@@ -137,7 +137,7 @@ void InstallMcmanHook(void *exp)
     register void *mcman63, *mcman68;
 
     /* getting MCMAN's sceMcRead & sceMcWrite routines */
-    pMcRead = GetExportEntry(exp, 8);
+    pMcRead  = GetExportEntry(exp, 8);
     pMcWrite = GetExportEntry(exp, 9);
     /* hooking MCMAN's library entry #62 */
     HookExportEntry(exp, 62, hookMcman62);
@@ -160,7 +160,7 @@ static int CheckPatchMc2_s1()
 {
     modinfo_t info;
     ModuleInfo_t *mod_table = GetLoadcoreInternalData()->image_info;
-    const char modname[8] = "mc2_s1";
+    const char modname[8]   = "mc2_s1";
     u32 start, end;
 
     getModInfo("modload\0", &info);
@@ -183,12 +183,12 @@ static int CheckPatchMc2_s1()
     if (!mod_table)
         goto not_found_again; // mc2_s1 not found
     start = mod_table->text_start;
-    end = start + mod_table->text_size + mod_table->data_size + mod_table->bss_size;
+    end   = start + mod_table->text_size + mod_table->data_size + mod_table->bss_size;
 
     getModInfo("dmacman\0", &info);
 
     // walk the import tables
-    iop_library_t *lib = (iop_library_t *)((u32)info.exports - 0x14);
+    iop_library_t *lib             = (iop_library_t *)((u32)info.exports - 0x14);
     struct irx_import_table *table = lib->caller;
     struct irx_import_stub *stub;
     while (table) {
@@ -364,7 +364,7 @@ int hookSecrAuthCard(int port, int slot, int cnum)
 #define SIO2STAT (*(volatile u32 *)(0xbf80826c))
 #define SIO2CMD  ((volatile u32 *)(0xbf808200))
 static Sio2Packet *temp_packet = NULL;
-static int skip_sema_wait = 0;
+static int skip_sema_wait      = 0;
 
 int hookDmac_request(u32 channel, void *addr, u32 size, u32 count, int dir)
 {
@@ -378,7 +378,7 @@ int hookDmac_request(u32 channel, void *addr, u32 size, u32 count, int dir)
     switch (channel) {
         case 11: // sio2in
             // may have to copy the dma buffer, but isn't a problem right now
-            temp_packet = _SysAlloc(sizeof(Sio2Packet));
+            temp_packet          = _SysAlloc(sizeof(Sio2Packet));
             temp_packet->wrmaddr = addr;
             temp_packet->wrwords = size;
             temp_packet->wrcount = count;
@@ -397,7 +397,7 @@ int hookDmac_request(u32 channel, void *addr, u32 size, u32 count, int dir)
             Sio2McEmu(temp_packet);
             SIO2CTRL |= 0x40; // reset it, pcsx2 suggests it's reset after every write
             _SysFree(temp_packet);
-            temp_packet = NULL;
+            temp_packet    = NULL;
             skip_sema_wait = 1;
             return 1;
         default:
@@ -448,7 +448,7 @@ u32 *hookSio2man67()
             }
         }
         skip_sema_wait = 0;
-        fake_stat = 0x1000;
+        fake_stat      = 0x1000;
         return (&fake_stat);
     }
     pSio2man67();
@@ -470,7 +470,7 @@ void Sio2McEmu(Sio2Packet *sd)
 
         for (result = 1, ddi = 0; (ddi < sd->wrcount) && (ddi < 0x10) && (*pctl); ddi++, pctl++) {
             if (wdma[0] == 0x81) {
-                mcd = &memcards[*pctl & 0x1];
+                mcd    = &memcards[*pctl & 0x1];
                 length = (*pctl >> 18) & 0x1FF;
 
                 if (mcd->mcnum != -1) {
@@ -506,7 +506,7 @@ void Sio2McEmu(Sio2Packet *sd)
                             /* calculating EDC for memory card spec data */
                             rdma[11] = CalculateEDC(&rdma[3], sizeof(McSpec));
                             rdma[12] = mcd->tcode;
-                            result = 1;
+                            result   = 1;
                             break;
                         /* 0x81 0x27 - Set new termination code */
                         case 0x27:
@@ -519,7 +519,7 @@ void Sio2McEmu(Sio2Packet *sd)
                         case 0x28:
                             SioResponse(mcd, rdma, 4);
                             rdma[4] = mcd->tcode;
-                            result = 1;
+                            result  = 1;
                             break;
                         /* 0x81 0x42 - Write data to a memory card */
                         case 0x42:
@@ -682,7 +682,7 @@ restart:
         u32 csize = (size < 16) ? size : 16;
         mips_memcpy(buf, mcd->cbufp, csize);
         mcd->rcoff = (csize > 12) ? 0 : (mcd->rcoff - csize);
-        buf = (void *)((u8 *)buf + csize);
+        buf        = (void *)((u8 *)buf + csize);
         size -= csize;
         if (size <= 0)
             return 1;
@@ -700,7 +700,7 @@ restart:
         mcd->rcoff += 3;
     }
     if (mcd->rdoff == mcd->cspec.PageSize) {
-        buf = (void *)((u8 *)buf + size);
+        buf  = (void *)((u8 *)buf + size);
         size = tot_size - size;
         mcd->rpage++;
         mcd->rdoff = 0;
@@ -731,7 +731,7 @@ int MceWrite(MemoryCard *mcd, void *buf, u32 size)
 restart:
     DPRINTF("write sector %X size %ld\n", mcd->wpage, size);
     if (mcd->wcoff && !mcd->wroff) {
-        u32 csize = (size < 16) ? size : 16;
+        u32 csize  = (size < 16) ? size : 16;
         mcd->wcoff = (csize > 12) ? 0 : (mcd->wcoff - csize);
         buf += csize;
         size -= csize;
@@ -750,7 +750,7 @@ restart:
         register int r;
 
         buf += size;
-        size = tot_size - size;
+        size       = tot_size - size;
         mcd->wroff = 0;
 
         r = DeviceWritePage(mcd->mcnum, mcd->dbufp, mcd->wpage);

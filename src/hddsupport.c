@@ -26,9 +26,9 @@
 
 #define OPL_HDD_MODE_PS2LOGO_OFFSET 0x17F8
 
-static unsigned char hddForceUpdate = 0;
+static unsigned char hddForceUpdate      = 0;
 static unsigned char hddHDProKitDetected = 0;
-static unsigned char hddModulesLoaded = 0;
+static unsigned char hddModulesLoaded    = 0;
 
 static char *hddPrefix = "pfs0:";
 static hdl_games_list_t hddGames;
@@ -67,21 +67,21 @@ static int hddCheckHDProKit(void)
     DIntr();
     ee_kmode_enter();
     // HD Pro IO start commands sequence
-    HDPROreg_IO8 = 0x72;
+    HDPROreg_IO8   = 0x72;
     CDVDreg_STATUS = 0;
-    HDPROreg_IO8 = 0x34;
+    HDPROreg_IO8   = 0x34;
     CDVDreg_STATUS = 0;
-    HDPROreg_IO8 = 0x61;
+    HDPROreg_IO8   = 0x61;
     CDVDreg_STATUS = 0;
-    u32 res = HDPROreg_IO8;
+    u32 res        = HDPROreg_IO8;
     CDVDreg_STATUS = 0;
 
     // check result
     if ((res & 0xff) == 0xe7) {
         // HD Pro IO finish commands sequence
-        HDPROreg_IO8 = 0xf3;
+        HDPROreg_IO8   = 0xf3;
         CDVDreg_STATUS = 0;
-        ret = 1;
+        ret            = 1;
     }
     ee_kmode_exit();
     EIntr();
@@ -278,7 +278,7 @@ static int hddUpdateGameList(void)
     if (((ret = hddLoadGameListCache(&hddGames)) != 0) || (hddForceUpdate)) {
         hddGamesNew.count = 0;
         hddGamesNew.games = NULL;
-        ret = hddGetHDLGamelist(&hddGamesNew);
+        ret               = hddGetHDLGamelist(&hddGamesNew);
         if (ret == 0) {
             hddUpdateGameListCache(&hddGames, &hddGamesNew);
             hddFreeHDLGamelist(&hddGames);
@@ -358,7 +358,7 @@ void hddLaunchGame(int id, config_set_t *configSet)
         nparts = hddGetPartitionInfo(gOPLPart, parts);
         if (nparts > 0 && nparts <= 5) {
             for (i = 0; i < nparts; i++) {
-                hdd_vmc_infos.parts[i].start = parts[i].start;
+                hdd_vmc_infos.parts[i].start  = parts[i].start;
                 hdd_vmc_infos.parts[i].length = parts[i].length;
                 LOG("HDDSUPPORT hdd_vmc_infos.parts[%d].start : 0x%X\n", i, hdd_vmc_infos.parts[i].start);
                 LOG("HDDSUPPORT hdd_vmc_infos.parts[%d].length : 0x%X\n", i, hdd_vmc_infos.parts[i].length);
@@ -375,24 +375,24 @@ void hddLaunchGame(int id, config_set_t *configSet)
 
         for (vmc_id = 0; vmc_id < 2; vmc_id++) {
             if (vmc_name[vmc_id][0]) {
-                have_error = 1;
+                have_error           = 1;
                 hdd_vmc_infos.active = 0;
                 if (sysCheckVMC(gHDDPrefix, "/", vmc_name[vmc_id], 0, &vmc_superblock) > 0) {
                     hdd_vmc_infos.flags = vmc_superblock.mc_flag & 0xFF;
                     hdd_vmc_infos.flags |= 0x100;
-                    hdd_vmc_infos.specs.page_size = vmc_superblock.page_size;
+                    hdd_vmc_infos.specs.page_size  = vmc_superblock.page_size;
                     hdd_vmc_infos.specs.block_size = vmc_superblock.pages_per_block;
-                    hdd_vmc_infos.specs.card_size = vmc_superblock.pages_per_cluster * vmc_superblock.clusters_per_card;
+                    hdd_vmc_infos.specs.card_size  = vmc_superblock.pages_per_cluster * vmc_superblock.clusters_per_card;
 
                     // Check vmc inode block chain (write operation can cause damage)
                     snprintf(vmc_path, sizeof(vmc_path), "%sVMC/%s.bin", gHDDPrefix, vmc_name[vmc_id]);
                     if ((nparts = hddGetFileBlockInfo(vmc_path, parts, blocks, 11)) > 0) {
-                        have_error = 0;
+                        have_error           = 0;
                         hdd_vmc_infos.active = 1;
                         for (i = 0; i < nparts - 1; i++) {
-                            hdd_vmc_infos.blocks[i].number = blocks[i + 1].number;
+                            hdd_vmc_infos.blocks[i].number  = blocks[i + 1].number;
                             hdd_vmc_infos.blocks[i].subpart = blocks[i + 1].subpart;
-                            hdd_vmc_infos.blocks[i].count = blocks[i + 1].count;
+                            hdd_vmc_infos.blocks[i].count   = blocks[i + 1].count;
                             LOG("HDDSUPPORT hdd_vmc_infos.blocks[%d].number     : 0x%X\n", i, hdd_vmc_infos.blocks[i].number);
                             LOG("HDDSUPPORT hdd_vmc_infos.blocks[%d].subpart    : 0x%X\n", i, hdd_vmc_infos.blocks[i].subpart);
                             LOG("HDDSUPPORT hdd_vmc_infos.blocks[%d].count      : 0x%X\n", i, hdd_vmc_infos.blocks[i].count);
@@ -451,10 +451,10 @@ void hddLaunchGame(int id, config_set_t *configSet)
 
     if (hddHDProKitDetected) {
         size_irx = size_hdd_hdpro_cdvdman_irx;
-        irx = &hdd_hdpro_cdvdman_irx;
+        irx      = &hdd_hdpro_cdvdman_irx;
     } else {
         size_irx = size_hdd_cdvdman_irx;
-        irx = &hdd_cdvdman_irx;
+        irx      = &hdd_cdvdman_irx;
     }
 
     sbPrepare(NULL, configSet, size_irx, irx, &i);

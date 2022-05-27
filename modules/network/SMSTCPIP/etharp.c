@@ -378,7 +378,7 @@ update_arp_entry(struct netif *netif, struct ip_addr *ipaddr, struct eth_addr *e
                     ethhdr = p->payload;
                     for (k = 0; k < netif->hwaddr_len; ++k) {
                         ethhdr->dest.addr[k] = ethaddr->addr[k];
-                        ethhdr->src.addr[k] = netif->hwaddr[k];
+                        ethhdr->src.addr[k]  = netif->hwaddr[k];
                     }
                     ethhdr->type = ETHTYPE_IP;
                     LWIP_DEBUGF(ETHARP_DEBUG | DBG_TRACE, ("update_arp_entry: sending queued IP packet %p.\n", (void *)p));
@@ -525,10 +525,10 @@ void etharp_arp_input(struct netif *netif, struct eth_addr *ethaddr, struct pbuf
                 ip_addr_set(&(hdr->sipaddr), &(netif->ip_addr));
 
                 for (i = 0; i < netif->hwaddr_len; ++i) {
-                    hdr->dhwaddr.addr[i] = hdr->shwaddr.addr[i];
-                    hdr->shwaddr.addr[i] = ethaddr->addr[i];
+                    hdr->dhwaddr.addr[i]     = hdr->shwaddr.addr[i];
+                    hdr->shwaddr.addr[i]     = ethaddr->addr[i];
                     hdr->ethhdr.dest.addr[i] = hdr->dhwaddr.addr[i];
-                    hdr->ethhdr.src.addr[i] = ethaddr->addr[i];
+                    hdr->ethhdr.src.addr[i]  = ethaddr->addr[i];
                 }
 
                 hdr->hwtype = htons(HWTYPE_ETHERNET);
@@ -677,7 +677,7 @@ etharp_output(struct netif *netif, struct ip_addr *ipaddr, struct pbuf *q)
 
         for (i = 0; i < netif->hwaddr_len; i++) {
             ethhdr->dest.addr[i] = dest->addr[i];
-            ethhdr->src.addr[i] = srcaddr->addr[i];
+            ethhdr->src.addr[i]  = srcaddr->addr[i];
         }
 
         ethhdr->type = ETHTYPE_IP;
@@ -768,7 +768,7 @@ err_t etharp_query(struct netif *netif, struct ip_addr *ipaddr, struct pbuf *q)
         if (p != NULL) {
             u8_t j;
             LWIP_DEBUGF(ETHARP_DEBUG | DBG_TRACE, ("etharp_query: sending ARP request.\n"));
-            hdr = p->payload;
+            hdr         = p->payload;
             hdr->opcode = ARP_REQUEST;
             for (j = 0; j < netif->hwaddr_len; ++j) {
                 hdr->shwaddr.addr[j] = srcaddr->addr[j];
@@ -786,7 +786,7 @@ err_t etharp_query(struct netif *netif, struct ip_addr *ipaddr, struct pbuf *q)
             ARPH_PROTOLEN_SET(hdr, sizeof(struct ip_addr));
             for (j = 0; j < netif->hwaddr_len; ++j) {
                 hdr->ethhdr.dest.addr[j] = 0xff;
-                hdr->ethhdr.src.addr[j] = srcaddr->addr[j];
+                hdr->ethhdr.src.addr[j]  = srcaddr->addr[j];
             }
             hdr->ethhdr.type = ETHTYPE_ARP;
             /* send ARP query */

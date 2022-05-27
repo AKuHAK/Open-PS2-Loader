@@ -216,16 +216,16 @@ static int texSizeValidate(int width, int height, short psm)
 
 static void texPrepare(GSTEXTURE *texture)
 {
-    texture->Width = 0;                 // Must be set by loader
-    texture->Height = 0;                // Must be set by loader
-    texture->PSM = GS_PSM_CT24;         // Must be set by loader
-    texture->ClutPSM = 0;               // Default, can be set by loader
-    texture->TBW = 0;                   // gsKit internal value
-    texture->Mem = NULL;                // Must be allocated by loader
-    texture->Clut = NULL;               // Default, can be set by loader
-    texture->Vram = 0;                  // VRAM allocation handled by texture manager
-    texture->VramClut = 0;              // VRAM allocation handled by texture manager
-    texture->Filter = GS_FILTER_LINEAR; // Default
+    texture->Width    = 0;                // Must be set by loader
+    texture->Height   = 0;                // Must be set by loader
+    texture->PSM      = GS_PSM_CT24;      // Must be set by loader
+    texture->ClutPSM  = 0;                // Default, can be set by loader
+    texture->TBW      = 0;                // gsKit internal value
+    texture->Mem      = NULL;             // Must be allocated by loader
+    texture->Clut     = NULL;             // Default, can be set by loader
+    texture->Vram     = 0;                // VRAM allocation handled by texture manager
+    texture->VramClut = 0;                // VRAM allocation handled by texture manager
+    texture->Filter   = GS_FILTER_LINEAR; // Default
 
     // Do not load the texture to VRAM directly, only load it to EE RAM
     texture->Delayed = 1;
@@ -328,7 +328,7 @@ static void texPngReadMemFunction(png_structp pngPtr, png_bytep data, png_size_t
 static void texPngReadPixels4(GSTEXTURE *texture, png_bytep *rowPointers, size_t size)
 {
     unsigned char *pixel = (unsigned char *)texture->Mem;
-    png_clut_t *clut = (png_clut_t *)texture->Clut;
+    png_clut_t *clut     = (png_clut_t *)texture->Clut;
 
     int i, j, k = 0;
 
@@ -337,9 +337,9 @@ static void texPngReadPixels4(GSTEXTURE *texture, png_bytep *rowPointers, size_t
     }
 
     for (i = 0; i < pngTexture.numPalette; i++) {
-        clut[i].red = pngTexture.palette[i].red;
+        clut[i].red   = pngTexture.palette[i].red;
         clut[i].green = pngTexture.palette[i].green;
-        clut[i].blue = pngTexture.palette[i].blue;
+        clut[i].blue  = pngTexture.palette[i].blue;
         clut[i].alpha = 0x80;
     }
 
@@ -362,7 +362,7 @@ static void texPngReadPixels4(GSTEXTURE *texture, png_bytep *rowPointers, size_t
 static void texPngReadPixels8(GSTEXTURE *texture, png_bytep *rowPointers, size_t size)
 {
     unsigned char *pixel = (unsigned char *)texture->Mem;
-    png_clut_t *clut = (png_clut_t *)texture->Clut;
+    png_clut_t *clut     = (png_clut_t *)texture->Clut;
 
     int i, j, k = 0;
 
@@ -371,9 +371,9 @@ static void texPngReadPixels8(GSTEXTURE *texture, png_bytep *rowPointers, size_t
     }
 
     for (i = 0; i < pngTexture.numPalette; i++) {
-        clut[i].red = pngTexture.palette[i].red;
+        clut[i].red   = pngTexture.palette[i].red;
         clut[i].green = pngTexture.palette[i].green;
-        clut[i].blue = pngTexture.palette[i].blue;
+        clut[i].blue  = pngTexture.palette[i].blue;
         clut[i].alpha = 0x80;
     }
 
@@ -384,8 +384,8 @@ static void texPngReadPixels8(GSTEXTURE *texture, png_bytep *rowPointers, size_t
     for (i = 0; i < pngTexture.numPalette; i++) {
         if ((i & 0x18) == 8) {
             png_clut_t tmp = clut[i];
-            clut[i] = clut[i + 8];
-            clut[i + 8] = tmp;
+            clut[i]        = clut[i + 8];
+            clut[i + 8]    = tmp;
         }
     }
 
@@ -433,7 +433,7 @@ static void texPngReadData(GSTEXTURE *texture, png_structp pngPtr, png_infop inf
                            void (*texPngReadPixels)(GSTEXTURE *texture, png_bytep *rowPointers, size_t size))
 {
     int row, rowBytes = png_get_rowbytes(pngPtr, infoPtr);
-    size_t size = gsKit_texture_size_ee(texture->Width, texture->Height, texture->PSM);
+    size_t size  = gsKit_texture_size_ee(texture->Width, texture->Height, texture->PSM);
     texture->Mem = memalign(128, size);
 
     // failed allocation
@@ -461,11 +461,11 @@ static void texPngReadData(GSTEXTURE *texture, png_structp pngPtr, png_infop inf
 static int texPngLoadAll(GSTEXTURE *texture, const char *filePath, int texId)
 {
     texPrepare(texture);
-    png_structp pngPtr = NULL;
-    png_infop infoPtr = NULL;
-    png_voidp readData = NULL;
+    png_structp pngPtr      = NULL;
+    png_infop infoPtr       = NULL;
+    png_voidp readData      = NULL;
     png_rw_ptr readFunction = NULL;
-    FILE *file = NULL;
+    FILE *file              = NULL;
     void **PngFileBufferPtr;
 
     if (filePath) {
@@ -481,8 +481,8 @@ static int texPngLoadAll(GSTEXTURE *texture, const char *filePath, int texId)
             return ERR_BAD_FILE;
 
         PngFileBufferPtr = internalDefault[texId].texture;
-        readData = &PngFileBufferPtr;
-        readFunction = &texPngReadMemFunction;
+        readData         = &PngFileBufferPtr;
+        readFunction     = &texPngReadMemFunction;
     }
 
     pngPtr = png_create_read_struct(PNG_LIBPNG_VER_STRING, (png_voidp)NULL, NULL, NULL);
@@ -508,7 +508,7 @@ static int texPngLoadAll(GSTEXTURE *texture, const char *filePath, int texId)
     png_uint_32 pngWidth, pngHeight;
     int bitDepth, colorType, interlaceType;
     png_get_IHDR(pngPtr, infoPtr, &pngWidth, &pngHeight, &bitDepth, &colorType, &interlaceType, NULL, NULL);
-    texture->Width = pngWidth;
+    texture->Width  = pngWidth;
     texture->Height = pngHeight;
 
     if (bitDepth == 16)
@@ -526,31 +526,31 @@ static int texPngLoadAll(GSTEXTURE *texture, const char *filePath, int texId)
     void (*texPngReadPixels)(GSTEXTURE * texture, png_bytep * rowPointers, size_t size);
     switch (png_get_color_type(pngPtr, infoPtr)) {
         case PNG_COLOR_TYPE_RGB_ALPHA:
-            texture->PSM = GS_PSM_CT32;
+            texture->PSM     = GS_PSM_CT32;
             texPngReadPixels = &texPngReadPixels32;
             break;
         case PNG_COLOR_TYPE_RGB:
-            texture->PSM = GS_PSM_CT24;
+            texture->PSM     = GS_PSM_CT24;
             texPngReadPixels = &texPngReadPixels24;
             break;
         case PNG_COLOR_TYPE_PALETTE:
-            pngTexture.palette = NULL;
+            pngTexture.palette    = NULL;
             pngTexture.numPalette = 0;
-            pngTexture.trans = NULL;
-            pngTexture.numTrans = 0;
+            pngTexture.trans      = NULL;
+            pngTexture.numTrans   = 0;
 
             png_get_PLTE(pngPtr, infoPtr, &pngTexture.palette, &pngTexture.numPalette);
             png_get_tRNS(pngPtr, infoPtr, &pngTexture.trans, &pngTexture.numTrans, NULL);
             texture->ClutPSM = GS_PSM_CT32;
 
             if (bitDepth == 4) {
-                texture->PSM = GS_PSM_T4;
+                texture->PSM  = GS_PSM_T4;
                 texture->Clut = memalign(128, gsKit_texture_size_ee(8, 2, GS_PSM_CT32));
                 memset(texture->Clut, 0, gsKit_texture_size_ee(8, 2, GS_PSM_CT32));
 
                 texPngReadPixels = &texPngReadPixels4;
             } else if (bitDepth == 8) {
-                texture->PSM = GS_PSM_T8;
+                texture->PSM  = GS_PSM_T8;
                 texture->Clut = memalign(128, gsKit_texture_size_ee(16, 16, GS_PSM_CT32));
                 memset(texture->Clut, 0, gsKit_texture_size_ee(16, 16, GS_PSM_CT32));
 
@@ -589,15 +589,15 @@ static int texPngLoadInternal(GSTEXTURE *texture, int texId)
 static int texJpgLoad(GSTEXTURE *texture, const char *filePath)
 {
     texPrepare(texture);
-    int result = ERR_BAD_FILE;
+    int result   = ERR_BAD_FILE;
     jpgData *jpg = NULL;
 
     jpg = jpgFromFilename(filePath, JPG_NORMAL);
     if (jpg) {
-        texture->Width = jpg->width;
+        texture->Width  = jpg->width;
         texture->Height = jpg->height;
-        texture->PSM = GS_PSM_CT24;
-        texture->Mem = jpg->buffer;
+        texture->PSM    = GS_PSM_CT24;
+        texture->Mem    = jpg->buffer;
         free(jpg);
         result = 0;
     }

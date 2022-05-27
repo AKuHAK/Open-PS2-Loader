@@ -32,7 +32,7 @@
 #include <speedregs.h>
 #include <atahw.h>
 
-//#define NETLOG_DEBUG
+// #define NETLOG_DEBUG
 
 #ifdef NETLOG_DEBUG
 // !!! netlog exports functions pointers !!!
@@ -168,9 +168,9 @@ int atad_start(void)
 
     iop_sema_t smp;
     smp.initial = 1;
-    smp.max = 1;
-    smp.option = 0;
-    smp.attr = SA_THPRI;
+    smp.max     = 1;
+    smp.option  = 0;
+    smp.attr    = SA_THPRI;
     ata_io_sema = CreateSema(&smp);
 
     res = 0;
@@ -209,7 +209,7 @@ int ata_get_error(void)
 #define ata_wait_bus_busy() gen_ata_wait_busy(ATA_WAIT_BUSBUSY)
 
 /* 0x80 for busy, 0x88 for bus busy.
-	In the original ATAD, the busy and bus-busy functions were separate, but similar.  */
+    In the original ATAD, the busy and bus-busy functions were separate, but similar.  */
 static int gen_ata_wait_busy(int bits)
 {
     USE_ATA_REGS;
@@ -261,20 +261,20 @@ static int ata_device_select(int device)
     /* Select the device.  */
     ata_hwport->r_select = (device & 1) << 4;
     (void)(ata_hwport->r_control);
-    (void)(ata_hwport->r_control); //Only done once in v1.04.
+    (void)(ata_hwport->r_control); // Only done once in v1.04.
 
     return ata_wait_bus_busy();
 }
 
 /* Export 6 */
 /*
-	28-bit LBA:
-		sector	(7:0)	-> LBA (7:0)
-		lcyl	(7:0)	-> LBA (15:8)
-		hcyl	(7:0)	-> LBA (23:16)
-		device	(3:0)	-> LBA (27:24)
+    28-bit LBA:
+        sector	(7:0)	-> LBA (7:0)
+        lcyl	(7:0)	-> LBA (15:8)
+        hcyl	(7:0)	-> LBA (23:16)
+        device	(3:0)	-> LBA (27:24)
 
-	48-bit LBA just involves writing the upper 24 bits in the format above into each respective register on the first write pass, before writing the lower 24 bits in the 2nd write pass. The LBA bits within the device field are not used in either write pass.
+    48-bit LBA just involves writing the upper 24 bits in the format above into each respective register on the first write pass, before writing the lower 24 bits in the 2nd write pass. The LBA bits within the device field are not used in either write pass.
 */
 int ata_io_start(void *buf, u32 blkcount, u16 feature, u16 nsector, u16 sector, u16 lcyl, u16 hcyl, u16 select, u16 command)
 {
@@ -291,15 +291,15 @@ int ata_io_start(void *buf, u32 blkcount, u16 feature, u16 nsector, u16 sector, 
         return res;
 
     /* For the SCE and SMART commands, we need to search on the subcommand
-	specified in the feature register.  */
+    specified in the feature register.  */
     if (command == ATA_C_SMART) {
-        cmd_table = smart_cmd_table;
+        cmd_table      = smart_cmd_table;
         cmd_table_size = SMART_CMD_TABLE_SIZE;
-        searchcmd = (u8)feature;
+        searchcmd      = (u8)feature;
     } else {
-        cmd_table = ata_cmd_table;
+        cmd_table      = ata_cmd_table;
         cmd_table_size = ATA_CMD_TABLE_SIZE;
-        searchcmd = (u8)command;
+        searchcmd      = (u8)command;
     }
 
     type = 0;
@@ -310,10 +310,10 @@ int ata_io_start(void *buf, u32 blkcount, u16 feature, u16 nsector, u16 sector, 
         }
     }
 
-    if (!(atad_cmd_state.type = type & 0x7F)) //Non-SONY: ignore the 48-bit LBA flag.
+    if (!(atad_cmd_state.type = type & 0x7F)) // Non-SONY: ignore the 48-bit LBA flag.
         return ATA_RES_ERR_CMD;
 
-    atad_cmd_state.buf = buf;
+    atad_cmd_state.buf      = buf;
     atad_cmd_state.blkcount = blkcount;
 
     /* Check that the device is ready if this the appropiate command.  */
@@ -333,14 +333,14 @@ int ata_io_start(void *buf, u32 blkcount, u16 feature, u16 nsector, u16 sector, 
 
     /* Does this command need a timeout?  */
     using_timeout = 0;
-    switch (type & 0x7F) { //Non-SONY: ignore the 48-bit LBA flag.
+    switch (type & 0x7F) { // Non-SONY: ignore the 48-bit LBA flag.
         case 1:
         case 6:
             using_timeout = 1;
             break;
         case 4:
             atad_cmd_state.dir = (command != ATA_C_READ_DMA && command != ATA_C_READ_DMA_EXT);
-            using_timeout = 1;
+            using_timeout      = 1;
             break;
     }
 
@@ -359,24 +359,24 @@ int ata_io_start(void *buf, u32 blkcount, u16 feature, u16 nsector, u16 sector, 
     /* Finally!  We send off the ATA command with arguments.  */
     ata_hwport->r_control = (using_timeout == 0) << 1;
 
-    if (type & 0x80) { //For the sake of achieving (greatly) improved performance, write the registers twice only if required! This is also required for compatibility with the buggy firmware of certain PSX units.
+    if (type & 0x80) { // For the sake of achieving (greatly) improved performance, write the registers twice only if required! This is also required for compatibility with the buggy firmware of certain PSX units.
         /* 48-bit LBA requires writing to the address registers twice,
-		   24 bits of the LBA address is written each time.
-		   Writing to registers twice does not affect 28-bit LBA since
-		   only the latest data stored in address registers is used.  */
+           24 bits of the LBA address is written each time.
+           Writing to registers twice does not affect 28-bit LBA since
+           only the latest data stored in address registers is used.  */
         ata_hwport->r_feature = (feature >> 8) & 0xff;
         ata_hwport->r_nsector = (nsector >> 8) & 0xff;
-        ata_hwport->r_sector = (sector >> 8) & 0xff;
-        ata_hwport->r_lcyl = (lcyl >> 8) & 0xff;
-        ata_hwport->r_hcyl = (hcyl >> 8) & 0xff;
+        ata_hwport->r_sector  = (sector >> 8) & 0xff;
+        ata_hwport->r_lcyl    = (lcyl >> 8) & 0xff;
+        ata_hwport->r_hcyl    = (hcyl >> 8) & 0xff;
     }
 
     ata_hwport->r_feature = feature & 0xff;
     ata_hwport->r_nsector = nsector & 0xff;
-    ata_hwport->r_sector = sector & 0xff;
-    ata_hwport->r_lcyl = lcyl & 0xff;
-    ata_hwport->r_hcyl = hcyl & 0xff;
-    ata_hwport->r_select = (select | ATA_SEL_LBA) & 0xff; //In v1.04, LBA was enabled in the ata_device_sector_io function.
+    ata_hwport->r_sector  = sector & 0xff;
+    ata_hwport->r_lcyl    = lcyl & 0xff;
+    ata_hwport->r_hcyl    = hcyl & 0xff;
+    ata_hwport->r_select  = (select | ATA_SEL_LBA) & 0xff; // In v1.04, LBA was enabled in the ata_device_sector_io function.
     ata_hwport->r_command = command & 0xff;
 
     /* Turn on the LED.  */
@@ -414,20 +414,20 @@ static inline int ata_pio_transfer(ata_cmd_state_t *cmd_state)
         buf16 = cmd_state->buf16;
         for (i = 0; i < 256; i++) {
             ata_hwport->r_data = *buf16;
-            cmd_state->buf16 = ++buf16;
+            cmd_state->buf16   = ++buf16;
         }
         if (cmd_state->type == 8) {
             buf8 = cmd_state->buf8;
             for (i = 0; i < 4; i++) {
                 ata_hwport->r_data = *buf8;
-                cmd_state->buf8 = ++buf8;
+                cmd_state->buf8    = ++buf8;
             }
         }
     } else if (type == 2) {
         /* PIO data in  */
         buf16 = cmd_state->buf16;
         for (i = 0; i < 256; i++) {
-            *buf16 = ata_hwport->r_data;
+            *buf16           = ata_hwport->r_data;
             cmd_state->buf16 = ++buf16;
         }
     }
@@ -480,7 +480,7 @@ static inline int ata_dma_complete(void *buf, int blkcount, int dir)
         dma_stat = SPD_REG16(0x38) & 0x1f;
 
     next_transfer:
-        count = (blkcount < dma_stat) ? blkcount : dma_stat;
+        count  = (blkcount < dma_stat) ? blkcount : dma_stat;
         nbytes = count * 512;
         if ((res = dev9DmaTransfer(0, buf, (nbytes << 9) | 32, dir)) < 0)
             return res;
@@ -595,14 +595,14 @@ int ata_device_sector_io(int device, void *buf, u32 lba, u32 nsectors, int dir)
             /* Combine bits 24-31 and bits 0-7 of lba into sector.  */
             sector = ((lba >> 16) & 0xff00) | (lba & 0xff);
             /* In v1.04, LBA was enabled here.  */
-            select = (device << 4) & 0xffff;
+            select  = (device << 4) & 0xffff;
             command = (dir == 1) ? ATA_C_WRITE_DMA_EXT : ATA_C_READ_DMA_EXT;
         } else {
             /* Setup for 28-bit LBA.  */
-            len = (nsectors > 256) ? 256 : nsectors;
+            len    = (nsectors > 256) ? 256 : nsectors;
             sector = lba & 0xff;
             /* In v1.04, LBA was enabled here.  */
-            select = ((device << 4) | ((lba >> 24) & 0xf)) & 0xffff;
+            select  = ((device << 4) | ((lba >> 24) & 0xf)) & 0xffff;
             command = (dir == 1) ? ATA_C_WRITE_DMA : ATA_C_READ_DMA;
         }
 
@@ -649,10 +649,10 @@ static void ata_set_dir(int dir)
     unsigned short int val;
 
     SPD_REG16(0x38) = 3;
-    val = SPD_REG16(SPD_R_IF_CTRL) & 1;
+    val             = SPD_REG16(SPD_R_IF_CTRL) & 1;
     val |= (dir == ATA_DIR_WRITE) ? 0x4c : 0x4e;
-    SPD_REG16(SPD_R_IF_CTRL) = val;
-    SPD_REG16(SPD_R_XFR_CTRL) = dir | (ata_gamestar_workaround ? 0x86 : 0x6); //In v1.04, DMA was enabled here (0x86 instead of 0x6)
+    SPD_REG16(SPD_R_IF_CTRL)  = val;
+    SPD_REG16(SPD_R_XFR_CTRL) = dir | (ata_gamestar_workaround ? 0x86 : 0x6); // In v1.04, DMA was enabled here (0x86 instead of 0x6)
 }
 
 static int ata_device_standby_immediate(int device)

@@ -57,8 +57,8 @@ static void guiShow();
 
 // debug version displays an FPS meter
 static clock_t prevtime = 0;
-static clock_t curtime = 0;
-static float fps = 0.0f;
+static clock_t curtime  = 0;
+static float fps        = 0.0f;
 
 extern GSGLOBAL *gsGlobal;
 #endif
@@ -115,41 +115,41 @@ void guiReloadScreenExtents()
 
 void guiInit(void)
 {
-    guiFrameId = 0;
+    guiFrameId        = 0;
     guiInactiveFrames = 0;
 
-    gFrameHook = NULL;
-    gTerminate = 0;
+    gFrameHook    = NULL;
+    gTerminate    = 0;
     gInitComplete = 0;
     gScheduledOps = 0;
     gCompletedOps = 0;
 
     gUpdateList = NULL;
-    gUpdateEnd = NULL;
+    gUpdateEnd  = NULL;
 
     gQueueSema.init_count = 1;
-    gQueueSema.max_count = 1;
-    gQueueSema.option = 0;
+    gQueueSema.max_count  = 1;
+    gQueueSema.option     = 0;
 
-    gSemaId = CreateSema(&gQueueSema);
+    gSemaId        = CreateSema(&gQueueSema);
     gGUILockSemaId = CreateSema(&gQueueSema);
 
     guiReloadScreenExtents();
 
     // background texture - for perlin
-    gBackgroundTex.Width = PLASMA_W;
-    gBackgroundTex.Height = PLASMA_H;
-    gBackgroundTex.Mem = memalign(128, PLASMA_W * PLASMA_H * 4);
-    gBackgroundTex.PSM = GS_PSM_CT32;
-    gBackgroundTex.Filter = GS_FILTER_LINEAR;
-    gBackgroundTex.Vram = 0;
+    gBackgroundTex.Width    = PLASMA_W;
+    gBackgroundTex.Height   = PLASMA_H;
+    gBackgroundTex.Mem      = memalign(128, PLASMA_W * PLASMA_H * 4);
+    gBackgroundTex.PSM      = GS_PSM_CT32;
+    gBackgroundTex.Filter   = GS_FILTER_LINEAR;
+    gBackgroundTex.Vram     = 0;
     gBackgroundTex.VramClut = 0;
-    gBackgroundTex.Clut = NULL;
+    gBackgroundTex.Clut     = NULL;
 
     // Precalculate the values for the perlin noise plasma
     int i;
     for (i = 0; i < 256; ++i) {
-        pperm[i] = rand() % 256;
+        pperm[i]       = rand() % 256;
         pperm[i + 256] = pperm[i];
     }
 
@@ -192,7 +192,7 @@ void guiEndFrame(void)
 #ifdef __DEBUG
     // Measure time directly after vsync
     prevtime = curtime;
-    curtime = clock();
+    curtime  = clock();
 #endif
     guiUnlock();
 }
@@ -247,7 +247,7 @@ static void guiResetNotifications(void)
 {
     showThmPopup = 0;
     showLngPopup = 0;
-    popupTimer = 0;
+    popupTimer   = 0;
 }
 
 static void guiRenderNotifications(char *string, int y)
@@ -264,7 +264,7 @@ static void guiShowNotifications(void)
 {
     char notification[128];
     char *col_pos;
-    int y = 10;
+    int y    = 10;
     int yadd = 35;
 
     if (showPartPopup || showThmPopup || showLngPopup || showCfgPopup) {
@@ -311,7 +311,7 @@ static void guiShowNotifications(void)
         if (clock() >= popupTimer) {
             guiResetNotifications();
             showPartPopup = 0;
-            showCfgPopup = 0;
+            showCfgPopup  = 0;
         }
     }
 }
@@ -364,8 +364,8 @@ void guiShowNetCompatUpdate(void)
     diaSetInt(diaNetCompatUpdate, NETUPD_OPT_UPD_ALL, 0);
     diaSetEnabled(diaNetCompatUpdate, NETUPD_OPT_UPD_ALL, 1);
 
-    done = 0;
-    started = 0;
+    done           = 0;
+    started        = 0;
     UpdateFunction = NULL;
     while (!done) {
         ret = diaExecuteDialog(diaNetCompatUpdate, -1, 1, UpdateFunction);
@@ -385,7 +385,7 @@ void guiShowNetCompatUpdate(void)
                         diaGetInt(diaNetCompatUpdate, NETUPD_OPT_UPD_ALL, &UpdateAll);
                         oplUpdateGameCompat(UpdateAll);
                         UpdateFunction = &guiNetCompatUpdRefresh;
-                        started = 1;
+                        started        = 1;
                     } else {
                         ethDisplayErrorStatus();
                     }
@@ -400,14 +400,14 @@ void guiShowNetCompatUpdate(void)
                         // The process truly ends when the UI callback gets the update from the worker thread that the process has ended.
                     }
                 } else {
-                    done = 1;
+                    done    = 1;
                     started = 0;
                 }
                 break;
             default:
                 guiShowNetCompatUpdateResult(ret);
-                done = 1;
-                started = 0;
+                done           = 1;
+                started        = 0;
                 UpdateFunction = NULL;
                 break;
         }
@@ -602,7 +602,7 @@ static int guiUIUpdater(int modified)
 void guiShowUIConfig(void)
 {
     int themeID = -1, langID = -1;
-    curTheme = -1;
+    curTheme     = -1;
     showCfgPopup = 0;
     guiResetNotifications();
 
@@ -711,8 +711,8 @@ static int netConfigUpdater(int modified)
 void guiShowNetConfig(void)
 {
     size_t i;
-    const char *ethOpModes[] = {_l(_STR_AUTO), _l(_STR_ETH_100MFDX), _l(_STR_ETH_100MHDX), _l(_STR_ETH_10MFDX), _l(_STR_ETH_10MHDX), NULL};
-    const char *addrConfModes[] = {_l(_STR_ADDR_TYPE_IP), _l(_STR_ADDR_TYPE_NETBIOS), NULL};
+    const char *ethOpModes[]      = {_l(_STR_AUTO), _l(_STR_ETH_100MFDX), _l(_STR_ETH_100MHDX), _l(_STR_ETH_10MFDX), _l(_STR_ETH_10MHDX), NULL};
+    const char *addrConfModes[]   = {_l(_STR_ADDR_TYPE_IP), _l(_STR_ADDR_TYPE_NETBIOS), NULL};
     const char *ipAddrConfModes[] = {_l(_STR_IP_ADDRESS_TYPE_STATIC), _l(_STR_IP_ADDRESS_TYPE_DHCP), NULL};
     diaSetEnum(diaNetConfig, NETCFG_PS2_IP_ADDR_TYPE, ipAddrConfModes);
     diaSetEnum(diaNetConfig, NETCFG_SHARE_ADDR_TYPE, addrConfModes);
@@ -857,7 +857,7 @@ void guiShowControllerConfig(void)
     int value;
 
     // configure the enumerations
-    const char *scrollSpeeds[] = {_l(_STR_SLOW), _l(_STR_MEDIUM), _l(_STR_FAST), NULL};
+    const char *scrollSpeeds[]  = {_l(_STR_SLOW), _l(_STR_MEDIUM), _l(_STR_FAST), NULL};
     const char *selectButtons[] = {_l(_STR_CIRCLE), _l(_STR_CROSS), NULL};
 
     diaSetEnum(diaControllerConfig, UICFG_SCROLL, scrollSpeeds);
@@ -909,15 +909,15 @@ int guiDeferUpdate(struct gui_update_t *op)
     WaitSema(gSemaId);
 
     struct gui_update_list_t *up = (struct gui_update_list_t *)malloc(sizeof(struct gui_update_list_t));
-    up->item = op;
-    up->next = NULL;
+    up->item                     = op;
+    up->next                     = NULL;
 
     if (!gUpdateList) {
         gUpdateList = up;
-        gUpdateEnd = gUpdateList;
+        gUpdateEnd  = gUpdateList;
     } else {
         gUpdateEnd->next = up;
-        gUpdateEnd = up;
+        gUpdateEnd       = up;
     }
 
     SignalSema(gSemaId);
@@ -943,12 +943,12 @@ static void guiHandleOp(struct gui_update_t *item)
                                        item->submenu.text, item->submenu.id, item->submenu.text_id);
 
             if (!item->menu.menu->submenu) { // first subitem in list
-                item->menu.menu->submenu = result;
-                item->menu.menu->current = result;
+                item->menu.menu->submenu   = result;
+                item->menu.menu->current   = result;
                 item->menu.menu->pagestart = result;
             } else if (item->submenu.selected) { // remember last played game feature
-                item->menu.menu->current = result;
-                item->menu.menu->pagestart = result;
+                item->menu.menu->current    = result;
+                item->menu.menu->pagestart  = result;
                 item->menu.menu->remindLast = 1;
 
                 // Last Played Auto Start
@@ -965,8 +965,8 @@ static void guiHandleOp(struct gui_update_t *item)
 
         case GUI_OP_CLEAR_SUBMENU:
             submenuDestroy(item->menu.subMenu);
-            item->menu.menu->submenu = NULL;
-            item->menu.menu->current = NULL;
+            item->menu.menu->submenu   = NULL;
+            item->menu.menu->current   = NULL;
             item->menu.menu->pagestart = NULL;
             break;
 
@@ -999,7 +999,7 @@ static void guiHandleDeferredOps(void)
         guiHandleOp(gUpdateList->item);
 
         struct gui_update_list_t *td = gUpdateList;
-        gUpdateList = gUpdateList->next;
+        gUpdateList                  = gUpdateList->next;
 
         free(td);
 
@@ -1183,9 +1183,9 @@ static float guiCalcPerlin(float x, float y, float z)
     return nxyz;
 }
 
-static float dir = 0.02;
-static float perz = -100;
-static int pery = 0;
+static float dir                   = 0.02;
+static float perz                  = -100;
+static int pery                    = 0;
 static unsigned char curbgColor[3] = {0, 0, 0};
 
 static int cdirection(unsigned char a, unsigned char b)
@@ -1244,8 +1244,8 @@ void guiDrawBGPlasma()
 int guiDrawIconAndText(int iconId, int textId, int font, int x, int y, u64 color)
 {
     GSTEXTURE *iconTex = thmGetTexture(iconId);
-    int w = 0;
-    int h = 20;
+    int w              = 0;
+    int h              = 20;
 
     if (iconTex) {
         w = (iconTex->Width * 20) / iconTex->Height;
@@ -1272,8 +1272,8 @@ int guiAlignMenuHints(menu_hint_item_t *hint, int font, int width)
 
     for (; hint; hint = hint->next) {
         GSTEXTURE *iconTex = thmGetTexture(hint->icon_id);
-        w = (iconTex->Width * 20) / iconTex->Height;
-        char *text = _l(hint->text_id);
+        w                  = (iconTex->Width * 20) / iconTex->Height;
+        char *text         = _l(hint->text_id);
 
         x -= rmWideScale(w) + 2;
         x -= rmUnScaleX(fntCalcDimensions(font, text));
@@ -1294,8 +1294,8 @@ int guiAlignSubMenuHints(int hintCount, int *textID, int *iconID, int font, int 
 
     for (i = 0; i < hintCount; i++) {
         GSTEXTURE *iconTex = thmGetTexture(iconID[i]);
-        w = (iconTex->Width * 20) / iconTex->Height;
-        char *text = _l(textID[i]);
+        w                  = (iconTex->Width * 20) / iconTex->Height;
+        char *text         = _l(textID[i]);
 
         x -= rmWideScale(w) + 2;
         x -= rmUnScaleX(fntCalcDimensions(font, text));
@@ -1329,7 +1329,7 @@ static int endIntro = 0; // Break intro loop and start 'Last Played Auto Start' 
 static void guiDrawOverlays()
 {
     // are there any pending operations?
-    int pending = ioHasPendingRequests();
+    int pending          = ioHasPendingRequests();
     static int busyAlpha = 0x00; // Fully transparant
 
     if (!pending) {
@@ -1347,8 +1347,8 @@ static void guiDrawOverlays()
 
 #ifdef __DEBUG
     char text[20];
-    int x = screenWidth - 120;
-    int y = 15;
+    int x    = screenWidth - 120;
+    int y    = 15;
     int yadd = 15;
 
     snprintf(text, sizeof(text), "VRAM:");
@@ -1389,7 +1389,7 @@ static void guiDrawOverlays()
             clock_t CronCurrent;
 
             CronCurrent = clock() / CLOCKS_PER_SEC;
-            RemainSecs = gAutoStartLastPlayed - (CronCurrent - CronStart);
+            RemainSecs  = gAutoStartLastPlayed - (CronCurrent - CronStart);
             snprintf(strAutoStartInNSecs, sizeof(strAutoStartInNSecs), _l(_STR_AUTO_START_IN_N_SECS), RemainSecs);
             fntRenderString(gTheme->fonts[0], screenWidth / 2, screenHeight / 2, ALIGN_CENTER, 0, 0, strAutoStartInNSecs, GS_SETREG_RGBA(0x60, 0x60, 0x60, 0x80));
         }
@@ -1437,7 +1437,7 @@ static void guiShow()
         // Advance the effect
         transIndex++;
         if (transIndex >= transition_frames) {
-            screenHandler = screenHandlerTarget;
+            screenHandler       = screenHandlerTarget;
             screenHandlerTarget = NULL;
         }
     } else
@@ -1447,10 +1447,10 @@ static void guiShow()
 
 void guiIntroLoop(void)
 {
-    int greetingAlpha = 0x80;
+    int greetingAlpha        = 0x80;
     const int fadeFrameCount = 0x80 / 2;
-    const int fadeDuration = (fadeFrameCount * 1000) / 55; // Average between 50 and 60 fps
-    clock_t tFadeDelayEnd = 0;
+    const int fadeDuration   = (fadeFrameCount * 1000) / 55; // Average between 50 and 60 fps
+    clock_t tFadeDelayEnd    = 0;
 
     while (!endIntro) {
         guiStartFrame();
@@ -1532,7 +1532,7 @@ void guiSetFrameHook(gui_callback_t cback)
 void guiSwitchScreen(int target)
 {
     sfxPlay(SFX_TRANSITION);
-    transIndex = 0;
+    transIndex          = 0;
     screenHandlerTarget = &screenHandlers[target];
 }
 

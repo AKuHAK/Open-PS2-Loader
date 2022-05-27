@@ -54,10 +54,10 @@ static void BlinkColour(u8 x, u32 colour, u8 forever)
 
 static u32 FindEmptyArea(u32 start, u32 end, u32 emptysize)
 {
-    u128 *addr = (u128 *)start;
+    u128 *addr  = (u128 *)start;
     u32 counter = 0;
-    u32 result = 0;
-    emptysize = (((emptysize + 16) >> 4) << 4); // It must be 16-bytes aligned
+    u32 result  = 0;
+    emptysize   = (((emptysize + 16) >> 4) << 4); // It must be 16-bytes aligned
 
     while ((u32)addr < (end - emptysize)) {
         if (*(addr) == 0)
@@ -96,7 +96,7 @@ static void u8todecstr(u8 input, char *output, u8 digits)
     do {
         i--;
         output[i] = "0123456789"[input % 10];
-        input = input / 10;
+        input     = input / 10;
     } while (input > 0);
     while (i > 0) {
         i--;
@@ -111,7 +111,7 @@ static void u16todecstr(u16 input, char *output, u8 digits)
     do {
         i--;
         output[i] = "0123456789"[input % 10];
-        input = input / 10;
+        input     = input / 10;
     } while (input > 0);
     while (i > 0) {
         i--;
@@ -126,7 +126,7 @@ static void u32todecstr(u32 input, char *output, u8 digits)
     do {
         i--;
         output[i] = "0123456789"[input % 10];
-        input = input / 10;
+        input     = input / 10;
     } while (input > 0);
     while (i > 0) {
         i--;
@@ -141,7 +141,7 @@ static void u32tohexstr(u32 input, char *output, u8 digits)
     do {
         i--;
         output[i] = "0123456789ABCDEF"[input % 16];
-        input = input / 16;
+        input     = input / 16;
     } while (input > 0);
     while (i > 0) {
         i--;
@@ -156,7 +156,7 @@ static void u64tohexstr(u64 input, char *output, u8 digits)
     do {
         i--;
         output[i] = "0123456789ABCDEF"[input % 16];
-        input = input / 16;
+        input     = input / 16;
     } while (input > 0);
     while (i > 0) {
         i--;
@@ -188,10 +188,10 @@ static void Screenshot(u16 sbp, u8 sbw, u8 spsm, u16 width, u16 height, u32 dime
     static u128 EnableGIFPATH3;
 
     u32 *EnableGIFPATH3_32 = (u32 *)&EnableGIFPATH3;
-    EnableGIFPATH3_32[0] = GS_VIF1_MSKPATH3(0);
-    EnableGIFPATH3_32[1] = GS_VIF1_NOP;
-    EnableGIFPATH3_32[2] = GS_VIF1_NOP;
-    EnableGIFPATH3_32[3] = GS_VIF1_NOP;
+    EnableGIFPATH3_32[0]   = GS_VIF1_MSKPATH3(0);
+    EnableGIFPATH3_32[1]   = GS_VIF1_NOP;
+    EnableGIFPATH3_32[2]   = GS_VIF1_NOP;
+    EnableGIFPATH3_32[3]   = GS_VIF1_NOP;
 
     u32 DMAChain[20 * 2] ALIGNED(16);
     u32 *DMA32Packet = (u32 *)&DMAChain;
@@ -230,16 +230,16 @@ static void Screenshot(u16 sbp, u8 sbw, u8 spsm, u16 width, u16 height, u32 dime
     DMA32Packet[3] = GS_VIF1_DIRECT(6);        // Transfer the following 6 qwords of data directly to the GIF
 
     // Setup the transmission parameters for the BLIT operation (copy of a pixels rectangular area)
-    DMA64Packet[0] = GS_GIFTAG(5, 1, 0, 0, 0, 1); // GIFTAG(NLOOP, EOP, PRE, PRIM, FLG, NREG)
-    DMA64Packet[1] = GS_GIF_AD;
-    DMA64Packet[2] = GS_GSBITBLTBUF_SET(sbp, sbw, spsm, 0, 0, spsm);
-    DMA64Packet[3] = GS_GSBITBLTBUF;
-    DMA64Packet[4] = GS_GSTRXPOS_SET(0, 0, 0, 0, 0); // SSAX, SSAY, DSAX, DSAY, DIR
-    DMA64Packet[5] = GS_GSTRXPOS;
-    DMA64Packet[6] = GS_GSTRXREG_SET(width, height); // RRW, RRh
-    DMA64Packet[7] = GS_GSTRXREG;
-    DMA64Packet[8] = 0;
-    DMA64Packet[9] = GS_GSFINISH;
+    DMA64Packet[0]  = GS_GIFTAG(5, 1, 0, 0, 0, 1); // GIFTAG(NLOOP, EOP, PRE, PRIM, FLG, NREG)
+    DMA64Packet[1]  = GS_GIF_AD;
+    DMA64Packet[2]  = GS_GSBITBLTBUF_SET(sbp, sbw, spsm, 0, 0, spsm);
+    DMA64Packet[3]  = GS_GSBITBLTBUF;
+    DMA64Packet[4]  = GS_GSTRXPOS_SET(0, 0, 0, 0, 0); // SSAX, SSAY, DSAX, DSAY, DIR
+    DMA64Packet[5]  = GS_GSTRXPOS;
+    DMA64Packet[6]  = GS_GSTRXREG_SET(width, height); // RRW, RRh
+    DMA64Packet[7]  = GS_GSTRXREG;
+    DMA64Packet[8]  = 0;
+    DMA64Packet[9]  = GS_GSFINISH;
     DMA64Packet[10] = GS_GSTRXDIR_SET(1); // XDIR
     DMA64Packet[11] = GS_GSTRXDIR;
 
@@ -259,7 +259,7 @@ static void Screenshot(u16 sbp, u8 sbw, u8 spsm, u16 width, u16 height, u32 dime
     FlushCache(GS_WRITEBACK_DCACHE);
 
     // Start DMA transfer
-    *GS_D1_QWC = 0x7;
+    *GS_D1_QWC  = 0x7;
     *GS_D1_MADR = (u32)DMA32Packet;
     *GS_D1_CHCR = 0x101;
     // Ensure that store is complete and transfer has begun
@@ -300,7 +300,7 @@ static void Screenshot(u16 sbp, u8 sbw, u8 spsm, u16 width, u16 height, u32 dime
         FlushCache(GS_WRITEBACK_DCACHE);
 
         // Transfer image to host
-        *GS_D1_QWC = (8192 + ((i + 1 == slices) ? remainder : 0));
+        *GS_D1_QWC  = (8192 + ((i + 1 == slices) ? remainder : 0));
         *GS_D1_MADR = addr;
         *GS_D1_CHCR = 0x0100;
 
@@ -348,7 +348,7 @@ static void ConvertColors32(u32 *buffer, u32 dimensions)
     u32 x32;
     for (i = 0; i < dimensions; i++) {
 
-        x32 = buffer[i];
+        x32       = buffer[i];
         buffer[i] = ((x32 >> 16) & 0xFF) | ((x32 << 16) & 0xFF0000) | (x32 & 0xFF00FF00);
 
         FastDelay(1);
@@ -362,8 +362,8 @@ static void ConvertColors24(u8 *buffer, u32 image_size)
     u32 x32 __attribute__((aligned(16)));
     for (i = 0; i < image_size; i += 3) {
 
-        x32 = (((u32)(buffer[i])) << 16) | (((u32)(buffer[i + 1])) << 8) | (((u32)(buffer[i + 2])) << 0);
-        buffer[i] = (u8)((x32 >> 0) & 0xFF);
+        x32           = (((u32)(buffer[i])) << 16) | (((u32)(buffer[i + 1])) << 8) | (((u32)(buffer[i + 2])) << 0);
+        buffer[i]     = (u8)((x32 >> 0) & 0xFF);
         buffer[i + 1] = (u8)((x32 >> 8) & 0xFF);
         buffer[i + 2] = (u8)((x32 >> 16) & 0xFF);
 
@@ -378,7 +378,7 @@ static void ConvertColors16(u16 *buffer, u32 dimensions)
     u16 x16;
     for (i = 0; i < dimensions; i++) {
 
-        x16 = buffer[i];
+        x16       = buffer[i];
         buffer[i] = (x16 & 0x8000) | ((x16 << 10) & 0x7C00) | (x16 & 0x3E0) | ((x16 >> 10) & 0x1F);
 
         FastDelay(1);
@@ -404,12 +404,12 @@ static void SaveTextFile(u32 buffer, u16 width, u16 height, u8 pixel_size, u32 i
     char u16text[6 + 1];
     char u8text[3 + 1];
 
-    u32 i = 0;
-    u64 pmode = GSMSourceGSRegs.pmode;
-    u64 smode2 = GSMSourceGSRegs.smode2;
-    u64 dispfb1 = GSMSourceGSRegs.dispfb1;
+    u32 i        = 0;
+    u64 pmode    = GSMSourceGSRegs.pmode;
+    u64 smode2   = GSMSourceGSRegs.smode2;
+    u64 dispfb1  = GSMSourceGSRegs.dispfb1;
     u64 display1 = GSMSourceGSRegs.display1;
-    u64 dispfb2 = GSMSourceGSRegs.dispfb2;
+    u64 dispfb2  = GSMSourceGSRegs.dispfb2;
     u64 display2 = GSMSourceGSRegs.display2;
 
     // Sequential number, inherited from Bitmap File
@@ -601,10 +601,10 @@ static u8 SaveBitmapFile(u16 width, u16 height, u8 pixel_size, void *buffer, u8 
 
     bpp = (pixel_size << 3);
 
-    lenght = width * pixel_size;
+    lenght     = width * pixel_size;
     dimensions = width * height;
     image_size = dimensions * pixel_size;
-    file_size = image_size + 54;
+    file_size  = image_size + 54;
 
     // Sequential numbering feature
     while (1) {
@@ -637,21 +637,21 @@ static u8 SaveBitmapFile(u16 width, u16 height, u8 pixel_size, void *buffer, u8 
     if (ret != 2)
         BlinkColour(5, 0x0000FF, 1); // Red
     //(...then, write the remaining info!)
-    bh = (void *)((u8 *)buffer + image_size);
-    bh->filesize = (u32)file_size;
-    bh->reserved = (u32)0;
-    bh->headersize = (u32)54;
-    bh->infoSize = (u32)40;
-    bh->width = (u32)width;
-    bh->depth = (u32)height;
-    bh->biPlanes = (u16)1;
-    bh->bits = (u16)bpp;
-    bh->biCompression = (u32)0;
-    bh->biSizeImage = (u32)image_size;
+    bh                  = (void *)((u8 *)buffer + image_size);
+    bh->filesize        = (u32)file_size;
+    bh->reserved        = (u32)0;
+    bh->headersize      = (u32)54;
+    bh->infoSize        = (u32)40;
+    bh->width           = (u32)width;
+    bh->depth           = (u32)height;
+    bh->biPlanes        = (u16)1;
+    bh->bits            = (u16)bpp;
+    bh->biCompression   = (u32)0;
+    bh->biSizeImage     = (u32)image_size;
     bh->biXPelsPerMeter = (u32)0;
     bh->biYPelsPerMeter = (u32)0;
-    bh->biClrUsed = (u32)0;
-    bh->biClrImportant = (u32)0;
+    bh->biClrUsed       = (u32)0;
+    bh->biClrImportant  = (u32)0;
     // Wait until the preceding loads are completed
     asm volatile("sync.l;sync.p;");
 
@@ -719,26 +719,26 @@ int InGameScreenshot(void)
 
     u8 Number;
 
-    pmode = GSMSourceGSRegs.pmode;
-    smode2 = GSMSourceGSRegs.smode2;
-    dispfb1 = GSMSourceGSRegs.dispfb1;
+    pmode    = GSMSourceGSRegs.pmode;
+    smode2   = GSMSourceGSRegs.smode2;
+    dispfb1  = GSMSourceGSRegs.dispfb1;
     display1 = GSMSourceGSRegs.display1;
-    dispfb2 = GSMSourceGSRegs.dispfb2;
+    dispfb2  = GSMSourceGSRegs.dispfb2;
     display2 = GSMSourceGSRegs.display2;
 
     if (GET_PMODE_EN2(pmode)) {
-        sbp = (GET_DISPFB_FBP(dispfb2) << 5);    // BITBLTBUF.SBP*64 = DISPFB1.FBP*2048 <-> BITBLTBUF.SBP = DISPFB2.FBP*2048/64 <-> BITBLTBUF.SBP = DISPFB2.FBP*32
-        sbw = GET_DISPFB_FBW(dispfb2);           // BITBLTBUF.SBW = DISPFB2.FBW
-        spsm = GET_DISPFB_PSM(dispfb2);          // BITBLTBUF.SPSM = DISPFB2.PSM
+        sbp    = (GET_DISPFB_FBP(dispfb2) << 5); // BITBLTBUF.SBP*64 = DISPFB1.FBP*2048 <-> BITBLTBUF.SBP = DISPFB2.FBP*2048/64 <-> BITBLTBUF.SBP = DISPFB2.FBP*32
+        sbw    = GET_DISPFB_FBW(dispfb2);        // BITBLTBUF.SBW = DISPFB2.FBW
+        spsm   = GET_DISPFB_PSM(dispfb2);        // BITBLTBUF.SPSM = DISPFB2.PSM
         height = (GET_DISPLAY_DH(display2) + 1); // height = DH+1
     } else {
-        sbp = (GET_DISPFB_FBP(dispfb1) << 5);    // BITBLTBUF.SBP*64 = DISPFB1.FBP*2048 <-> BITBLTBUF.SBP = DISPFB1.FBP*2048/64 <-> BITBLTBUF.SBP = DISPFB1.FBP*32
-        sbw = GET_DISPFB_FBW(dispfb1);           // BITBLTBUF.SBW = DISPFB1.FBW
-        spsm = GET_DISPFB_PSM(dispfb1);          // BITBLTBUF.SPSM = DISPFB1.PSM
+        sbp    = (GET_DISPFB_FBP(dispfb1) << 5); // BITBLTBUF.SBP*64 = DISPFB1.FBP*2048 <-> BITBLTBUF.SBP = DISPFB1.FBP*2048/64 <-> BITBLTBUF.SBP = DISPFB1.FBP*32
+        sbw    = GET_DISPFB_FBW(dispfb1);        // BITBLTBUF.SBW = DISPFB1.FBW
+        spsm   = GET_DISPFB_PSM(dispfb1);        // BITBLTBUF.SPSM = DISPFB1.PSM
         height = (GET_DISPLAY_DH(display1) + 1); // height = DH+1
     }
 
-    width = (u16)sbw << 6;
+    width      = (u16)sbw << 6;
     dimensions = width * height;
     pixel_size = PixelSize(spsm);
     image_size = dimensions * pixel_size;
@@ -781,7 +781,7 @@ int InGameScreenshot(void)
 
     // Save IGS Bitmap File first, since it's the bigger file)
     intffmd = GET_SMODE2_INTFFMD(smode2);
-    Number = SaveBitmapFile(width, height, pixel_size, buffer, intffmd);
+    Number  = SaveBitmapFile(width, height, pixel_size, buffer, intffmd);
 
     // The Number used on Bitmap File is returned to the related Text File, in order their both Sequential Numbers match
     SaveTextFile((u32)buffer, width, height, pixel_size, image_size, Number);

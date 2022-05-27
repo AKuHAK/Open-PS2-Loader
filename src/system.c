@@ -139,8 +139,8 @@ void sysInitDev9(void)
     int ret;
 
     if (!dev9Initialized) {
-        ret = sysLoadModuleBuffer(&ps2dev9_irx, size_ps2dev9_irx, 0, NULL);
-        dev9Loaded = (ret == 0); // DEV9.IRX must have successfully loaded and returned RESIDENT END.
+        ret             = sysLoadModuleBuffer(&ps2dev9_irx, size_ps2dev9_irx, 0, NULL);
+        dev9Loaded      = (ret == 0); // DEV9.IRX must have successfully loaded and returned RESIDENT END.
         dev9Initialized = 1;
     }
 
@@ -284,7 +284,7 @@ unsigned int USBA_crc32(const char *string)
 
     do {
         byte = string[count++];
-        crc = crctab[byte ^ ((crc >> 24) & 0xFF)] ^ ((crc << 8) & 0xFFFFFF00);
+        crc  = crctab[byte ^ ((crc >> 24) & 0xFF)] ^ ((crc << 8) & 0xFFFFFF00);
     } while ((string[count - 1] != 0) && (count <= 32));
 
     return crc;
@@ -389,7 +389,7 @@ static unsigned int addIopPatch(const char *mode_str, const char *startup, irxpt
 
         if (!strcmp(p->game, startup) && (p->mode[0] == '\0' || !strcmp(p->mode, startup))) {
             tab->info = (*(p->module_size)) | SET_OPL_MOD_ID(OPL_MODULE_ID_IOP_PATCH);
-            tab->ptr = (void *)p->module;
+            tab->ptr  = (void *)p->module;
             return 1;
         }
     }
@@ -444,23 +444,23 @@ static unsigned int sendIrxKernelRAM(const char *startup, const char *mode_str, 
     else
         modules |= CORE_IRX_HDD;
 
-    irxtable = (irxtab_t *)ModuleStorage;
-    irxptr_tab = (irxptr_t *)((unsigned char *)irxtable + sizeof(irxtab_t));
+    irxtable         = (irxtab_t *)ModuleStorage;
+    irxptr_tab       = (irxptr_t *)((unsigned char *)irxtable + sizeof(irxtab_t));
     size_ioprp_image = size_IOPRP_img + size_cdvdman_irx + size_cdvdfsv_irx + size_eesync_irx + 256;
     LOG("IOPRP image size calculated: %d\n", size_ioprp_image);
-    ioprp_image = malloc(size_ioprp_image);
+    ioprp_image      = malloc(size_ioprp_image);
     size_ioprp_image = patch_IOPRP_image(ioprp_image, cdvdman_irx, size_cdvdman_irx);
     LOG("IOPRP image size actual:     %d\n", size_ioprp_image);
 
     modcount = 0;
     // Basic modules
-    irxptr_tab[modcount].info = size_udnl_irx | SET_OPL_MOD_ID(OPL_MODULE_ID_UDNL);
+    irxptr_tab[modcount].info  = size_udnl_irx | SET_OPL_MOD_ID(OPL_MODULE_ID_UDNL);
     irxptr_tab[modcount++].ptr = (void *)&udnl_irx;
-    irxptr_tab[modcount].info = size_ioprp_image | SET_OPL_MOD_ID(OPL_MODULE_ID_IOPRP);
+    irxptr_tab[modcount].info  = size_ioprp_image | SET_OPL_MOD_ID(OPL_MODULE_ID_IOPRP);
     irxptr_tab[modcount++].ptr = ioprp_image;
-    irxptr_tab[modcount].info = size_imgdrv_irx | SET_OPL_MOD_ID(OPL_MODULE_ID_IMGDRV);
+    irxptr_tab[modcount].info  = size_imgdrv_irx | SET_OPL_MOD_ID(OPL_MODULE_ID_IMGDRV);
     irxptr_tab[modcount++].ptr = (void *)&imgdrv_irx;
-    irxptr_tab[modcount].info = size_resetspu_irx | SET_OPL_MOD_ID(OPL_MODULE_ID_RESETSPU);
+    irxptr_tab[modcount].info  = size_resetspu_irx | SET_OPL_MOD_ID(OPL_MODULE_ID_RESETSPU);
     irxptr_tab[modcount++].ptr = (void *)&resetspu_irx;
 
 #ifdef PADEMU
@@ -469,46 +469,46 @@ static unsigned int sendIrxKernelRAM(const char *startup, const char *mode_str, 
 #define PADEMU_ARG
 #endif
     if ((modules & CORE_IRX_USB) PADEMU_ARG) {
-        irxptr_tab[modcount].info = size_usbd_irx | SET_OPL_MOD_ID(OPL_MODULE_ID_USBD);
+        irxptr_tab[modcount].info  = size_usbd_irx | SET_OPL_MOD_ID(OPL_MODULE_ID_USBD);
         irxptr_tab[modcount++].ptr = (void *)&usbd_irx;
     }
     if (modules & CORE_IRX_USB) {
-        irxptr_tab[modcount].info = size_usbmass_bd_irx | SET_OPL_MOD_ID(OPL_MODULE_ID_USBMASSBD);
+        irxptr_tab[modcount].info  = size_usbmass_bd_irx | SET_OPL_MOD_ID(OPL_MODULE_ID_USBMASSBD);
         irxptr_tab[modcount++].ptr = (void *)&usbmass_bd_irx;
     }
     if (modules & CORE_IRX_ILINK) {
-        irxptr_tab[modcount].info = size_iLinkman_irx | SET_OPL_MOD_ID(OPL_MODULE_ID_ILINK);
+        irxptr_tab[modcount].info  = size_iLinkman_irx | SET_OPL_MOD_ID(OPL_MODULE_ID_ILINK);
         irxptr_tab[modcount++].ptr = (void *)&iLinkman_irx;
-        irxptr_tab[modcount].info = size_IEEE1394_bd_irx | SET_OPL_MOD_ID(OPL_MODULE_ID_ILINKBD);
+        irxptr_tab[modcount].info  = size_IEEE1394_bd_irx | SET_OPL_MOD_ID(OPL_MODULE_ID_ILINKBD);
         irxptr_tab[modcount++].ptr = (void *)&IEEE1394_bd_irx;
     }
     if (modules & CORE_IRX_MX4SIO) {
-        irxptr_tab[modcount].info = size_mx4sio_bd_irx | SET_OPL_MOD_ID(OPL_MODULE_ID_MX4SIOBD);
+        irxptr_tab[modcount].info  = size_mx4sio_bd_irx | SET_OPL_MOD_ID(OPL_MODULE_ID_MX4SIOBD);
         irxptr_tab[modcount++].ptr = (void *)&mx4sio_bd_irx;
     }
     if (modules & CORE_IRX_ETH) {
-        irxptr_tab[modcount].info = size_smap_ingame_irx | SET_OPL_MOD_ID(OPL_MODULE_ID_SMAP);
+        irxptr_tab[modcount].info  = size_smap_ingame_irx | SET_OPL_MOD_ID(OPL_MODULE_ID_SMAP);
         irxptr_tab[modcount++].ptr = (void *)&smap_ingame_irx;
-        irxptr_tab[modcount].info = size_ingame_smstcpip_irx | SET_OPL_MOD_ID(OPL_MODULE_ID_SMSTCPIP);
+        irxptr_tab[modcount].info  = size_ingame_smstcpip_irx | SET_OPL_MOD_ID(OPL_MODULE_ID_SMSTCPIP);
         irxptr_tab[modcount++].ptr = (void *)&ingame_smstcpip_irx;
     }
     if (modules & CORE_IRX_SMB) {
-        irxptr_tab[modcount].info = size_smbinit_irx | SET_OPL_MOD_ID(OPL_MODULE_ID_SMBINIT);
+        irxptr_tab[modcount].info  = size_smbinit_irx | SET_OPL_MOD_ID(OPL_MODULE_ID_SMBINIT);
         irxptr_tab[modcount++].ptr = (void *)&smbinit_irx;
     }
 
     if (modules & CORE_IRX_VMC) {
-        irxptr_tab[modcount].info = size_mcemu_irx | SET_OPL_MOD_ID(OPL_MODULE_ID_MCEMU);
+        irxptr_tab[modcount].info  = size_mcemu_irx | SET_OPL_MOD_ID(OPL_MODULE_ID_MCEMU);
         irxptr_tab[modcount++].ptr = (void *)mcemu_irx;
     }
 
 #ifdef PADEMU
     if (gEnablePadEmu) {
         if (gPadEmuSettings & 0xFF) {
-            irxptr_tab[modcount].info = size_bt_pademu_irx | SET_OPL_MOD_ID(OPL_MODULE_ID_PADEMU);
+            irxptr_tab[modcount].info  = size_bt_pademu_irx | SET_OPL_MOD_ID(OPL_MODULE_ID_PADEMU);
             irxptr_tab[modcount++].ptr = (void *)&bt_pademu_irx;
         } else {
-            irxptr_tab[modcount].info = size_usb_pademu_irx | SET_OPL_MOD_ID(OPL_MODULE_ID_PADEMU);
+            irxptr_tab[modcount].info  = size_usb_pademu_irx | SET_OPL_MOD_ID(OPL_MODULE_ID_PADEMU);
             irxptr_tab[modcount++].ptr = (void *)&usb_pademu_irx;
         }
     }
@@ -517,16 +517,16 @@ static unsigned int sendIrxKernelRAM(const char *startup, const char *mode_str, 
 #ifdef __INGAME_DEBUG
 #ifdef __DECI2_DEBUG
     if (modules & CORE_IRX_DECI2) {
-        irxptr_tab[modcount].info = size_drvtif_ingame_irx | SET_OPL_MOD_ID(OPL_MODULE_ID_DRVTIF);
+        irxptr_tab[modcount].info  = size_drvtif_ingame_irx | SET_OPL_MOD_ID(OPL_MODULE_ID_DRVTIF);
         irxptr_tab[modcount++].ptr = (void *)&drvtif_ingame_irx;
-        irxptr_tab[modcount].info = size_tifinet_ingame_irx | SET_OPL_MOD_ID(OPL_MODULE_ID_TIFINET);
+        irxptr_tab[modcount].info  = size_tifinet_ingame_irx | SET_OPL_MOD_ID(OPL_MODULE_ID_TIFINET);
         irxptr_tab[modcount++].ptr = (void *)&tifinet_ingame_irx;
     }
 #else
     if (modules & CORE_IRX_DEBUG) {
-        irxptr_tab[modcount].info = size_udptty_ingame_irx | SET_OPL_MOD_ID(OPL_MODULE_ID_UDPTTY);
+        irxptr_tab[modcount].info  = size_udptty_ingame_irx | SET_OPL_MOD_ID(OPL_MODULE_ID_UDPTTY);
         irxptr_tab[modcount++].ptr = (void *)&udptty_ingame_irx;
-        irxptr_tab[modcount].info = size_ioptrap_irx | SET_OPL_MOD_ID(OPL_MODULE_ID_IOPTRAP);
+        irxptr_tab[modcount].info  = size_ioptrap_irx | SET_OPL_MOD_ID(OPL_MODULE_ID_IOPTRAP);
         irxptr_tab[modcount++].ptr = (void *)&ioptrap_irx;
     }
 #endif
@@ -535,7 +535,7 @@ static unsigned int sendIrxKernelRAM(const char *startup, const char *mode_str, 
     modcount += addIopPatch(mode_str, startup, &irxptr_tab[modcount]);
 
     irxtable->modules = irxptr_tab;
-    irxtable->count = modcount;
+    irxtable->count   = modcount;
 
 #ifdef __DECI2_DEBUG
     // For DECI2 debugging mode, the UDNL module will have to be stored within kernel RAM because there isn't enough space below user RAM.
@@ -552,7 +552,7 @@ static unsigned int sendIrxKernelRAM(const char *startup, const char *mode_str, 
 #endif
 
     total_size = (sizeof(irxtab_t) + sizeof(irxptr_t) * modcount + 0xF) & ~0xF;
-    irxptr = (void *)((((unsigned int)irxptr_tab + sizeof(irxptr_t) * modcount) + 0xF) & ~0xF);
+    irxptr     = (void *)((((unsigned int)irxptr_tab + sizeof(irxptr_t) * modcount) + 0xF) & ~0xF);
 
 #ifdef __DECI2_DEBUG
     for (i = 1; i < modcount; i++) {
@@ -566,7 +566,7 @@ static unsigned int sendIrxKernelRAM(const char *startup, const char *mode_str, 
             memcpy(irxptr, irxptr_tab[i].ptr, curIrxSize);
 
             irxptr_tab[i].ptr = irxptr;
-            irxptr = (void *)((u8 *)irxptr + ((curIrxSize + 0xF) & ~0xF));
+            irxptr            = (void *)((u8 *)irxptr + ((curIrxSize + 0xF) & ~0xF));
             total_size += ((curIrxSize + 0xF) & ~0xF);
         } else {
             irxptr_tab[i].ptr = NULL;
@@ -604,7 +604,7 @@ static int ResetDECI2(void)
     };
 
     result = -1;
-    ptr = (void *)0x80000000;
+    ptr    = (void *)0x80000000;
     for (i = 0; i < 0x20000 / 4; i++) {
         if (ptr[i + 0] == Deci2ManagerInitPattern[0] &&
             ptr[i + 1] == Deci2ManagerInitPattern[1] &&
@@ -659,9 +659,9 @@ static void *initLoadExecPS2(void *new_eeload)
     /* Find the part of LoadExecPS2() that initilizes the EELOAD copying loop's variables */
     for (p = (u32 *)0x80001000; p < (u32 *)0x80030000; p++) {
         if (memcmp(p, &initEELOADCopyPattern, sizeof(initEELOADCopyPattern)) == 0) {
-            p[1] = 0x3C120000 | (u16)((u32)new_eeload >> 16);    /* lui s2, HI16(new_eeload) */
-            p[2] = 0x36520000 | (u16)((u32)new_eeload & 0xFFFF); /* ori s2, s2, LO16(new_eeload) */
-            p[3] = 0x24070000;                                   /* li a3, 0 <- Disable the EELOAD copying loop */
+            p[1]   = 0x3C120000 | (u16)((u32)new_eeload >> 16);    /* lui s2, HI16(new_eeload) */
+            p[2]   = 0x36520000 | (u16)((u32)new_eeload & 0xFFFF); /* ori s2, s2, LO16(new_eeload) */
+            p[3]   = 0x24070000;                                   /* li a3, 0 <- Disable the EELOAD copying loop */
             result = (void *)p;
             break; /* All done. */
         }
@@ -688,8 +688,8 @@ static void *initInitializeUserMemory(void *start)
          *  ori  $a0, $a0, 0x2000
          */
         if (p[0] == 0x3c040008 && (p[1] & 0xfc000000) == 0x0c000000 && p[2] == 0x34842000) {
-            p[0] = 0x3c040000 | ((unsigned int)start >> 16);
-            p[2] = 0x34840000 | ((unsigned int)start & 0xffff);
+            p[0]   = 0x3c040000 | ((unsigned int)start >> 16);
+            p[2]   = 0x34840000 | ((unsigned int)start & 0xffff);
             result = (void *)p;
             break;
         }
@@ -706,7 +706,7 @@ static int initKernel(void *eeload, void *modStorageEnd, void **eeloadCopy, void
 #ifdef __DECI2_DEBUG
     ResetDECI2();
 #endif
-    *eeloadCopy = initLoadExecPS2(eeload);
+    *eeloadCopy     = initLoadExecPS2(eeload);
     *initUserMemory = initInitializeUserMemory(modStorageEnd);
 
     ee_kmode_exit();
@@ -752,7 +752,7 @@ void sysLaunchLoaderElf(const char *filename, const char *mode_str, int size_cdv
     memset((void *)0x00084000, 0, 0x00100000 - 0x00084000);
 #pragma GCC diagnostic pop
 
-    modules = 0;
+    modules       = 0;
     ModuleStorage = GetModStorageLocation(filename, compatflags);
 
 #ifdef __DECI2_DEBUG
@@ -771,8 +771,8 @@ void sysLaunchLoaderElf(const char *filename, const char *mode_str, int size_cdv
 
     // NB: LOADER.ELF is embedded
     boot_elf = (u8 *)&eecore_elf;
-    eh = (elf_header_t *)boot_elf;
-    eph = (elf_pheader_t *)(boot_elf + eh->phoff);
+    eh       = (elf_header_t *)boot_elf;
+    eph      = (elf_pheader_t *)(boot_elf + eh->phoff);
 
     // Scan through the ELF's program headers and copy them into RAM, then
     // zero out any non-loaded regions.
@@ -927,10 +927,10 @@ int sysCheckVMC(const char *prefix, const char *sep, char *name, int createSize,
         if (createSize && (createSize != size)) {
             createVMCparam_t createParam;
             strcpy(createParam.VMC_filename, path);
-            createParam.VMC_size_mb = createSize;
-            createParam.VMC_blocksize = 16;
+            createParam.VMC_size_mb         = createSize;
+            createParam.VMC_blocksize       = 16;
             createParam.VMC_thread_priority = 0x0f;
-            createParam.VMC_card_slot = -1;
+            createParam.VMC_card_slot       = -1;
             fileXioDevctl("genvmc:", 0xC0DE0001, (void *)&createParam, sizeof(createParam), NULL, 0);
         }
     }

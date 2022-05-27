@@ -40,7 +40,7 @@ u32 GetExportTableSize(void *table)
     register void **exp;
     register u32 size;
 
-    exp = (void **)table;
+    exp  = (void **)table;
     size = 0;
 
     if (exp != NULL)

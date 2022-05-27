@@ -93,7 +93,7 @@ int LoadMemModule(int mode, void *modptr, unsigned int modsize, int arg_len, con
     if (iopmem == NULL)
         return -E_IOP_NO_MEMORY;
 
-    sifdma.src = modptr;
+    sifdma.src  = modptr;
     sifdma.dest = iopmem;
     sifdma.size = modsize;
     sifdma.attr = 0;
@@ -137,8 +137,8 @@ int GetOPLModInfo(int id, void **pointer, unsigned int *size)
     for (i = 0, result = -1; i < irxtable->count; i++) {
         if (GET_OPL_MOD_ID(irxtable->modules[i].info) == id) {
             *pointer = irxtable->modules[i].ptr;
-            *size = GET_OPL_MOD_SIZE(irxtable->modules[i].info);
-            result = 0;
+            *size    = GET_OPL_MOD_SIZE(irxtable->modules[i].info);
+            result   = 0;
             break;
         }
     }
@@ -174,7 +174,7 @@ int LoadElf(const char *path, t_ExecData *data)
 
     strncpy(arg.path, path, LF_PATH_MAX - 1);
     strncpy(arg.secname, (char *)&secname, LF_ARG_MAX - 1);
-    arg.path[LF_PATH_MAX - 1] = 0;
+    arg.path[LF_PATH_MAX - 1]   = 0;
     arg.secname[LF_ARG_MAX - 1] = 0;
 
     if (SifCallRpc(&_lf_cd, LF_F_ELF_LOAD, 0, &arg, sizeof arg, &arg, sizeof(t_ExecData), NULL, NULL) < 0)
@@ -182,7 +182,7 @@ int LoadElf(const char *path, t_ExecData *data)
 
     if (arg.epc != 0) {
         data->epc = arg.epc;
-        data->gp = arg.gp;
+        data->gp  = arg.gp;
 
         return 0;
     } else
@@ -209,7 +209,7 @@ void ChangeModuleName(const char *name, const char *newname)
         if (!_memcmp(search_name, name, len)) {
             strncpy(search_name, newname, sizeof(search_name));
             search_name[sizeof(search_name) - 1] = '\0';
-            len = strlen(search_name);
+            len                                  = strlen(search_name);
             SyncDCache(search_name, search_name + len);
             smem_write(info.name, search_name, len);
             break;

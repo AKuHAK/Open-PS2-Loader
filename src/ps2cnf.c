@@ -95,7 +95,7 @@ int ps2cnfGetBootFile(const char *path, char *bootfile)
     fclose(fd);
 
     system_cnf[size] = '\0';
-    cnf_end = &system_cnf[size];
+    cnf_end          = &system_cnf[size];
 
     // Parse SYSTEM.CNF
     cnf_start = system_cnf;

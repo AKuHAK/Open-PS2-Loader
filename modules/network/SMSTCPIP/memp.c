@@ -153,9 +153,9 @@ void memp_init(void)
 
 #if MEMP_STATS
     for (i = 0; i < MEMP_MAX; ++i) {
-        lwip_stats.memp[i].used = lwip_stats.memp[i].max =
+        lwip_stats.memp[i].used    = lwip_stats.memp[i].max =
             lwip_stats.memp[i].err = 0;
-        lwip_stats.memp[i].avail = memp_num[i];
+        lwip_stats.memp[i].avail   = memp_num[i];
     }
 #endif /* MEMP_STATS */
 
@@ -164,15 +164,15 @@ void memp_init(void)
         size = MEM_ALIGN_SIZE(memp_sizes[i] + sizeof(struct memp));
         if (memp_num[i] > 0) {
             memp_tab[i] = memp;
-            m = memp;
+            m           = memp;
 
             for (j = 0; j < memp_num[i]; ++j) {
                 m->next = (struct memp *)MEM_ALIGN((u8_t *)m + size);
-                memp = m;
-                m = m->next;
+                memp    = m;
+                m       = m->next;
             }
             memp->next = NULL;
-            memp = m;
+            memp       = m;
         } else {
             memp_tab[i] = NULL;
         }
@@ -204,7 +204,7 @@ memp_malloc(memp_t type)
 
     if (memp != NULL) {
         memp_tab[type] = memp->next;
-        memp->next = NULL;
+        memp->next     = NULL;
 #if MEMP_STATS
         ++lwip_stats.memp[type].used;
         if (lwip_stats.memp[type].used > lwip_stats.memp[type].max) {
@@ -257,7 +257,7 @@ void memp_free(memp_t type, void *mem)
     lwip_stats.memp[type].used--;
 #endif /* MEMP_STATS */
 
-    memp->next = memp_tab[type];
+    memp->next     = memp_tab[type];
     memp_tab[type] = memp;
 
     LWIP_ASSERT("memp sanity", memp_sanity());

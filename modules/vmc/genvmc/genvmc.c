@@ -80,7 +80,7 @@ static iop_device_t genvmc_dev = {
 #define sceMcGetCardType McGetMcType
 
 // SONY superblock magic & version
-static const char SUPERBLOCK_MAGIC[] = "Sony PS2 Memory Card Format ";
+static const char SUPERBLOCK_MAGIC[]   = "Sony PS2 Memory Card Format ";
 static const char SUPERBLOCK_VERSION[] = "1.2.0.0";
 
 // superblock struct
@@ -122,9 +122,9 @@ typedef struct
 static MCDevInfo devinfo __attribute__((aligned(64)));
 static u8 cluster_buf[(BLOCKKB * 1024) + 16] __attribute__((aligned(64)));
 
-static int genvmc_io_sema = -1;
-static int genvmc_thread_sema = -1;
-static int genvmc_abort_sema = -1;
+static int genvmc_io_sema             = -1;
+static int genvmc_thread_sema         = -1;
+static int genvmc_abort_sema          = -1;
 static int genvmc_abort_finished_sema = -1;
 
 static int genvmc_abort = 0;
@@ -143,8 +143,8 @@ static void long_multiply(u32 v1, u32 v2, u32 *HI, u32 *LO)
     d = v2 & 0xffff;
 
     *LO = b * d;
-    x = a * d + c * b;
-    y = ((*LO >> 16) & 0xffff) + x;
+    x   = a * d + c * b;
+    y   = ((*LO >> 16) & 0xffff) + x;
 
     *LO = (*LO & 0xffff) | ((y & 0xffff) << 16);
     *HI = (y >> 16) & 0xffff;
@@ -166,19 +166,19 @@ static int mc_getmcrtime(sceMcStDateTime *time)
     } while (--retries > 0);
 
     if (cdtime.stat & 0x80) {
-        time->Year = 2000;
+        time->Year  = 2000;
         time->Month = 3;
-        time->Day = 4;
-        time->Hour = 5;
-        time->Min = 6;
-        time->Sec = 7;
+        time->Day   = 4;
+        time->Hour  = 5;
+        time->Min   = 6;
+        time->Sec   = 7;
         time->Resv2 = 0;
     } else {
         time->Resv2 = 0;
-        time->Sec = btoi(cdtime.second);
-        time->Min = btoi(cdtime.minute);
-        time->Hour = btoi(cdtime.hour);
-        time->Day = btoi(cdtime.day);
+        time->Sec   = btoi(cdtime.second);
+        time->Min   = btoi(cdtime.minute);
+        time->Hour  = btoi(cdtime.hour);
+        time->Day   = btoi(cdtime.day);
 
         if ((cdtime.month & 0x10) != 0) // Keep only valid bits: 0x1f (for month values 1-12 in BCD)
             time->Month = (cdtime.month & 0xf) + 0xa;
@@ -205,7 +205,7 @@ static int mc_writecluster(int fd, int cluster, void *buf, int dup)
     } else {
         lseek(fd, cluster * mcdi->cluster_size, SEEK_SET);
         size = mcdi->cluster_size * dup;
-        r = write(fd, buf, size);
+        r    = write(fd, buf, size);
         if (r != size)
             return -1;
     }
@@ -236,9 +236,9 @@ static int vmc_mccopy(char *filename, int slot, int *progress, char *msg)
     if (memcmp(mcdi->magic, SUPERBLOCK_MAGIC, 28))
         return -100;
 
-    pagesblock = (BLOCKKB * 1024) / mcdi->pagesize;
+    pagesblock    = (BLOCKKB * 1024) / mcdi->pagesize;
     clustersblock = pagesblock / mcdi->pages_per_cluster;
-    blocks = mcdi->clusters_per_card / clustersblock;
+    blocks        = mcdi->clusters_per_card / clustersblock;
 
     int genvmc_fh = open(filename, O_RDWR | O_CREAT | O_TRUNC);
     if (genvmc_fh < 0)
@@ -279,7 +279,7 @@ static int vmc_mccopy(char *filename, int slot, int *progress, char *msg)
         }
     }
     *progress = 100;
-    ret = 0;
+    ret       = 0;
 exit:
     close(genvmc_fh);
     return ret;
@@ -305,15 +305,15 @@ static int vmc_mcformat(char *filename, int size_kb, int blocksize, int *progres
     strcat((char *)&mcdi->magic, SUPERBLOCK_VERSION);
 
     // set mc specs
-    mcdi->cluster_size = 1024;   // size in KB of clusters
-    mcdi->blocksize = blocksize; // how many pages in a block of data
-    mcdi->pages_per_cluster = 2; // how many pages in a cluster
-    mcdi->pagesize = mcdi->cluster_size / mcdi->pages_per_cluster;
-    mcdi->clusters_per_block = mcdi->blocksize / mcdi->pages_per_cluster;
-    mcdi->clusters_per_card = (size_kb * 1024) / mcdi->cluster_size;
-    mcdi->cardtype = 0x02; // PlayStation2 card type
-    mcdi->cardflags = 0x2b;
-    mcdi->cardform = -1;
+    mcdi->cluster_size           = 1024;      // size in KB of clusters
+    mcdi->blocksize              = blocksize; // how many pages in a block of data
+    mcdi->pages_per_cluster      = 2;         // how many pages in a cluster
+    mcdi->pagesize               = mcdi->cluster_size / mcdi->pages_per_cluster;
+    mcdi->clusters_per_block     = mcdi->blocksize / mcdi->pages_per_cluster;
+    mcdi->clusters_per_card      = (size_kb * 1024) / mcdi->cluster_size;
+    mcdi->cardtype               = 0x02; // PlayStation2 card type
+    mcdi->cardflags              = 0x2b;
+    mcdi->cardform               = -1;
     mcdi->FATentries_per_cluster = mcdi->cluster_size / sizeof(u32);
 
     // clear bad blocks list
@@ -325,7 +325,7 @@ static int vmc_mcformat(char *filename, int size_kb, int blocksize, int *progres
     memset(cluster_buf, 0xff, sizeof(cluster_buf));
     for (i = 0; i < mcdi->clusters_per_card; i += BLOCKKB) {
         *progress = i / (mcdi->clusters_per_card / 99);
-        r = mc_writecluster(genvmc_fh, i, cluster_buf, BLOCKKB);
+        r         = mc_writecluster(genvmc_fh, i, cluster_buf, BLOCKKB);
         if (r < 0) {
             if (r == -2) // it's user abort
                 r = -1000;
@@ -348,7 +348,7 @@ static int vmc_mcformat(char *filename, int size_kb, int blocksize, int *progres
     for (i = 0; i < 32; i++)
         mcdi->ifc_list[i] = -1;
     ifc_index = mcdi->blocksize / 2;
-    i = ifc_index;
+    i         = ifc_index;
     for (j = 0; j < ifc_length; j++, i++)
         mcdi->ifc_list[j] = i;
 
@@ -411,9 +411,9 @@ static int vmc_mcformat(char *filename, int size_kb, int blocksize, int *progres
     // calculate number of allocatable clusters per card
     u32 hi, lo, temp;
     long_multiply(mcdi->clusters_per_card, 0x10624dd3, &hi, &lo);
-    temp = (hi >> 6) - (mcdi->clusters_per_card >> 31);
+    temp                           = (hi >> 6) - (mcdi->clusters_per_card >> 31);
     mcdi->max_allocatable_clusters = (((((temp << 5) - temp) << 2) + temp) << 3) + 1;
-    j = alloc_offset;
+    j                              = alloc_offset;
 
     // building/writing FAT clusters
     strcpy(msg, "Writing fat clusters...");
@@ -421,7 +421,7 @@ static int vmc_mcformat(char *filename, int size_kb, int blocksize, int *progres
     for (z = 0; j < (i * mcdi->clusters_per_block); j += mcdi->FATentries_per_cluster) {
 
         memset(cluster_buf, 0, mcdi->cluster_size);
-        u32 *fc = (u32 *)cluster_buf;
+        u32 *fc    = (u32 *)cluster_buf;
         int sz_u32 = (i * mcdi->clusters_per_block) - j;
         if (sz_u32 > mcdi->FATentries_per_cluster)
             sz_u32 = mcdi->FATentries_per_cluster;
@@ -429,9 +429,9 @@ static int vmc_mcformat(char *filename, int size_kb, int blocksize, int *progres
             fc[b] = 0x7fffffff; // marking free cluster
 
         if (z == 0) {
-            mcdi->alloc_offset = j;
+            mcdi->alloc_offset    = j;
             mcdi->rootdir_cluster = 0;
-            fc[0] = 0xffffffff; // marking rootdir end
+            fc[0]                 = 0xffffffff; // marking rootdir end
         }
         z += sz_u32;
 
@@ -454,9 +454,9 @@ static int vmc_mcformat(char *filename, int size_kb, int blocksize, int *progres
         goto err_out;
     }
 
-    mcdi->unknown1 = 0;
-    mcdi->unknown2 = 0;
-    mcdi->unknown5 = -1;
+    mcdi->unknown1         = 0;
+    mcdi->unknown2         = 0;
+    mcdi->unknown5         = -1;
     mcdi->rootdir_cluster2 = mcdi->rootdir_cluster;
 
     // build root directory
@@ -468,18 +468,18 @@ static int vmc_mcformat(char *filename, int size_kb, int blocksize, int *progres
     rootdir_entry[1] = (McFsEntry *)&cluster_buf[sizeof(McFsEntry)];
     memset((void *)rootdir_entry[0], 0, sizeof(McFsEntry));
     memset((void *)rootdir_entry[1], 0, sizeof(McFsEntry));
-    rootdir_entry[0]->mode = sceMcFileAttrExists | sceMcFile0400 | sceMcFileAttrSubdir | sceMcFileAttrReadable | sceMcFileAttrWriteable | sceMcFileAttrExecutable;
+    rootdir_entry[0]->mode   = sceMcFileAttrExists | sceMcFile0400 | sceMcFileAttrSubdir | sceMcFileAttrReadable | sceMcFileAttrWriteable | sceMcFileAttrExecutable;
     rootdir_entry[0]->length = 2;
     memcpy((void *)&rootdir_entry[0]->created, (void *)&time, sizeof(sceMcStDateTime));
     memcpy((void *)&rootdir_entry[0]->modified, (void *)&time, sizeof(sceMcStDateTime));
-    rootdir_entry[0]->cluster = 0;
+    rootdir_entry[0]->cluster   = 0;
     rootdir_entry[0]->dir_entry = 0;
     strcpy(rootdir_entry[0]->name, ".");
-    rootdir_entry[1]->mode = sceMcFileAttrExists | sceMcFileAttrHidden | sceMcFile0400 | sceMcFileAttrSubdir | sceMcFileAttrWriteable | sceMcFileAttrExecutable;
+    rootdir_entry[1]->mode   = sceMcFileAttrExists | sceMcFileAttrHidden | sceMcFile0400 | sceMcFileAttrSubdir | sceMcFileAttrWriteable | sceMcFileAttrExecutable;
     rootdir_entry[1]->length = 2;
     memcpy((void *)&rootdir_entry[1]->created, (void *)&time, sizeof(sceMcStDateTime));
     memcpy((void *)&rootdir_entry[1]->modified, (void *)&time, sizeof(sceMcStDateTime));
-    rootdir_entry[1]->cluster = 0;
+    rootdir_entry[1]->cluster   = 0;
     rootdir_entry[1]->dir_entry = 0;
     strcpy(rootdir_entry[1]->name, "..");
 
@@ -532,9 +532,9 @@ static int genvmc_dummy(void)
 //--------------------------------------------------------------
 static int genvmc_init(iop_device_t *dev)
 {
-    genvmc_io_sema = CreateMutex(IOP_MUTEX_UNLOCKED);
+    genvmc_io_sema     = CreateMutex(IOP_MUTEX_UNLOCKED);
     genvmc_thread_sema = CreateMutex(IOP_MUTEX_UNLOCKED);
-    genvmc_abort_sema = CreateMutex(IOP_MUTEX_UNLOCKED);
+    genvmc_abort_sema  = CreateMutex(IOP_MUTEX_UNLOCKED);
 
     return 0;
 }
@@ -561,8 +561,8 @@ static void VMC_create_thread(void *args)
     genvmc_abort = 0;
     SignalSema(genvmc_abort_sema);
 
-    genvmc_stats.VMC_status = GENVMC_STAT_BUSY;
-    genvmc_stats.VMC_error = 0;
+    genvmc_stats.VMC_status   = GENVMC_STAT_BUSY;
+    genvmc_stats.VMC_error    = 0;
     genvmc_stats.VMC_progress = 0;
     strcpy(genvmc_stats.VMC_msg, "Initializing...");
 
@@ -573,7 +573,7 @@ static void VMC_create_thread(void *args)
 
     if (r < 0) {
         genvmc_stats.VMC_status = GENVMC_STAT_AVAIL;
-        genvmc_stats.VMC_error = r;
+        genvmc_stats.VMC_error  = r;
 
         if (r == -1000) { // user abort
             remove(param->VMC_filename);
@@ -585,8 +585,8 @@ static void VMC_create_thread(void *args)
         goto exit;
     }
 
-    genvmc_stats.VMC_status = GENVMC_STAT_AVAIL;
-    genvmc_stats.VMC_error = 0;
+    genvmc_stats.VMC_status   = GENVMC_STAT_AVAIL;
+    genvmc_stats.VMC_error    = 0;
     genvmc_stats.VMC_progress = 100;
     strcpy(genvmc_stats.VMC_msg, "VMC file created");
 
@@ -604,11 +604,11 @@ static int vmc_create(createVMCparam_t *param)
     register int r, thid;
     iop_thread_t thread_param;
 
-    thread_param.attr = TH_C;
-    thread_param.option = 0;
-    thread_param.thread = (void *)VMC_create_thread;
+    thread_param.attr      = TH_C;
+    thread_param.option    = 0;
+    thread_param.thread    = (void *)VMC_create_thread;
     thread_param.stacksize = 0x2000;
-    thread_param.priority = (param->VMC_thread_priority < 0x0f) ? 0x0f : param->VMC_thread_priority;
+    thread_param.priority  = (param->VMC_thread_priority < 0x0f) ? 0x0f : param->VMC_thread_priority;
 
     // creating VMC create thread
     thid = CreateThread(&thread_param);

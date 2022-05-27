@@ -44,7 +44,7 @@
 #include "lwip/tcp.h"
 
 
-struct netif *netif_list = NULL;
+struct netif *netif_list    = NULL;
 struct netif *netif_default = NULL;
 
 /**
@@ -75,7 +75,7 @@ netif_add(struct netif *netif, struct ip_addr *ipaddr, struct ip_addr *netmask,
 #endif
     /* remember netif specific state information data */
     netif->state = state;
-    netif->num = netifnum++;
+    netif->num   = netifnum++;
     netif->input = input;
 
     netif_set_addr(netif, ipaddr, netmask, gw);
@@ -87,7 +87,7 @@ netif_add(struct netif *netif, struct ip_addr *ipaddr, struct ip_addr *netmask,
 
     /* add this netif to the list */
     netif->next = netif_list;
-    netif_list = netif;
+    netif_list  = netif;
     LWIP_DEBUGF(NETIF_DEBUG, ("netif: added interface %c%c IP addr ",
                               netif->name[0], netif->name[1]));
     ip_addr_debug_print(NETIF_DEBUG, ipaddr);

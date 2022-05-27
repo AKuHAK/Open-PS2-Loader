@@ -8,7 +8,7 @@
   Copyright (c) 2003 Marcus R. Brown <mrbrown@0xd6.org>
   Licenced under Academic Free License version 2.0
   Review ps2sdk README & LICENSE files for further details.
- 
+
   ATA device driver.
 */
 
@@ -78,7 +78,7 @@ int ata_io_sema = -1;
 #define SIGNALIOSEMA(x) SignalSema(x)
 
 #define ATA_EV_TIMEOUT  1
-#define ATA_EV_COMPLETE 2 //Unused as there is no completion interrupt
+#define ATA_EV_COMPLETE 2 // Unused as there is no completion interrupt
 
 /* Local device info.  */
 static ata_devinfo_t atad_devinfo;
@@ -124,7 +124,7 @@ typedef struct _ata_cmd_state
 static ata_cmd_state_t atad_cmd_state;
 
 static int hdpro_io_active = 0;
-static int intr_suspended = 0;
+static int intr_suspended  = 0;
 static int intr_state;
 
 static int hdpro_io_start(void);
@@ -166,7 +166,7 @@ int atad_start(void)
 
     M_PRINTF(BANNER, VERSION);
 
-    event.attr = EA_SINGLE; //In v1.04, EA_MULTI was specified.
+    event.attr = EA_SINGLE; // In v1.04, EA_MULTI was specified.
     event.bits = 0;
     if ((ata_evflg = CreateEventFlag(&event)) < 0) {
         M_PRINTF("Couldn't create event flag, exiting.\n");
@@ -175,7 +175,7 @@ int atad_start(void)
 
     hdpro_io_start();
 
-    HDPROreg_IO8 = 0xe3;
+    HDPROreg_IO8   = 0xe3;
     CDVDreg_STATUS = 0;
 
     if (ata_bus_reset() != 0)
@@ -183,9 +183,9 @@ int atad_start(void)
 
     iop_sema_t smp;
     smp.initial = 1;
-    smp.max = 1;
-    smp.option = 0;
-    smp.attr = SA_THPRI;
+    smp.max     = 1;
+    smp.option  = 0;
+    smp.attr    = SA_THPRI;
     ata_io_sema = CreateSema(&smp);
 
     res = 0;
@@ -209,7 +209,7 @@ int ata_get_error()
 #define ata_wait_bus_busy() gen_ata_wait_busy(ATA_WAIT_BUSBUSY)
 
 /* 0x80 for busy, 0x88 for bus busy.
-	In the original ATAD, the busy and bus-busy functions were separate, but similar.  */
+    In the original ATAD, the busy and bus-busy functions were separate, but similar.  */
 static int gen_ata_wait_busy(int bits)
 {
     int i, didx, delay;
@@ -223,7 +223,7 @@ static int gen_ata_wait_busy(int bits)
 
         hdpro_io_finish();
 
-        //Differs from the normal ATAD here.
+        // Differs from the normal ATAD here.
         if (r_control == 0xffff)
             return ATA_RES_ERR_TIMEOUT;
 
@@ -272,14 +272,14 @@ static int hdpro_io_start(void)
     suspend_intr();
 
     // HD Pro IO start commands sequence
-    HDPROreg_IO8 = 0x72;
-    CDVDreg_STATUS = 0;
-    HDPROreg_IO8 = 0x34;
-    CDVDreg_STATUS = 0;
-    HDPROreg_IO8 = 0x61;
-    CDVDreg_STATUS = 0;
+    HDPROreg_IO8     = 0x72;
+    CDVDreg_STATUS   = 0;
+    HDPROreg_IO8     = 0x34;
+    CDVDreg_STATUS   = 0;
+    HDPROreg_IO8     = 0x61;
+    CDVDreg_STATUS   = 0;
     unsigned int res = HDPROreg_IO8;
-    CDVDreg_STATUS = 0;
+    CDVDreg_STATUS   = 0;
 
     resume_intr();
 
@@ -298,7 +298,7 @@ static int hdpro_io_finish(void)
     suspend_intr();
 
     // HD Pro IO finish commands sequence
-    HDPROreg_IO8 = 0xf3;
+    HDPROreg_IO8   = 0xf3;
     CDVDreg_STATUS = 0;
 
     resume_intr();
@@ -316,11 +316,11 @@ static void hdpro_io_write(u8 cmd, u16 val)
     suspend_intr();
 
     // IO write to HD Pro
-    HDPROreg_IO8 = cmd;
+    HDPROreg_IO8   = cmd;
     CDVDreg_STATUS = 0;
-    HDPROreg_IO8 = val;
+    HDPROreg_IO8   = val;
     CDVDreg_STATUS = 0;
-    HDPROreg_IO8 = (val & 0xffff) >> 8;
+    HDPROreg_IO8   = (val & 0xffff) >> 8;
     CDVDreg_STATUS = 0;
 
     resume_intr();
@@ -331,13 +331,13 @@ static int hdpro_io_read(u8 cmd)
     suspend_intr();
 
     // IO read from HD Pro
-    HDPROreg_IO8 = cmd;
-    CDVDreg_STATUS = 0;
+    HDPROreg_IO8      = cmd;
+    CDVDreg_STATUS    = 0;
     unsigned int res0 = HDPROreg_IO8;
-    CDVDreg_STATUS = 0;
+    CDVDreg_STATUS    = 0;
     unsigned int res1 = HDPROreg_IO8;
-    CDVDreg_STATUS = 0;
-    res0 = (res0 & 0xff) | (res1 << 8);
+    CDVDreg_STATUS    = 0;
+    res0              = (res0 & 0xff) | (res1 << 8);
 
     resume_intr();
 
@@ -350,9 +350,9 @@ static int ata_bus_reset(void)
     suspend_intr();
 
     // HD Pro IO initialization commands sequence
-    HDPROreg_IO8 = 0x13;
+    HDPROreg_IO8   = 0x13;
     CDVDreg_STATUS = 0;
-    HDPROreg_IO8 = 0x00;
+    HDPROreg_IO8   = 0x00;
     CDVDreg_STATUS = 0;
 
     resume_intr();
@@ -361,9 +361,9 @@ static int ata_bus_reset(void)
 
     suspend_intr();
 
-    HDPROreg_IO8 = 0x13;
+    HDPROreg_IO8   = 0x13;
     CDVDreg_STATUS = 0;
-    HDPROreg_IO8 = 0x01;
+    HDPROreg_IO8   = 0x01;
     CDVDreg_STATUS = 0;
 
     resume_intr();
@@ -406,15 +406,15 @@ int ata_io_start(void *buf, u32 blkcount, u16 feature, u16 nsector, u16 sector, 
         return res;
 
     /* For the SCE and SMART commands, we need to search on the subcommand
-	specified in the feature register.  */
+    specified in the feature register.  */
     if (command == ATA_C_SMART) {
-        cmd_table = smart_cmd_table;
+        cmd_table      = smart_cmd_table;
         cmd_table_size = SMART_CMD_TABLE_SIZE;
-        searchcmd = (u8)feature;
+        searchcmd      = (u8)feature;
     } else {
-        cmd_table = ata_cmd_table;
+        cmd_table      = ata_cmd_table;
         cmd_table_size = ATA_CMD_TABLE_SIZE;
-        searchcmd = (u8)command;
+        searchcmd      = (u8)command;
     }
 
     type = 0;
@@ -428,7 +428,7 @@ int ata_io_start(void *buf, u32 blkcount, u16 feature, u16 nsector, u16 sector, 
     if (!(atad_cmd_state.type = type & 0x7F))
         return ATA_RES_ERR_CMD;
 
-    atad_cmd_state.buf = buf;
+    atad_cmd_state.buf      = buf;
     atad_cmd_state.blkcount = blkcount;
 
     /* Check that the device is ready if this the appropiate command.  */
@@ -453,7 +453,7 @@ int ata_io_start(void *buf, u32 blkcount, u16 feature, u16 nsector, u16 sector, 
         case 6:
             using_timeout = 1;
             break;
-            //Support for DMA commands (type = 4) is removed because HDPro cannot support DMA. The original HDPro driver still had code for it though.
+            // Support for DMA commands (type = 4) is removed because HDPro cannot support DMA. The original HDPro driver still had code for it though.
     }
 
     if (using_timeout) {
@@ -466,7 +466,7 @@ int ata_io_start(void *buf, u32 blkcount, u16 feature, u16 nsector, u16 sector, 
 
     /* Enable the command completion interrupt.  */
     suspend_intr();
-    HDPROreg_IO8 = 0x21;
+    HDPROreg_IO8   = 0x21;
     CDVDreg_STATUS = 0;
     (void)HDPROreg_IO8;
     CDVDreg_STATUS = 0;
@@ -474,11 +474,11 @@ int ata_io_start(void *buf, u32 blkcount, u16 feature, u16 nsector, u16 sector, 
 
     /* Finally!  We send off the ATA command with arguments.  */
     hdpro_io_write(ATAreg_CONTROL_WR, (using_timeout == 0) << 1);
-    if (type & 0x80) { //For the sake of achieving improved performance, write the registers twice only if required!
+    if (type & 0x80) { // For the sake of achieving improved performance, write the registers twice only if required!
         /* 48-bit LBA requires writing to the address registers twice,
-		   24 bits of the LBA address is written each time.
-		   Writing to registers twice does not affect 28-bit LBA since
-		   only the latest data stored in address registers is used.  */
+           24 bits of the LBA address is written each time.
+           Writing to registers twice does not affect 28-bit LBA since
+           only the latest data stored in address registers is used.  */
         hdpro_io_write(ATAreg_FEATURE_WR, (feature & 0xffff) >> 8);
         hdpro_io_write(ATAreg_NSECTOR_WR, (nsector & 0xffff) >> 8);
         hdpro_io_write(ATAreg_SECTOR_WR, (sector & 0xffff) >> 8);
@@ -492,7 +492,7 @@ int ata_io_start(void *buf, u32 blkcount, u16 feature, u16 nsector, u16 sector, 
     hdpro_io_write(ATAreg_LCYL_WR, lcyl & 0xff);
     hdpro_io_write(ATAreg_HCYL_WR, hcyl & 0xff);
 
-    hdpro_io_write(ATAreg_SELECT_WR, (select | ATA_SEL_LBA) & 0xff); //In v1.04, LBA was enabled in the ata_device_sector_io function.
+    hdpro_io_write(ATAreg_SELECT_WR, (select | ATA_SEL_LBA) & 0xff); // In v1.04, LBA was enabled in the ata_device_sector_io function.
     hdpro_io_write(ATAreg_COMMAND_WR, command & 0xff);
 
     return 0;
@@ -522,7 +522,7 @@ static int ata_pio_transfer(ata_cmd_state_t *cmd_state)
         /* PIO data out */
         buf16 = cmd_state->buf16;
 
-        HDPROreg_IO8 = 0x43;
+        HDPROreg_IO8   = 0x43;
         CDVDreg_STATUS = 0;
 
         for (i = 0; i < 256; i++) {
@@ -550,25 +550,25 @@ static int ata_pio_transfer(ata_cmd_state_t *cmd_state)
 
         suspend_intr();
 
-        HDPROreg_IO8 = 0x53;
+        HDPROreg_IO8   = 0x53;
         CDVDreg_STATUS = 0;
         CDVDreg_STATUS = 0;
 
         for (i = 0; i < 256; i++) {
 
             unsigned int res0 = HDPROreg_IO8;
-            CDVDreg_STATUS = 0;
+            CDVDreg_STATUS    = 0;
             unsigned int res1 = HDPROreg_IO8;
-            CDVDreg_STATUS = 0;
+            CDVDreg_STATUS    = 0;
 
             res0 = (res0 & 0xff) | (res1 << 8);
             chk ^= res0 + i;
 
-            *buf16 = res0 & 0xffff;
+            *buf16         = res0 & 0xffff;
             cmd_state->buf = ++buf16;
         }
 
-        HDPROreg_IO8 = 0x51;
+        HDPROreg_IO8   = 0x51;
         CDVDreg_STATUS = 0;
         CDVDreg_STATUS = 0;
 
@@ -592,14 +592,14 @@ int ata_io_finish(void)
 
     if (type == 1 || type == 6) { /* Non-data commands.  */
 
-        //Unlike ATAD, poll until the device either completes its command or times out. There is no completion interrupt.
+        // Unlike ATAD, poll until the device either completes its command or times out. There is no completion interrupt.
         while (1) {
             suspend_intr();
 
-            HDPROreg_IO8 = 0x21;
-            CDVDreg_STATUS = 0;
+            HDPROreg_IO8     = 0x21;
+            CDVDreg_STATUS   = 0;
             unsigned int ret = HDPROreg_IO8;
-            CDVDreg_STATUS = 0;
+            CDVDreg_STATUS   = 0;
 
             resume_intr();
 
@@ -693,17 +693,17 @@ int ata_device_sector_io(int device, void *buf, u32 lba, u32 nsectors, int dir)
             /* Combine bits 24-31 and bits 0-7 of lba into sector.  */
             sector = ((lba >> 16) & 0xff00) | (lba & 0xff);
             /* In v1.04, LBA was enabled here.  */
-            select = (device << 4) & 0xffff;
+            select  = (device << 4) & 0xffff;
             command = (dir == 1) ? ATA_C_WRITE_SECTOR_EXT : ATA_C_READ_SECTOR_EXT;
         } else {
             /* Setup for 28-bit LBA.  */
             sector = lba & 0xff;
             /* In v1.04, LBA was enabled here.  */
-            select = ((device << 4) | ((lba >> 24) & 0xf)) & 0xffff;
+            select  = ((device << 4) | ((lba >> 24) & 0xf)) & 0xffff;
             command = (dir == 1) ? ATA_C_WRITE_SECTOR : ATA_C_READ_SECTOR;
         }
 
-        //Unlike ATAD, retry indefinitely until the I/O operation succeeds.
+        // Unlike ATAD, retry indefinitely until the I/O operation succeeds.
         if ((res = ata_io_start(buf, len, 0, len, sector, lcyl,
                                 hcyl, select, command)) != 0)
             continue;
@@ -711,7 +711,7 @@ int ata_device_sector_io(int device, void *buf, u32 lba, u32 nsectors, int dir)
             continue;
 
         nbytes = len * 512;
-        buf = (void *)((u8 *)buf + nbytes);
+        buf    = (void *)((u8 *)buf + nbytes);
         lba += len;
         nsectors -= len;
     }

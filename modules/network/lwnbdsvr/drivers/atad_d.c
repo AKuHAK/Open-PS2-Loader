@@ -18,7 +18,7 @@ static inline int atad_flush_(nbd_context const *const me)
 
 int atad_ctor(atad_driver *const me, int device)
 {
-    me->device = device;
+    me->device              = device;
     ata_devinfo_t *dev_info = ata_get_devinfo(me->device);
 
     static struct lwnbd_operations const nbdopts = {
@@ -32,8 +32,8 @@ int atad_ctor(atad_driver *const me, int device)
     strcpy(me->super.export_desc, "PlayStation 2 HDD via ATAD");
     sprintf(me->super.export_name, "%s%d", "hdd", me->device);
     me->super.blocksize = 512;
-    me->super.buffer = nbd_buffer;
-    me->super.eflags = NBD_FLAG_HAS_FLAGS | NBD_FLAG_SEND_FLUSH;
+    me->super.buffer    = nbd_buffer;
+    me->super.eflags    = NBD_FLAG_HAS_FLAGS | NBD_FLAG_SEND_FLUSH;
 
     if (dev_info != NULL && dev_info->exists) {
         me->super.export_size = (uint64_t)dev_info->total_sectors * me->super.blocksize;

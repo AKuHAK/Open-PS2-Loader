@@ -71,7 +71,7 @@ struct NBNSNameRecord
 
 #define MAX_NAME_RECORDS 1
 
-static int nbnsSocket = -1;
+static int nbnsSocket          = -1;
 static int nbnsReceiveThreadID = -1;
 static struct NBNSNameRecord NameRecords[MAX_NAME_RECORDS];
 
@@ -125,7 +125,7 @@ static struct NBNSNameRecord *AllocNameRecord(void)
     for (i = 0; i < MAX_NAME_RECORDS; i++) {
         if (!(NameRecords[i].status & NBNS_NAME_RECORD_ALLOCATED)) {
             NameRecords[i].status = NBNS_NAME_RECORD_ALLOCATED;
-            result = &NameRecords[i];
+            result                = &NameRecords[i];
             break;
         }
     }
@@ -178,7 +178,7 @@ static void nbnsReceiveThread(void *arg)
         if ((length = recv(nbnsSocket, frame, sizeof(frame), 0)) > 0) {
             if (length >= sizeof(struct NbHeader)) {
                 header = (struct NbHeader *)frame;
-                code = BSWAP16(header->code);
+                code   = BSWAP16(header->code);
 
                 //    printf("R: %d, opcode: 0x%x, rcode: 0x%x, tcode: 0x%04x, flags: 0x%x\n", NB_GET_R(code), NB_GET_OPCODE(code), NB_GET_RCODE(code), BSWAP16(header->TransactionID), NB_GET_MN_FLAGS(code));
 
@@ -188,7 +188,7 @@ static void nbnsReceiveThread(void *arg)
                             // Responses.
                             if (NB_GET_RCODE(code) == 0 && BSWAP16(header->ANCount) == 1) // Positive query response.
                             {
-                                result = decode_name(&frame[sizeof(struct NbHeader)], decoded_name);
+                                result               = decode_name(&frame[sizeof(struct NbHeader)], decoded_name);
                                 decoded_name[result] = '\0';
 
                                 if ((record = lookupName(decoded_name, BSWAP16(header->TransactionID))) != NULL && (record->status & NBNS_NAME_RECORD_INIT)) {
@@ -235,16 +235,16 @@ int nbnsInit(void)
     iop_thread_t thread;
 
     if ((nbnsSocket = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)) >= 0) {
-        service.sin_family = AF_INET;
+        service.sin_family      = AF_INET;
         service.sin_addr.s_addr = htonl(INADDR_ANY);
-        service.sin_port = htons(0);
+        service.sin_port        = htons(0);
 
         if (bind(nbnsSocket, (struct sockaddr *)&service, sizeof(service)) >= 0) {
-            thread.thread = &nbnsReceiveThread;
+            thread.thread    = &nbnsReceiveThread;
             thread.stacksize = 0x350;
-            thread.priority = 0x21;
-            thread.attr = TH_C;
-            thread.option = 0x0B0B0000;
+            thread.priority  = 0x21;
+            thread.attr      = TH_C;
+            thread.option    = 0x0B0B0000;
 
             if ((nbnsReceiveThreadID = CreateThread(&thread)) > 0) {
                 StartThread(nbnsReceiveThreadID, NULL);
@@ -311,22 +311,22 @@ int nbnsFindName(const char *name, unsigned char *ip_address)
         CpuSuspendIntr(&OldState);
         record->status |= NBNS_NAME_RECORD_INIT;
         CpuResumeIntr(OldState);
-        record->thid = GetThreadId();
-        frame[sizeof(struct NbHeader)] = 32;
-        checksum = encode_name(name, &frame[sizeof(struct NbHeader)]);
+        record->thid                        = GetThreadId();
+        frame[sizeof(struct NbHeader)]      = 32;
+        checksum                            = encode_name(name, &frame[sizeof(struct NbHeader)]);
         frame[sizeof(struct NbHeader) + 33] = 0x00;
 
-        header = (struct NbHeader *)frame;
-        trailer = (struct NbQuestionTrailer *)(frame + sizeof(struct NbHeader) + sizeof(question_name) + 2);
-        record->uid = checksum | ((unsigned short int)uid << 8);
+        header                = (struct NbHeader *)frame;
+        trailer               = (struct NbQuestionTrailer *)(frame + sizeof(struct NbHeader) + sizeof(question_name) + 2);
+        record->uid           = checksum | ((unsigned short int)uid << 8);
         header->TransactionID = BSWAP16(record->uid);
         uid++;
-        header->code = BSWAP16(NB_CODE(NB_OPCODE(0, NB_OPCODE_TYPE_QUERY), NB_MN_FLAGS(0, 0, 1, 0, 1), 0));
-        header->QDCount = BSWAP16(1);
-        header->ANCount = 0;
-        header->NSCount = 0;
-        header->ARCount = 0;
-        trailer->qnType = BSWAP16(QUESTION_TYPE_NB);
+        header->code     = BSWAP16(NB_CODE(NB_OPCODE(0, NB_OPCODE_TYPE_QUERY), NB_MN_FLAGS(0, 0, 1, 0, 1), 0));
+        header->QDCount  = BSWAP16(1);
+        header->ANCount  = 0;
+        header->NSCount  = 0;
+        header->ARCount  = 0;
+        trailer->qnType  = BSWAP16(QUESTION_TYPE_NB);
         trailer->qnClass = BSWAP16(QUESTION_CLASS_IN);
 
         TotalLength = sizeof(struct NbHeader) + 34 + sizeof(struct NbQuestionTrailer);
@@ -334,9 +334,9 @@ int nbnsFindName(const char *name, unsigned char *ip_address)
         for (retries = 10; retries > 0; retries--) {
             struct sockaddr_in service;
 
-            service.sin_family = AF_INET;
+            service.sin_family      = AF_INET;
             service.sin_addr.s_addr = htonl(INADDR_BROADCAST);
-            service.sin_port = htons(137);
+            service.sin_port        = htons(137);
 
             if (sendto(nbnsSocket, frame, TotalLength, 0, (struct sockaddr *)&service, sizeof(service)) == TotalLength) {
                 clock.lo = 27600000; // 250ms * 3 = 750ms of 36.8MHz clock ticks

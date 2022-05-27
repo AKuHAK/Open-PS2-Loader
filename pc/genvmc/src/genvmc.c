@@ -30,7 +30,7 @@
 #define sceMcFileAttrExists      0x8000
 
 // SONY superblock magic & version
-static char SUPERBLOCK_MAGIC[] = "Sony PS2 Memory Card Format ";
+static char SUPERBLOCK_MAGIC[]   = "Sony PS2 Memory Card Format ";
 static char SUPERBLOCK_VERSION[] = "1.2.0.0";
 
 // superblock struct
@@ -131,8 +131,8 @@ static void long_multiply(u32 v1, u32 v2, u32 *HI, u32 *LO)
     d = v2 & 0xffff;
 
     *LO = b * d;
-    x = a * d + c * b;
-    y = ((*LO >> 16) & 0xffff) + x;
+    x   = a * d + c * b;
+    y   = ((*LO >> 16) & 0xffff) + x;
 
     *LO = (*LO & 0xffff) | ((y & 0xffff) << 16);
     *HI = (y >> 16) & 0xffff;
@@ -150,10 +150,10 @@ static int mc_getmcrtime(sceMcStDateTime *mctime)
     ptm = gmtime(&rawtime);
 
     mctime->Resv2 = 0;
-    mctime->Sec = ((((ptm->tm_sec >> 4) << 2) + (ptm->tm_sec >> 4)) << 1) + (ptm->tm_sec & 0xf);
-    mctime->Min = ((((ptm->tm_min >> 4) << 2) + (ptm->tm_min >> 4)) << 1) + (ptm->tm_min & 0xf);
-    mctime->Hour = ((((ptm->tm_hour >> 4) << 2) + (ptm->tm_hour >> 4)) << 1) + (ptm->tm_hour & 0xf);
-    mctime->Day = ((((ptm->tm_mday >> 4) << 2) + (ptm->tm_mday >> 4)) << 1) + (ptm->tm_mday & 0xf);
+    mctime->Sec   = ((((ptm->tm_sec >> 4) << 2) + (ptm->tm_sec >> 4)) << 1) + (ptm->tm_sec & 0xf);
+    mctime->Min   = ((((ptm->tm_min >> 4) << 2) + (ptm->tm_min >> 4)) << 1) + (ptm->tm_min & 0xf);
+    mctime->Hour  = ((((ptm->tm_hour >> 4) << 2) + (ptm->tm_hour >> 4)) << 1) + (ptm->tm_hour & 0xf);
+    mctime->Day   = ((((ptm->tm_mday >> 4) << 2) + (ptm->tm_mday >> 4)) << 1) + (ptm->tm_mday & 0xf);
 
     mctime->Month = (ptm->tm_mon + 1) & 0xf;
 
@@ -170,7 +170,7 @@ static int mc_writecluster(FILE *fd, int cluster, void *buf, int dup)
 
     fseek(fd, cluster * mcdi->cluster_size, SEEK_SET);
     size = mcdi->cluster_size * dup;
-    r = fwrite(buf, 1, size, fd);
+    r    = fwrite(buf, 1, size, fd);
     if (r != size)
         return -1;
 
@@ -196,15 +196,15 @@ static int vmc_mcformat(char *filename, int size_kb, int blocksize)
     strcat((char *)&mcdi->magic, SUPERBLOCK_VERSION);
 
     // set mc specs
-    mcdi->cluster_size = 1024;   // size in KB of clusters
-    mcdi->blocksize = blocksize; // how many pages in a block of data
-    mcdi->pages_per_cluster = 2; // how many pages in a cluster
-    mcdi->pagesize = mcdi->cluster_size / mcdi->pages_per_cluster;
-    mcdi->clusters_per_block = mcdi->blocksize / mcdi->pages_per_cluster;
-    mcdi->clusters_per_card = (size_kb * 1024) / mcdi->cluster_size;
-    mcdi->cardtype = 0x02; // PlayStation2 card type
-    mcdi->cardflags = 0x2b;
-    mcdi->cardform = -1;
+    mcdi->cluster_size           = 1024;      // size in KB of clusters
+    mcdi->blocksize              = blocksize; // how many pages in a block of data
+    mcdi->pages_per_cluster      = 2;         // how many pages in a cluster
+    mcdi->pagesize               = mcdi->cluster_size / mcdi->pages_per_cluster;
+    mcdi->clusters_per_block     = mcdi->blocksize / mcdi->pages_per_cluster;
+    mcdi->clusters_per_card      = (size_kb * 1024) / mcdi->cluster_size;
+    mcdi->cardtype               = 0x02; // PlayStation2 card type
+    mcdi->cardflags              = 0x2b;
+    mcdi->cardform               = -1;
     mcdi->FATentries_per_cluster = mcdi->cluster_size / sizeof(u32);
 
     // clear bad blocks list
@@ -235,7 +235,7 @@ static int vmc_mcformat(char *filename, int size_kb, int blocksize)
     for (i = 0; i < 32; i++)
         mcdi->ifc_list[i] = -1;
     ifc_index = mcdi->blocksize / 2;
-    i = ifc_index;
+    i         = ifc_index;
     for (j = 0; j < ifc_length; j++, i++)
         mcdi->ifc_list[j] = i;
 
@@ -287,9 +287,9 @@ static int vmc_mcformat(char *filename, int size_kb, int blocksize)
     // calculate number of allocatable clusters per card
     u32 hi, lo, temp;
     long_multiply(mcdi->clusters_per_card, 0x10624dd3, &hi, &lo);
-    temp = (hi >> 6) - (mcdi->clusters_per_card >> 31);
+    temp                           = (hi >> 6) - (mcdi->clusters_per_card >> 31);
     mcdi->max_allocatable_clusters = (((((temp << 5) - temp) << 2) + temp) << 3) + 1;
-    j = alloc_offset;
+    j                              = alloc_offset;
 
     // building/writing FAT clusters
     printf("4. writing fat clusters...\n");
@@ -297,7 +297,7 @@ static int vmc_mcformat(char *filename, int size_kb, int blocksize)
     for (z = 0; j < (i * mcdi->clusters_per_block); j += mcdi->FATentries_per_cluster) {
 
         memset(cluster_buf, 0, mcdi->cluster_size);
-        u32 *fc = (u32 *)cluster_buf;
+        u32 *fc    = (u32 *)cluster_buf;
         int sz_u32 = (i * mcdi->clusters_per_block) - j;
         if (sz_u32 > mcdi->FATentries_per_cluster)
             sz_u32 = mcdi->FATentries_per_cluster;
@@ -305,9 +305,9 @@ static int vmc_mcformat(char *filename, int size_kb, int blocksize)
             fc[b] = 0x7fffffff; // marking free cluster
 
         if (z == 0) {
-            mcdi->alloc_offset = j;
+            mcdi->alloc_offset    = j;
             mcdi->rootdir_cluster = 0;
-            fc[0] = 0xffffffff; // marking rootdir end
+            fc[0]                 = 0xffffffff; // marking rootdir end
         }
         z += sz_u32;
 
@@ -327,9 +327,9 @@ static int vmc_mcformat(char *filename, int size_kb, int blocksize)
         goto err_out;
     }
 
-    mcdi->unknown1 = 0;
-    mcdi->unknown2 = 0;
-    mcdi->unknown5 = -1;
+    mcdi->unknown1         = 0;
+    mcdi->unknown2         = 0;
+    mcdi->unknown5         = -1;
     mcdi->rootdir_cluster2 = mcdi->rootdir_cluster;
 
     // build root directory
@@ -341,18 +341,18 @@ static int vmc_mcformat(char *filename, int size_kb, int blocksize)
     rootdir_entry[1] = (McFsEntry *)&cluster_buf[sizeof(McFsEntry)];
     memset((void *)rootdir_entry[0], 0, sizeof(McFsEntry));
     memset((void *)rootdir_entry[1], 0, sizeof(McFsEntry));
-    rootdir_entry[0]->mode = sceMcFileAttrExists | sceMcFile0400 | sceMcFileAttrSubdir | sceMcFileAttrReadable | sceMcFileAttrWriteable | sceMcFileAttrExecutable;
+    rootdir_entry[0]->mode   = sceMcFileAttrExists | sceMcFile0400 | sceMcFileAttrSubdir | sceMcFileAttrReadable | sceMcFileAttrWriteable | sceMcFileAttrExecutable;
     rootdir_entry[0]->length = 2;
     memcpy((void *)&rootdir_entry[0]->created, (void *)&time, sizeof(sceMcStDateTime));
     memcpy((void *)&rootdir_entry[0]->modified, (void *)&time, sizeof(sceMcStDateTime));
-    rootdir_entry[0]->cluster = 0;
+    rootdir_entry[0]->cluster   = 0;
     rootdir_entry[0]->dir_entry = 0;
     strcpy(rootdir_entry[0]->name, ".");
-    rootdir_entry[1]->mode = sceMcFileAttrExists | sceMcFileAttrHidden | sceMcFile0400 | sceMcFileAttrSubdir | sceMcFileAttrWriteable | sceMcFileAttrExecutable;
+    rootdir_entry[1]->mode   = sceMcFileAttrExists | sceMcFileAttrHidden | sceMcFile0400 | sceMcFileAttrSubdir | sceMcFileAttrWriteable | sceMcFileAttrExecutable;
     rootdir_entry[1]->length = 2;
     memcpy((void *)&rootdir_entry[1]->created, (void *)&time, sizeof(sceMcStDateTime));
     memcpy((void *)&rootdir_entry[1]->modified, (void *)&time, sizeof(sceMcStDateTime));
-    rootdir_entry[1]->cluster = 0;
+    rootdir_entry[1]->cluster   = 0;
     rootdir_entry[1]->dir_entry = 0;
     strcpy(rootdir_entry[1]->name, "..");
 

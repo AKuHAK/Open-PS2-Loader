@@ -92,22 +92,22 @@ static short int CompatUpdateStatus;
 
 static void clearIOModuleT(opl_io_module_t *mod)
 {
-    mod->subMenu = NULL;
-    mod->support = NULL;
-    mod->menuItem.execCross = NULL;
-    mod->menuItem.execCircle = NULL;
-    mod->menuItem.execSquare = NULL;
+    mod->subMenu               = NULL;
+    mod->support               = NULL;
+    mod->menuItem.execCross    = NULL;
+    mod->menuItem.execCircle   = NULL;
+    mod->menuItem.execSquare   = NULL;
     mod->menuItem.execTriangle = NULL;
-    mod->menuItem.hints = NULL;
-    mod->menuItem.icon_id = -1;
-    mod->menuItem.current = NULL;
-    mod->menuItem.submenu = NULL;
-    mod->menuItem.pagestart = NULL;
-    mod->menuItem.remindLast = 0;
-    mod->menuItem.refresh = NULL;
-    mod->menuItem.text = NULL;
-    mod->menuItem.text_id = -1;
-    mod->menuItem.userdata = NULL;
+    mod->menuItem.hints        = NULL;
+    mod->menuItem.icon_id      = -1;
+    mod->menuItem.current      = NULL;
+    mod->menuItem.submenu      = NULL;
+    mod->menuItem.pagestart    = NULL;
+    mod->menuItem.remindLast   = 0;
+    mod->menuItem.refresh      = NULL;
+    mod->menuItem.text         = NULL;
+    mod->menuItem.text_id      = -1;
+    mod->menuItem.userdata     = NULL;
 }
 
 // forward decl
@@ -314,33 +314,33 @@ static void itemExecTriangle(struct menu_item *curMenu)
 
 static void initMenuForListSupport(int mode)
 {
-    opl_io_module_t *mod = &list_support[mode];
+    opl_io_module_t *mod  = &list_support[mode];
     mod->menuItem.icon_id = mod->support->itemIconId();
-    mod->menuItem.text = NULL;
+    mod->menuItem.text    = NULL;
     mod->menuItem.text_id = mod->support->itemTextId();
 
     mod->menuItem.userdata = mod->support;
 
     mod->subMenu = NULL;
 
-    mod->menuItem.submenu = NULL;
-    mod->menuItem.current = NULL;
-    mod->menuItem.pagestart = NULL;
+    mod->menuItem.submenu    = NULL;
+    mod->menuItem.current    = NULL;
+    mod->menuItem.pagestart  = NULL;
     mod->menuItem.remindLast = 0;
 
-    mod->menuItem.refresh = &itemExecRefresh;
-    mod->menuItem.execCross = &itemExecCross;
+    mod->menuItem.refresh      = &itemExecRefresh;
+    mod->menuItem.execCross    = &itemExecCross;
     mod->menuItem.execTriangle = &itemExecTriangle;
-    mod->menuItem.execSquare = &itemExecSquare;
-    mod->menuItem.execCircle = &itemExecCircle;
+    mod->menuItem.execSquare   = &itemExecSquare;
+    mod->menuItem.execCircle   = &itemExecCircle;
 
     mod->menuItem.hints = NULL;
 
     moduleUpdateMenu(mode, 0, 0);
 
     struct gui_update_t *mc = guiOpCreate(GUI_OP_ADD_MENU);
-    mc->menu.menu = &mod->menuItem;
-    mc->menu.subMenu = &mod->subMenu;
+    mc->menu.menu           = &mod->menuItem;
+    mc->menu.subMenu        = &mod->subMenu;
     guiDeferUpdate(mc);
 }
 
@@ -351,9 +351,9 @@ static void clearMenuGameList(opl_io_module_t *mdl)
         guiLock();
 
         submenuDestroy(&mdl->subMenu);
-        mdl->menuItem.submenu = NULL;
-        mdl->menuItem.current = NULL;
-        mdl->menuItem.pagestart = NULL;
+        mdl->menuItem.submenu    = NULL;
+        mdl->menuItem.current    = NULL;
+        mdl->menuItem.pagestart  = NULL;
         mdl->menuItem.remindLast = 0;
 
         // unlock
@@ -523,7 +523,7 @@ int oplShouldAppsUpdate(void)
 {
     int result;
 
-    result = (int)shouldAppsUpdate;
+    result           = (int)shouldAppsUpdate;
     shouldAppsUpdate = 0;
 
     return result;
@@ -613,7 +613,7 @@ static void updateMenuFromGameList(opl_io_module_t *mdl)
 
     // read the new game list
     struct gui_update_t *gup = NULL;
-    int count = mdl->support->itemUpdate();
+    int count                = mdl->support->itemUpdate();
     if (count > 0) {
         int i;
 
@@ -621,13 +621,13 @@ static void updateMenuFromGameList(opl_io_module_t *mdl)
 
             gup = guiOpCreate(GUI_OP_APPEND_MENU);
 
-            gup->menu.menu = &mdl->menuItem;
+            gup->menu.menu    = &mdl->menuItem;
             gup->menu.subMenu = &mdl->subMenu;
 
-            gup->submenu.icon_id = -1;
-            gup->submenu.id = i;
-            gup->submenu.text = mdl->support->itemGetName(i);
-            gup->submenu.text_id = -1;
+            gup->submenu.icon_id  = -1;
+            gup->submenu.id       = i;
+            gup->submenu.text     = mdl->support->itemGetName(i);
+            gup->submenu.text_id  = -1;
             gup->submenu.selected = 0;
 
             if (gRememberLastPlayed && temp && strcmp(temp, mdl->support->itemGetStartup(i)) == 0) {
@@ -639,8 +639,8 @@ static void updateMenuFromGameList(opl_io_module_t *mdl)
     }
 
     if (gAutosort) {
-        gup = guiOpCreate(GUI_OP_SORT);
-        gup->menu.menu = &mdl->menuItem;
+        gup               = guiOpCreate(GUI_OP_SORT);
+        gup->menu.menu    = &mdl->menuItem;
         gup->menu.subMenu = &mdl->subMenu;
         guiDeferUpdate(gup);
     }
@@ -720,7 +720,7 @@ void setErrorMessage(int strId)
 // ----------------------------------------------------------
 
 static int lscstatus = CONFIG_ALL;
-static int lscret = 0;
+static int lscret    = 0;
 
 static int checkLoadConfigBDM(int types)
 {
@@ -731,7 +731,7 @@ static int checkLoadConfigBDM(int types)
     if (bdmFindPartition(path, "conf_opl.cfg", 0)) {
         configEnd();
         configInit(path);
-        value = configReadMulti(types);
+        value                   = configReadMulti(types);
         config_set_t *configOPL = configGetByType(CONFIG_OPL);
         configSetInt(configOPL, CONFIG_OPL_BDM_MODE, START_MODE_AUTO);
         return value;
@@ -753,7 +753,7 @@ static int checkLoadConfigHDD(int types)
         close(value);
         configEnd();
         configInit(gHDDPrefix);
-        value = configReadMulti(types);
+        value                   = configReadMulti(types);
         config_set_t *configOPL = configGetByType(CONFIG_OPL);
         configSetInt(configOPL, CONFIG_OPL_HDD_MODE, START_MODE_AUTO);
         return value;
@@ -920,8 +920,8 @@ static void _loadConfig()
 
     applyConfig(themeID, langID);
 
-    lscret = result;
-    lscstatus = 0;
+    lscret       = result;
+    lscstatus    = 0;
     showCfgPopup = 1;
 }
 
@@ -1092,7 +1092,7 @@ void applyConfig(int themeID, int langID)
     }
 
     // theme must be set after color, and lng after theme
-    changed = thmSetGuiValue(themeID, changed);
+    changed         = thmSetGuiValue(themeID, changed);
     int langChanged = lngSetGuiValue(langID);
 
     guiUpdateScreenScale();
@@ -1112,7 +1112,7 @@ void applyConfig(int themeID, int langID)
 int loadConfig(int types)
 {
     lscstatus = types;
-    lscret = 0;
+    lscret    = 0;
 
     guiHandleDeferedIO(&lscstatus, _l(_STR_LOADING_SETTINGS), IO_CUSTOM_SIMPLEACTION, &_loadConfig);
 
@@ -1123,7 +1123,7 @@ int saveConfig(int types, int showUI)
 {
     char notification[128];
     lscstatus = types;
-    lscret = 0;
+    lscret    = 0;
 
     guiHandleDeferedIO(&lscstatus, _l(_STR_SAVING_SETTINGS), IO_CUSTOM_SIMPLEACTION, &_saveConfig);
 
@@ -1224,10 +1224,10 @@ static void compatUpdate(item_list_t *support, unsigned char mode, config_set_t 
                                 if (!(mode & COMPAT_UPD_MODE_MTIME_GMT)) {
                                     clock.second = itob(stat.mtime[1]);
                                     clock.minute = itob(stat.mtime[2]);
-                                    clock.hour = itob(stat.mtime[3]);
-                                    clock.day = itob(stat.mtime[4]);
-                                    clock.month = itob(stat.mtime[5]);
-                                    clock.year = itob((stat.mtime[6] | ((unsigned short int)stat.mtime[7] << 8)) - 2000);
+                                    clock.hour   = itob(stat.mtime[3]);
+                                    clock.day    = itob(stat.mtime[4]);
+                                    clock.month  = itob(stat.mtime[5]);
+                                    clock.year   = itob((stat.mtime[6] | ((unsigned short int)stat.mtime[7] << 8)) - 2000);
                                     configConvertToGmtTime(&clock);
 
                                     mtime[0] = btoi(clock.year);      // Year
@@ -1333,7 +1333,7 @@ static void compatDeferredUpdate(void *data)
 
 int oplGetUpdateGameCompatStatus(unsigned int *done, unsigned int *total)
 {
-    *done = CompatUpdateComplete;
+    *done  = CompatUpdateComplete;
     *total = CompatUpdateTotal;
     return CompatUpdateStatus;
 }
@@ -1348,11 +1348,11 @@ void oplUpdateGameCompat(int UpdateAll)
 {
     int i, started, count;
 
-    CompatUpdateTotal = 0;
+    CompatUpdateTotal    = 0;
     CompatUpdateComplete = 0;
     CompatUpdateStopFlag = 0;
-    CompatUpdateFlags = UpdateAll ? (COMPAT_UPD_MODE_NO_MTIME | COMPAT_UPD_MODE_UPD_USR) : 0;
-    CompatUpdateStatus = OPL_COMPAT_UPDATE_STAT_WIP;
+    CompatUpdateFlags    = UpdateAll ? (COMPAT_UPD_MODE_NO_MTIME | COMPAT_UPD_MODE_UPD_USR) : 0;
+    CompatUpdateStatus   = OPL_COMPAT_UPDATE_STAT_WIP;
 
     // Schedule compatibility updates of all the list handlers
     for (i = 0, started = 0; i < MODE_COUNT; i++) {
@@ -1381,14 +1381,14 @@ static void _updateCompatSingle(void)
 
 int oplUpdateGameCompatSingle(int id, item_list_t *support, config_set_t *configSet)
 {
-    CompatUpdateStopFlag = 0;
-    CompatUpdateStatus = OPL_COMPAT_UPDATE_STAT_WIP;
-    CompatUpdateTotal = 1;
-    CompatUpdateComplete = 0;
-    CompatUpdSingleID = id;
-    CompatUpdSingleSupport = support;
+    CompatUpdateStopFlag     = 0;
+    CompatUpdateStatus       = OPL_COMPAT_UPDATE_STAT_WIP;
+    CompatUpdateTotal        = 1;
+    CompatUpdateComplete     = 0;
+    CompatUpdSingleID        = id;
+    CompatUpdSingleSupport   = support;
     CompatUpdSingleConfigSet = configSet;
-    CompatUpdSingleStatus = 1;
+    CompatUpdSingleStatus    = 1;
 
     guiHandleDeferedIO(&CompatUpdSingleStatus, _l(_STR_PLEASE_WAIT), IO_CUSTOM_SIMPLEACTION, &_updateCompatSingle);
 
@@ -1561,88 +1561,88 @@ static void setDefaults(void)
     clearIOModuleT(&list_support[APP_MODE]);
 
     gAutoLaunchGame = NULL;
-    gOPLPart[0] = '\0';
-    gHDDPrefix = "pfs0:";
-    gBaseMCDir = "mc?:OPL";
+    gOPLPart[0]     = '\0';
+    gHDDPrefix      = "pfs0:";
+    gBaseMCDir      = "mc?:OPL";
 
     bdmCacheSize = 16;
     hddCacheSize = 8;
     smbCacheSize = 12;
 
-    ps2_ip_use_dhcp = 1;
-    gETHOpMode = ETH_OP_MODE_AUTO;
+    ps2_ip_use_dhcp          = 1;
+    gETHOpMode               = ETH_OP_MODE_AUTO;
     gPCShareAddressIsNetBIOS = 1;
-    gPCShareNBAddress[0] = '\0';
-    ps2_ip[0] = 192;
-    ps2_ip[1] = 168;
-    ps2_ip[2] = 0;
-    ps2_ip[3] = 10;
-    ps2_netmask[0] = 255;
-    ps2_netmask[1] = 255;
-    ps2_netmask[2] = 255;
-    ps2_netmask[3] = 0;
-    ps2_gateway[0] = 192;
-    ps2_gateway[1] = 168;
-    ps2_gateway[2] = 0;
-    ps2_gateway[3] = 1;
-    pc_ip[0] = 192;
-    pc_ip[1] = 168;
-    pc_ip[2] = 0;
-    pc_ip[3] = 2;
-    ps2_dns[0] = 192;
-    ps2_dns[1] = 168;
-    ps2_dns[2] = 0;
-    ps2_dns[3] = 1;
-    gPCPort = 445;
-    gPCShareName[0] = '\0';
-    gPCUserName[0] = '\0';
-    gPCPassword[0] = '\0';
-    gNetworkStartup = ERROR_ETH_NOT_STARTED;
-    gHDDSpindown = 20;
-    gScrollSpeed = 1;
-    gExitPath[0] = '\0';
-    gDefaultDevice = APP_MODE;
-    gAutosort = 1;
-    gAutoRefresh = 0;
-    gEnableDebug = 0;
-    gPS2Logo = 0;
-    gHDDGameListCache = 0;
-    gEnableWrite = 0;
-    gRememberLastPlayed = 0;
-    gAutoStartLastPlayed = 9;
-    gSelectButton = KEY_CIRCLE; // Default to Japan.
-    gBDMPrefix[0] = '\0';
-    gETHPrefix[0] = '\0';
-    gEnableNotifications = 0;
-    gEnableArt = 0;
-    gWideScreen = 0;
-    gEnableSFX = 0;
-    gEnableBootSND = 0;
-    gSFXVolume = 80;
-    gBootSndVolume = 80;
+    gPCShareNBAddress[0]     = '\0';
+    ps2_ip[0]                = 192;
+    ps2_ip[1]                = 168;
+    ps2_ip[2]                = 0;
+    ps2_ip[3]                = 10;
+    ps2_netmask[0]           = 255;
+    ps2_netmask[1]           = 255;
+    ps2_netmask[2]           = 255;
+    ps2_netmask[3]           = 0;
+    ps2_gateway[0]           = 192;
+    ps2_gateway[1]           = 168;
+    ps2_gateway[2]           = 0;
+    ps2_gateway[3]           = 1;
+    pc_ip[0]                 = 192;
+    pc_ip[1]                 = 168;
+    pc_ip[2]                 = 0;
+    pc_ip[3]                 = 2;
+    ps2_dns[0]               = 192;
+    ps2_dns[1]               = 168;
+    ps2_dns[2]               = 0;
+    ps2_dns[3]               = 1;
+    gPCPort                  = 445;
+    gPCShareName[0]          = '\0';
+    gPCUserName[0]           = '\0';
+    gPCPassword[0]           = '\0';
+    gNetworkStartup          = ERROR_ETH_NOT_STARTED;
+    gHDDSpindown             = 20;
+    gScrollSpeed             = 1;
+    gExitPath[0]             = '\0';
+    gDefaultDevice           = APP_MODE;
+    gAutosort                = 1;
+    gAutoRefresh             = 0;
+    gEnableDebug             = 0;
+    gPS2Logo                 = 0;
+    gHDDGameListCache        = 0;
+    gEnableWrite             = 0;
+    gRememberLastPlayed      = 0;
+    gAutoStartLastPlayed     = 9;
+    gSelectButton            = KEY_CIRCLE; // Default to Japan.
+    gBDMPrefix[0]            = '\0';
+    gETHPrefix[0]            = '\0';
+    gEnableNotifications     = 0;
+    gEnableArt               = 0;
+    gWideScreen              = 0;
+    gEnableSFX               = 0;
+    gEnableBootSND           = 0;
+    gSFXVolume               = 80;
+    gBootSndVolume           = 80;
 
     gBDMStartMode = START_MODE_DISABLED;
     gHDDStartMode = START_MODE_DISABLED;
     gETHStartMode = START_MODE_DISABLED;
     gAPPStartMode = START_MODE_DISABLED;
 
-    gEnableILK = 0;
+    gEnableILK    = 0;
     gEnableMX4SIO = 0;
 
     frameCounter = 0;
 
-    gVMode = 0;
-    gXOff = 0;
-    gYOff = 0;
+    gVMode    = 0;
+    gXOff     = 0;
+    gYOff     = 0;
     gOverscan = 0;
 
     setDefaultColors();
 
     // Last Played Auto Start
     KeyPressedOnce = 0;
-    DisableCron = 1; // Auto Start Last Played counter disabled by default
-    CronStart = 0;
-    RemainSecs = 0;
+    DisableCron    = 1; // Auto Start Last Played counter disabled by default
+    CronStart      = 0;
+    RemainSecs     = 0;
 }
 
 static void init(void)
@@ -1686,7 +1686,7 @@ static void deferredInit(void)
     guiDeferUpdate(id);
 
     if (list_support[gDefaultDevice].support) {
-        id = guiOpCreate(GUI_OP_SELECT_MENU);
+        id            = guiOpCreate(GUI_OP_SELECT_MENU);
         id->menu.menu = &list_support[gDefaultDevice].menuItem;
         guiDeferUpdate(id);
     }

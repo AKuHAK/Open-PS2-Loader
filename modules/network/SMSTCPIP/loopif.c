@@ -49,7 +49,7 @@ static void
 loopif_input(void *arg)
 {
     struct netif *netif = (struct netif *)(((void **)arg)[0]);
-    struct pbuf *r = (struct pbuf *)(((void **)arg)[1]);
+    struct pbuf *r      = (struct pbuf *)(((void **)arg)[1]);
 
     mem_free(arg);
     netif->input(r, netif);

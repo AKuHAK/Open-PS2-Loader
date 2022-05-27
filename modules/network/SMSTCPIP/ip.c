@@ -376,7 +376,7 @@ err_t ip_output_if(struct pbuf *p, struct ip_addr *src, struct ip_addr *dest,
         IPH_CHKSUM_SET(iphdr, inet_chksum(iphdr, IP_HLEN));
     } else {
         iphdr = p->payload;
-        dest = &(iphdr->dest);
+        dest  = &(iphdr->dest);
     }
 
 #if IP_FRAG

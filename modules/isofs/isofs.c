@@ -72,12 +72,12 @@ static int IsofsInit(iop_device_t *device)
 {
     iop_sema_t SemaData;
 
-    SemaData.attr = 0;
-    SemaData.option = 0;
+    SemaData.attr    = 0;
+    SemaData.option  = 0;
     SemaData.initial = 1;
-    SemaData.max = 1;
-    MountPoint.sema = CreateSema(&SemaData);
-    MountPoint.fd = -1;
+    SemaData.max     = 1;
+    MountPoint.sema  = CreateSema(&SemaData);
+    MountPoint.fd    = -1;
 
     return 0;
 }
@@ -140,10 +140,10 @@ static int sceCdReadDvdDualInfo(int *on_dual, u32 *layer1_start)
 {
     if (MountPoint.layer_info[1].maxLBA > 0) {
         *layer1_start = MountPoint.layer_info[0].maxLBA;
-        *on_dual = 1;
+        *on_dual      = 1;
     } else {
         *layer1_start = 0;
-        *on_dual = 0;
+        *on_dual      = 0;
     }
 
     return 1;
@@ -272,9 +272,9 @@ lbl_startlocate:
                     DPRINTF("cdvdman_locatefile found file! LBA=%d size=%d\n", (int)tocEntryPointer->fileLBA, (int)tocEntryPointer->fileSize);
                     return tocEntryPointer;
                 } else if ((!r) && (tocEntryPointer->fileProperties & 2)) { // we found it but it's a directory
-                    tocLBA = tocEntryPointer->fileLBA;
+                    tocLBA    = tocEntryPointer->fileLBA;
                     tocLength = tocEntryPointer->fileSize;
-                    p = &slash[1];
+                    p         = &slash[1];
 
                     int on_dual;
                     u32 layer1_start;
@@ -329,7 +329,7 @@ static int cdvdman_findfile(cd_file_t *pcdfile, const char *name, int layer)
             lsn += pcdfile->size;
         }
 
-        pcdfile->lsn = lsn;
+        pcdfile->lsn  = lsn;
         pcdfile->size = tocEntryPointer->fileSize;
 
         strcpy(pcdfile->name, strrchr(name, '\\') + 1);
@@ -360,15 +360,15 @@ static int IsofsOpen(iop_file_t *f, const char *name, int flags, int mode)
         r = cdvdman_findfile(&cdfile, name, f->unit);
         if (r) {
             f->privdata = fh;
-            fh->f = f;
+            fh->f       = f;
 
             if (f->mode == 0)
                 f->mode = r;
 
             fh->filesize = cdfile.size;
-            fh->lsn = cdfile.lsn;
+            fh->lsn      = cdfile.lsn;
             fh->position = 0;
-            r = 0;
+            r            = 0;
 
         } else
             r = -ENOENT;
@@ -525,7 +525,7 @@ int ProbeISO9660(int fd, unsigned int sector, layer_info_t *layer_info)
 {
     int result;
 
-    int prev_fd = MountPoint.fd;
+    int prev_fd   = MountPoint.fd;
     MountPoint.fd = fd; // for cdEmuRead
 
     ProbeZISO(fd);
@@ -534,8 +534,8 @@ int ProbeISO9660(int fd, unsigned int sector, layer_info_t *layer_info)
         if ((cdvdman_buf[0x00] == 1) && (!memcmp(&cdvdman_buf[0x01], "CD001", 5))) {
             struct dirTocEntry *tocEntryPointer = (struct dirTocEntry *)&cdvdman_buf[0x9c];
 
-            layer_info->maxLBA = *(u32 *)&cdvdman_buf[0x50];
-            layer_info->rootDirtocLBA = tocEntryPointer->fileLBA;
+            layer_info->maxLBA           = *(u32 *)&cdvdman_buf[0x50];
+            layer_info->rootDirtocLBA    = tocEntryPointer->fileLBA;
             layer_info->rootDirtocLength = tocEntryPointer->length;
 
             result = 0;
@@ -563,7 +563,7 @@ static int IsofsMount(iop_file_t *f, const char *fsname, const char *devname, in
     WaitSema(sema);
 
     memset(&MountPoint, 0, sizeof(struct MountData));
-    MountPoint.fd = -1;
+    MountPoint.fd   = -1;
     MountPoint.sema = sema;
 
     if ((fd = open(devname, O_RDONLY)) >= 0) {

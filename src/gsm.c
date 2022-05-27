@@ -31,11 +31,11 @@ void InitGSMConfig(config_set_t *configSet)
     config_set_t *configGame = configGetByType(CONFIG_GAME);
 
     // Default values.
-    gGSMSource = 0;
-    gEnableGSM = 0;
-    gGSMVMode = 0;
-    gGSMXOffset = 0;
-    gGSMYOffset = 0;
+    gGSMSource   = 0;
+    gEnableGSM   = 0;
+    gGSMVMode    = 0;
+    gGSMXOffset  = 0;
+    gGSMYOffset  = 0;
     gGSMFIELDFix = 0;
 
     if (configGetInt(configSet, CONFIG_ITEM_GSMSOURCE, &gGSMSource)) {
@@ -110,7 +110,7 @@ void PrepareGSM(char *cmdline)
         gGSMVMode = 2;                                    // Change to PAL instead.
 #endif
 
-    k576p_fix = 0;
+    k576p_fix              = 0;
     kGsDxDyOffsetSupported = 0;
     if ((fd = open("rom0:ROMVER", O_RDONLY)) >= 0) {
         // Read ROM version

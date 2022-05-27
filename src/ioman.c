@@ -74,7 +74,7 @@ int ioRegisterHandler(int type, io_request_handler_t handler)
             return IO_ERR_DUPLICIT_HANDLER;
     }
 
-    gRequestHandlers[gHandlerCount].type = type;
+    gRequestHandlers[gHandlerCount].type    = type;
     gRequestHandlers[gHandlerCount].handler = handler;
     gHandlerCount++;
 
@@ -148,7 +148,7 @@ static void ioWorkerThread(void *arg)
     // delete the pending requests
     while (gReqList) {
         struct io_request_t *req = gReqList;
-        gReqList = gReqList->next;
+        gReqList                 = gReqList->next;
         free(req);
     }
 
@@ -171,29 +171,29 @@ static void ioSimpleActionHandler(void *data)
 
 void ioInit(void)
 {
-    gIOTerminate = 0;
+    gIOTerminate  = 0;
     gHandlerCount = 0;
-    gReqList = NULL;
-    gReqEnd = NULL;
+    gReqList      = NULL;
+    gReqEnd       = NULL;
 
     gIOThreadId = 0;
 
     gQueueSema.init_count = 1;
-    gQueueSema.max_count = 1;
-    gQueueSema.option = 0;
+    gQueueSema.max_count  = 1;
+    gQueueSema.option     = 0;
 
-    gProcSemaId = CreateSema(&gQueueSema);
-    gEndSemaId = CreateSema(&gQueueSema);
+    gProcSemaId     = CreateSema(&gQueueSema);
+    gEndSemaId      = CreateSema(&gQueueSema);
     gIOPrintfSemaId = CreateSema(&gQueueSema);
 
     // default custom simple action handler
     ioRegisterHandler(IO_CUSTOM_SIMPLEACTION, &ioSimpleActionHandler);
 
-    gIOThread.attr = 0;
-    gIOThread.stack_size = THREAD_STACK_SIZE;
-    gIOThread.gp_reg = &_gp;
-    gIOThread.func = &ioWorkerThread;
-    gIOThread.stack = thread_stack;
+    gIOThread.attr             = 0;
+    gIOThread.stack_size       = THREAD_STACK_SIZE;
+    gIOThread.gp_reg           = &_gp;
+    gIOThread.func             = &ioWorkerThread;
+    gIOThread.stack            = thread_stack;
     gIOThread.initial_priority = 30;
 
     isIORunning = 1;
@@ -218,12 +218,12 @@ int ioPutRequest(int type, void *data)
 
     if (!req) {
         gReqList = (struct io_request_t *)malloc(sizeof(struct io_request_t));
-        req = gReqList;
-        gReqEnd = gReqList;
+        req      = gReqList;
+        gReqEnd  = gReqList;
     } else {
         req->next = (struct io_request_t *)malloc(sizeof(struct io_request_t));
-        req = req->next;
-        gReqEnd = req;
+        req       = req->next;
+        gReqEnd   = req;
     }
 
     req->next = NULL;
@@ -243,8 +243,8 @@ int ioRemoveRequests(int type)
     WaitSema(gProcSemaId);
     WaitSema(gEndSemaId);
 
-    int count = 0;
-    struct io_request_t *req = gReqList;
+    int count                 = 0;
+    struct io_request_t *req  = gReqList;
     struct io_request_t *last = NULL;
 
     while (req) {
@@ -266,7 +266,7 @@ int ioRemoveRequests(int type)
             req = next;
         } else {
             last = req;
-            req = req->next;
+            req  = req->next;
         }
     }
 

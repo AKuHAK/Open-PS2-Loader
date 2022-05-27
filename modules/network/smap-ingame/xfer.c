@@ -57,7 +57,7 @@ static inline int CopyFromFIFOWithDMA(volatile u8 *smap_regbase, void *buffer, i
         SPD_REG16(SPD_R_DMA_CTRL) = 7; // SPEED revision 17 (ES2) and above only.
 
         SMAP_REG16(SMAP_R_RXFIFO_SIZE) = result;
-        SMAP_REG8(SMAP_R_RXFIFO_CTRL) = SMAP_RXFIFO_DMAEN;
+        SMAP_REG8(SMAP_R_RXFIFO_CTRL)  = SMAP_RXFIFO_DMAEN;
 
         // Transfer in 64-byte (16x4) blocks
         dmac_request(IOP_DMAC_DEV9, buffer, 0x10, result, DMAC_TO_MEM);
@@ -150,12 +150,12 @@ int HandleRxIntr(struct SmapDriverData *SmapDrivPrivData)
     /*  Non-Sony: Workaround for the hardware BUG whereby the Rx FIFO of the MAL becomes unresponsive or loses frames when under load.
         Check that there are frames to process, before accessing the BD registers. */
     while (SMAP_REG8(SMAP_R_RXFIFO_FRAME_CNT) > 0) {
-        PktBdPtr = &rx_bd[SmapDrivPrivData->RxBDIndex % SMAP_BD_MAX_ENTRY];
+        PktBdPtr  = &rx_bd[SmapDrivPrivData->RxBDIndex % SMAP_BD_MAX_ENTRY];
         ctrl_stat = PktBdPtr->ctrl_stat;
         if (!(ctrl_stat & SMAP_BD_RX_EMPTY)) {
-            length = PktBdPtr->length;
+            length        = PktBdPtr->length;
             LengthRounded = (length + 3) & ~3;
-            pointer = PktBdPtr->pointer;
+            pointer       = PktBdPtr->pointer;
 
             if (ctrl_stat & (SMAP_BD_RX_INRANGE | SMAP_BD_RX_OUTRANGE | SMAP_BD_RX_FRMTOOLONG | SMAP_BD_RX_BADFCS | SMAP_BD_RX_ALIGNERR | SMAP_BD_RX_SHORTEVNT | SMAP_BD_RX_RUNTFRM | SMAP_BD_RX_OVERRUN)) {
             } else {
@@ -170,7 +170,7 @@ int HandleRxIntr(struct SmapDriverData *SmapDrivPrivData)
             }
 
             SMAP_REG8(SMAP_R_RXFIFO_FRAME_DEC) = 0;
-            PktBdPtr->ctrl_stat = SMAP_BD_RX_EMPTY;
+            PktBdPtr->ctrl_stat                = SMAP_BD_RX_EMPTY;
             SmapDrivPrivData->RxBDIndex++;
         } else
             break;
@@ -190,15 +190,15 @@ int SMAPSendPacket(const void *data, unsigned int length)
     unsigned int SizeRounded;
 
     if (SmapDriverData.SmapIsInitialized) {
-        SizeRounded = (length + 3) & ~3;
-        smap_regbase = SmapDriverData.smap_regbase;
+        SizeRounded   = (length + 3) & ~3;
+        smap_regbase  = SmapDriverData.smap_regbase;
         emac3_regbase = SmapDriverData.emac3_regbase;
 
         while (SMAP_EMAC3_GET(SMAP_R_EMAC3_TxMODE0) & SMAP_E3_TX_GNP_0) {
         };
 
         BD_data_ptr = SMAP_REG16(SMAP_R_TXFIFO_WR_PTR);
-        BD_ptr = &tx_bd[SmapDriverData.TxBDIndex % SMAP_BD_MAX_ENTRY];
+        BD_ptr      = &tx_bd[SmapDriverData.TxBDIndex % SMAP_BD_MAX_ENTRY];
 
         if ((result = CopyToFIFOWithDMA(SmapDriverData.smap_regbase, (void *)data, length)) > 0) {
             SizeRounded -= result;
@@ -241,10 +241,10 @@ int SMAPSendPacket(const void *data, unsigned int length)
             "r"(SizeRounded)
             : "at", "v0", "v1", "t0", "t1", "t2", "t3");
 
-        BD_ptr->length = length;
-        BD_ptr->pointer = BD_data_ptr;
+        BD_ptr->length                     = length;
+        BD_ptr->pointer                    = BD_data_ptr;
         SMAP_REG8(SMAP_R_TXFIFO_FRAME_INC) = 0;
-        BD_ptr->ctrl_stat = SMAP_BD_TX_READY | SMAP_BD_TX_GENFCS | SMAP_BD_TX_GENPAD;
+        BD_ptr->ctrl_stat                  = SMAP_BD_TX_READY | SMAP_BD_TX_GENFCS | SMAP_BD_TX_GENPAD;
         SmapDriverData.TxBDIndex++;
 
         SMAP_EMAC3_SET(SMAP_R_EMAC3_TxMODE0, SMAP_E3_TX_GNP_0);

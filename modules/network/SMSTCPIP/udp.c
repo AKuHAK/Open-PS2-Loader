@@ -91,7 +91,7 @@ u8_t udp_lookup(struct ip_hdr *iphdr, struct netif *inp)
 
     udphdr = (struct udp_hdr *)(u8_t *)iphdr + IPH_HL(iphdr) * 4;
 
-    src = ntohs(udphdr->src);
+    src  = ntohs(udphdr->src);
     dest = ntohs(udphdr->dest);
 
     pcb = pcb_cache;
@@ -157,7 +157,7 @@ void udp_input(struct pbuf *p, struct netif *inp)
 
 #ifdef SO_REUSE
     struct udp_pcb *pcb_temp;
-    int reuse = 0;
+    int reuse        = 0;
     int reuse_port_1 = 0;
     int reuse_port_2 = 0;
 #endif /* SO_REUSE */
@@ -180,7 +180,7 @@ void udp_input(struct pbuf *p, struct netif *inp)
 
     LWIP_DEBUGF(UDP_DEBUG, ("udp_input: received datagram of length %u\n", p->tot_len));
 
-    src = ntohs(udphdr->src);
+    src  = ntohs(udphdr->src);
     dest = ntohs(udphdr->dest);
 
     udp_debug_print(udphdr);
@@ -444,9 +444,9 @@ err_t udp_send(struct udp_pcb *pcb, struct pbuf *p)
         LWIP_DEBUGF(UDP_DEBUG, ("udp_send: added header in given pbuf %p\n", (void *)p));
     }
     /* { q now represents the packet to be sent */
-    udphdr = q->payload;
-    udphdr->src = htons(pcb->local_port);
-    udphdr->dest = htons(pcb->remote_port);
+    udphdr         = q->payload;
+    udphdr->src    = htons(pcb->local_port);
+    udphdr->dest   = htons(pcb->remote_port);
     udphdr->chksum = 0x0000;
 
     if ((netif = ip_route(&(pcb->remote_ip))) == NULL) {
@@ -631,7 +631,7 @@ err_t udp_bind(struct udp_pcb *pcb, struct ip_addr *ipaddr, u16_t port)
     if (rebind == 0) {
         /* place the PCB on the active list if not already there */
         pcb->next = udp_pcbs;
-        udp_pcbs = pcb;
+        udp_pcbs  = pcb;
     }
     LWIP_DEBUGF(UDP_DEBUG | DBG_TRACE | DBG_STATE, ("udp_bind: bound to %u.%u.%u.%u, port %u\n",
                                                     (unsigned int)(ntohl(pcb->local_ip.addr) >> 24 & 0xff),
@@ -700,7 +700,7 @@ err_t udp_connect(struct udp_pcb *pcb, struct ip_addr *ipaddr, u16_t port)
     }
     /* PCB not yet on the list, add PCB now */
     pcb->next = udp_pcbs;
-    udp_pcbs = pcb;
+    udp_pcbs  = pcb;
     return ERR_OK;
 }
 
@@ -715,7 +715,7 @@ void udp_recv(struct udp_pcb *pcb,
               void *recv_arg)
 {
     /* remember recv() callback and user data */
-    pcb->recv = recv;
+    pcb->recv     = recv;
     pcb->recv_arg = recv_arg;
 }
 /**

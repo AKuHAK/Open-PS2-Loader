@@ -162,20 +162,20 @@ int AddHistoryRecord(const char *name)
         }
     }
 
-    LeastUsedRecord = 0;
-    LeastUsedRecordTimestamp = INT_MAX;
+    LeastUsedRecord            = 0;
+    LeastUsedRecordTimestamp   = INT_MAX;
     LeastUsedRecordLaunchCount = INT_MAX;
-    IsNewRecord = 1;
+    IsNewRecord                = 1;
 
     for (i = 0; i < MAX_HISTORY_ENTRIES; i++) {
         if (HistoryEntries[i].LaunchCount < LeastUsedRecordLaunchCount) {
-            LeastUsedRecord = i;
+            LeastUsedRecord            = i;
             LeastUsedRecordLaunchCount = HistoryEntries[i].LaunchCount;
         }
         if (LeastUsedRecordLaunchCount == HistoryEntries[i].LaunchCount) {
             if (HistoryEntries[i].DateStamp < LeastUsedRecordTimestamp) {
                 LeastUsedRecordTimestamp = HistoryEntries[i].DateStamp;
-                LeastUsedRecord = i;
+                LeastUsedRecord          = i;
             }
         }
 
@@ -221,7 +221,7 @@ int AddHistoryRecord(const char *name)
     if (IsNewRecord) {
         // Count and consolidate a list of blank slots.
         NumBlankSlots = 0;
-        NumSlotsUsed = 0;
+        NumSlotsUsed  = 0;
         for (i = 0; i < MAX_HISTORY_ENTRIES; i++) {
             if (HistoryEntries[i].name[0] == '\0') {
                 BlankSlotList[NumBlankSlots] = i;
@@ -250,9 +250,9 @@ int AddHistoryRecord(const char *name)
             // Initialize the new entry.
             strncpy(NewEntry->name, name, sizeof(NewEntry->name) - 1);
             NewEntry->LaunchCount = 1;
-            NewEntry->bitmask = 1;
+            NewEntry->bitmask     = 1;
             NewEntry->ShiftAmount = 0;
-            NewEntry->DateStamp = GetTimestamp();
+            NewEntry->DateStamp   = GetTimestamp();
         }
     }
 

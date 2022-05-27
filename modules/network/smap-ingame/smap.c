@@ -54,8 +54,8 @@
 struct SmapDriverData SmapDriverData;
 
 static unsigned int EnableAutoNegotiation = 1;
-static unsigned int EnablePinStrapConfig = 0;
-static unsigned int SmapConfiguration = 0x5E0;
+static unsigned int EnablePinStrapConfig  = 0;
+static unsigned int SmapConfiguration     = 0x5E0;
 
 static void _smap_write_phy(volatile u8 *emac3_regbase, unsigned int address, u16 value)
 {
@@ -85,7 +85,7 @@ static u16 _smap_read_phy(volatile u8 *emac3_regbase, unsigned int address)
 
     PHYRegisterValue = (address & SMAP_E3_PHY_REG_ADDR_MSK) | SMAP_E3_PHY_READ | ((SMAP_DsPHYTER_ADDRESS & SMAP_E3_PHY_ADDR_MSK) << SMAP_E3_PHY_ADDR_BITSFT);
 
-    i = 0;
+    i      = 0;
     result = 0;
     SMAP_EMAC3_SET32(SMAP_R_EMAC3_STA_CTRL, PHYRegisterValue);
 
@@ -142,7 +142,7 @@ static int InitPHY(struct SmapDriverData *SmapDrivPrivData)
         // DEBUG_PRINTF("smap: no auto mode (conf=0x%x)\n", SmapConfiguration);
 
         LinkSpeed100M = 0 < (SmapConfiguration & 0x180); /* Toggles between SMAP_PHY_BMCR_10M and SMAP_PHY_BMCR_100M. */
-        value = LinkSpeed100M << 13;
+        value         = LinkSpeed100M << 13;
         if (SmapConfiguration & 0x140)
             value |= SMAP_PHY_BMCR_DUPM;
         _smap_write_phy(SmapDrivPrivData->emac3_regbase, SMAP_DsPHYTER_BMCR, value);
@@ -272,7 +272,7 @@ static int InitPHY(struct SmapDriverData *SmapDrivPrivData)
             _smap_read_phy(SmapDrivPrivData->emac3_regbase, SMAP_DsPHYTER_FCSCR);
             _smap_read_phy(SmapDrivPrivData->emac3_regbase, SMAP_DsPHYTER_RECR);
             DelayThread(500000);
-            value = _smap_read_phy(SmapDrivPrivData->emac3_regbase, SMAP_DsPHYTER_FCSCR);
+            value  = _smap_read_phy(SmapDrivPrivData->emac3_regbase, SMAP_DsPHYTER_FCSCR);
             value2 = _smap_read_phy(SmapDrivPrivData->emac3_regbase, SMAP_DsPHYTER_RECR);
             if ((value2 != 0) || (value >= 0x11)) {
                 // DEBUG_PRINTF("smap: FCSCR=%d RECR=%d\n", value, value2);
@@ -305,14 +305,14 @@ static int InitPHY(struct SmapDriverData *SmapDrivPrivData)
 
     FlowControlEnabled = 0;
     if (RegDump[SMAP_DsPHYTER_BMCR] & SMAP_PHY_BMCR_ANEN) {
-        value = RegDump[SMAP_DsPHYTER_ANAR] & RegDump[SMAP_DsPHYTER_ANLPAR];
+        value         = RegDump[SMAP_DsPHYTER_ANAR] & RegDump[SMAP_DsPHYTER_ANLPAR];
         LinkSpeed100M = 0 < (value & 0x180);
-        LinkFDX = 0 < (value & 0x140);
+        LinkFDX       = 0 < (value & 0x140);
         if (LinkFDX)
             FlowControlEnabled = 0 < (value & 0x400);
     } else {
-        LinkSpeed100M = RegDump[SMAP_DsPHYTER_BMCR] >> 13 & 1;
-        LinkFDX = RegDump[SMAP_DsPHYTER_BMCR] >> 8 & 1;
+        LinkSpeed100M      = RegDump[SMAP_DsPHYTER_BMCR] >> 13 & 1;
+        LinkFDX            = RegDump[SMAP_DsPHYTER_BMCR] >> 8 & 1;
         FlowControlEnabled = SmapConfiguration >> 10 & 1;
     }
 
@@ -328,7 +328,7 @@ static int InitPHY(struct SmapDriverData *SmapDrivPrivData)
     DEBUG_PRINTF("smap: %s %s Duplex Mode %s Flow Control\n", LinkSpeed100M ? "100BaseTX" : "10BaseT", LinkFDX ? "Full" : "Half", FlowControlEnabled ? "with" : "without");
 
     emac3_regbase = SmapDrivPrivData->emac3_regbase;
-    emac3_value = SMAP_EMAC3_GET32(SMAP_R_EMAC3_MODE1) & 0x67FFFFFF;
+    emac3_value   = SMAP_EMAC3_GET32(SMAP_R_EMAC3_MODE1) & 0x67FFFFFF;
     if (LinkFDX)
         emac3_value |= SMAP_E3_FDX_ENABLE;
     if (FlowControlEnabled)
@@ -368,7 +368,7 @@ static int Dev9IntrCb(int flag)
 #endif
 
     emac3_regbase = SmapDriverData.emac3_regbase;
-    smap_regbase = SmapDriverData.smap_regbase;
+    smap_regbase  = SmapDriverData.smap_regbase;
     while ((IntrReg = SPD_REG16(SPD_R_INTR_STAT) & DEV9_SMAP_INTR_MASK) != 0) {
         if (IntrReg & SMAP_INTR_EMAC3) {
             SMAP_REG16(SMAP_R_INTR_CLR) = SMAP_INTR_EMAC3;
@@ -393,13 +393,13 @@ static void Dev9PreDmaCbHandler(int bcr, int dir)
     unsigned short int SliceCount;
 
     smap_regbase = SmapDriverData.smap_regbase;
-    SliceCount = bcr >> 16;
+    SliceCount   = bcr >> 16;
     if (dir != DMAC_TO_MEM) {
         SMAP_REG16(SMAP_R_TXFIFO_SIZE) = SliceCount;
-        SMAP_REG8(SMAP_R_TXFIFO_CTRL) = SMAP_TXFIFO_DMAEN;
+        SMAP_REG8(SMAP_R_TXFIFO_CTRL)  = SMAP_TXFIFO_DMAEN;
     } else {
         SMAP_REG16(SMAP_R_RXFIFO_SIZE) = SliceCount;
-        SMAP_REG8(SMAP_R_RXFIFO_CTRL) = SMAP_RXFIFO_DMAEN;
+        SMAP_REG8(SMAP_R_RXFIFO_CTRL)  = SMAP_RXFIFO_DMAEN;
     }
 }
 
@@ -472,7 +472,7 @@ void SMAPStop(void)
 
         dev9IntrDisable(DEV9_SMAP_INTR_MASK2);
         SMAP_EMAC3_SET32(SMAP_R_EMAC3_MODE0, 0);
-        SmapDriverData.NetDevStopFlag = 0;
+        SmapDriverData.NetDevStopFlag    = 0;
         SmapDriverData.SmapIsInitialized = 0;
     }
 
@@ -487,7 +487,7 @@ static int ParseSmapConfiguration(const char *cmd, unsigned int *configuration)
     unsigned int result, base, character, value;
 
     DigitStart = CmdStart = cmd;
-    base = 10;
+    base                  = 10;
 
     if (CmdStart[0] == '0') {
         if (CmdStart[1] != '\0') {
@@ -503,7 +503,7 @@ static int ParseSmapConfiguration(const char *cmd, unsigned int *configuration)
         goto fail_end;
     }
 
-    result = 0;
+    result    = 0;
     character = DigitStart[0];
     do {
         if (character - '0' < 10) {
@@ -561,7 +561,7 @@ int smap_init(int argc, char *argv[])
         return -1;
 */
 
-    SmapDriverData.smap_regbase = smap_regbase;
+    SmapDriverData.smap_regbase  = smap_regbase;
     SmapDriverData.emac3_regbase = emac3_regbase;
     if ((SPD_REG16(SPD_R_REV_3) & SPD_CAPS_SMAP) == 0)
         return -1;
@@ -595,16 +595,16 @@ int smap_init(int argc, char *argv[])
     SMAP_REG8(SMAP_R_BD_MODE) = 0;
     for (i = 0; i < SMAP_BD_MAX_ENTRY; i++) {
         tx_bd[i].ctrl_stat = 0;
-        tx_bd[i].reserved = 0;
-        tx_bd[i].length = 0;
-        tx_bd[i].pointer = 0;
+        tx_bd[i].reserved  = 0;
+        tx_bd[i].length    = 0;
+        tx_bd[i].pointer   = 0;
     }
 
     for (i = 0; i < SMAP_BD_MAX_ENTRY; i++) {
         rx_bd[i].ctrl_stat = SMAP_BD_RX_EMPTY;
-        rx_bd[i].reserved = 0;
-        rx_bd[i].length = 0;
-        rx_bd[i].pointer = 0;
+        rx_bd[i].reserved  = 0;
+        rx_bd[i].length    = 0;
+        rx_bd[i].pointer   = 0;
     }
 
     SMAP_REG16(SMAP_R_INTR_CLR) = DEV9_SMAP_ALL_INTR_MASK;
@@ -665,12 +665,12 @@ int SMAPGetMACAddress(unsigned char *buffer)
 
     mac_address_hi = SMAP_EMAC3_GET32(SMAP_R_EMAC3_ADDR_HI);
     mac_address_lo = SMAP_EMAC3_GET32(SMAP_R_EMAC3_ADDR_LO);
-    buffer[0] = mac_address_hi >> 8;
-    buffer[1] = mac_address_hi;
-    buffer[2] = mac_address_lo >> 24;
-    buffer[3] = mac_address_lo >> 16;
-    buffer[4] = mac_address_lo >> 8;
-    buffer[5] = mac_address_lo;
+    buffer[0]      = mac_address_hi >> 8;
+    buffer[1]      = mac_address_hi;
+    buffer[2]      = mac_address_lo >> 24;
+    buffer[3]      = mac_address_lo >> 16;
+    buffer[4]      = mac_address_lo >> 8;
+    buffer[5]      = mac_address_lo;
 
     return 0;
 }

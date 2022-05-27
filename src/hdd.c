@@ -101,7 +101,7 @@ int hddReadSectors(u32 lba, u32 nsectors, void *buf)
 {
     hddAtaTransfer_t *args = (hddAtaTransfer_t *)IOBuffer;
 
-    args->lba = lba;
+    args->lba  = lba;
     args->size = nsectors;
 
     if (fileXioDevctl("hdd0:", HDIOC_READSECTOR, args, sizeof(hddAtaTransfer_t), buf, nsectors * 512) != 0)
@@ -120,7 +120,7 @@ static int hddWriteSectors(u32 lba, u32 nsectors, const void *buf)
     if (nsectors > 2) // Sanity check
         return -ENOMEM;
 
-    args->lba = lba;
+    args->lba  = lba;
     args->size = nsectors;
     memcpy(args->data, buf, nsectors * 512);
 
@@ -155,14 +155,14 @@ static int hddGetHDLGameInfo(struct GameDataEntry *game, hdl_game_info_t *ginfo)
         ginfo->name[HDL_GAME_NAME_MAX] = '\0';
         strncpy(ginfo->startup, hdl_header->startup, sizeof(ginfo->startup) - 1);
         ginfo->startup[sizeof(ginfo->startup) - 1] = '\0';
-        ginfo->hdl_compat_flags = hdl_header->hdl_compat_flags;
-        ginfo->ops2l_compat_flags = hdl_header->ops2l_compat_flags;
-        ginfo->dma_type = hdl_header->dma_type;
-        ginfo->dma_mode = hdl_header->dma_mode;
-        ginfo->layer_break = hdl_header->layer1_start;
-        ginfo->disctype = (u8)hdl_header->discType;
-        ginfo->start_sector = game->lba;
-        ginfo->total_size_in_kb = game->size * 2; // size * 2048 / 1024 = 2x
+        ginfo->hdl_compat_flags                    = hdl_header->hdl_compat_flags;
+        ginfo->ops2l_compat_flags                  = hdl_header->ops2l_compat_flags;
+        ginfo->dma_type                            = hdl_header->dma_type;
+        ginfo->dma_mode                            = hdl_header->dma_mode;
+        ginfo->layer_break                         = hdl_header->layer1_start;
+        ginfo->disctype                            = (u8)hdl_header->discType;
+        ginfo->start_sector                        = game->lba;
+        ginfo->total_size_in_kb                    = game->size * 2; // size * 2048 / 1024 = 2x
     } else
         ret = -1;
 
@@ -195,7 +195,7 @@ int hddGetHDLGamelist(hdl_games_list_t *game_list)
     ret = 0;
     if ((fd = fileXioDopen("hdd0:")) >= 0) {
         head = current = NULL;
-        count = 0;
+        count          = 0;
         while (fileXioDread(fd, &dirent) > 0) {
             if (dirent.stat.mode == HDL_FS_MAGIC) {
                 if ((pGameEntry = GetGameListRecord(head, dirent.name)) == NULL) {
@@ -213,8 +213,8 @@ int hddGetHDLGamelist(hdl_games_list_t *game_list)
                     count++;
                     current->next = NULL;
                     current->size = 0;
-                    current->lba = 0;
-                    pGameEntry = current;
+                    current->lba  = 0;
+                    pGameEntry    = current;
                 }
 
                 if (!(dirent.stat.attr & APA_FLAG_SUB)) {
@@ -282,8 +282,8 @@ int hddSetHDLGameInfo(hdl_game_info_t *ginfo)
     hdl_header->gamename[sizeof(hdl_header->gamename) - 1] = '\0';
     // hdl_header->hdl_compat_flags = ginfo->hdl_compat_flags;
     hdl_header->ops2l_compat_flags = ginfo->ops2l_compat_flags;
-    hdl_header->dma_type = ginfo->dma_type;
-    hdl_header->dma_mode = ginfo->dma_mode;
+    hdl_header->dma_type           = ginfo->dma_type;
+    hdl_header->dma_mode           = ginfo->dma_mode;
 
     if (hddWriteSectors(ginfo->start_sector, 2, IOBuffer) != 0)
         return -EIO;
@@ -312,11 +312,11 @@ int hddGetPartitionInfo(const char *name, apa_sub_t *parts)
     int result, i;
 
     if ((result = fileXioGetStat(name, &stat)) >= 0) {
-        lba = stat.private_5;
+        lba    = stat.private_5;
         header = (apa_header_t *)IOBuffer;
 
         if (hddReadSectors(lba, sizeof(apa_header_t) / 512, header) == 0) {
-            parts[0].start = header->start;
+            parts[0].start  = header->start;
             parts[0].length = header->length;
 
             for (i = 0; i < header->nsub; i++)
@@ -339,7 +339,7 @@ int hddGetFileBlockInfo(const char *name, const apa_sub_t *subs, pfs_blockinfo_t
     int result;
 
     if ((result = fileXioGetStat(name, &stat)) >= 0) {
-        lba = subs[stat.private_4].start + stat.private_5;
+        lba   = subs[stat.private_4].start + stat.private_5;
         inode = (pfs_inode_t *)IOBuffer;
 
         if (hddReadSectors(lba, sizeof(pfs_inode_t) / 512, inode) == 0) {

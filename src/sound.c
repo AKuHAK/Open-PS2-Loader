@@ -81,8 +81,8 @@ static int sfxRead(const char *full_path, struct sfxEffect *sfx)
         return -EIO;
     }
 
-    sfx->buffer = buffer;
-    sfx->size = size;
+    sfx->buffer  = buffer;
+    sfx->size    = size;
     sfx->builtin = 0;
 
     return 0;
@@ -98,23 +98,23 @@ static int sfxCalculateSoundDuration(int nSamples)
 
 static void sfxInitDefaults(void)
 {
-    sfx_files[SFX_BOOT].buffer = boot_adp;
-    sfx_files[SFX_BOOT].size = size_boot_adp;
-    sfx_files[SFX_BOOT].builtin = 1;
-    sfx_files[SFX_CANCEL].buffer = cancel_adp;
-    sfx_files[SFX_CANCEL].size = size_cancel_adp;
-    sfx_files[SFX_CANCEL].builtin = 1;
-    sfx_files[SFX_CONFIRM].buffer = confirm_adp;
-    sfx_files[SFX_CONFIRM].size = size_confirm_adp;
-    sfx_files[SFX_CONFIRM].builtin = 1;
-    sfx_files[SFX_CURSOR].buffer = cursor_adp;
-    sfx_files[SFX_CURSOR].size = size_cursor_adp;
-    sfx_files[SFX_CURSOR].builtin = 1;
-    sfx_files[SFX_MESSAGE].buffer = message_adp;
-    sfx_files[SFX_MESSAGE].size = size_message_adp;
-    sfx_files[SFX_MESSAGE].builtin = 1;
-    sfx_files[SFX_TRANSITION].buffer = transition_adp;
-    sfx_files[SFX_TRANSITION].size = size_transition_adp;
+    sfx_files[SFX_BOOT].buffer        = boot_adp;
+    sfx_files[SFX_BOOT].size          = size_boot_adp;
+    sfx_files[SFX_BOOT].builtin       = 1;
+    sfx_files[SFX_CANCEL].buffer      = cancel_adp;
+    sfx_files[SFX_CANCEL].size        = size_cancel_adp;
+    sfx_files[SFX_CANCEL].builtin     = 1;
+    sfx_files[SFX_CONFIRM].buffer     = confirm_adp;
+    sfx_files[SFX_CONFIRM].size       = size_confirm_adp;
+    sfx_files[SFX_CONFIRM].builtin    = 1;
+    sfx_files[SFX_CURSOR].buffer      = cursor_adp;
+    sfx_files[SFX_CURSOR].size        = size_cursor_adp;
+    sfx_files[SFX_CURSOR].builtin     = 1;
+    sfx_files[SFX_MESSAGE].buffer     = message_adp;
+    sfx_files[SFX_MESSAGE].size       = size_message_adp;
+    sfx_files[SFX_MESSAGE].builtin    = 1;
+    sfx_files[SFX_TRANSITION].buffer  = transition_adp;
+    sfx_files[SFX_TRANSITION].size    = size_transition_adp;
     sfx_files[SFX_TRANSITION].builtin = 1;
 }
 
@@ -161,7 +161,7 @@ int sfxInit(int bootSnd)
     char full_path[256];
     int ret, loaded;
     int thmSfxEnabled = 0;
-    int i = 1;
+    int i             = 1;
 
     if (!sfx_initialized) {
         if (audsrv_init() != 0) {
@@ -193,7 +193,7 @@ int sfxInit(int bootSnd)
     }
 
     loaded = 0;
-    i = bootSnd ? 0 : 1;
+    i      = bootSnd ? 0 : 1;
     for (; i < SFX_COUNT; i++) {
         if (thmSfxEnabled) {
             snprintf(full_path, sizeof(full_path), "%s/%s", sound_path, sfx_files[i].name);

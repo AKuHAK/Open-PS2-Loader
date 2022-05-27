@@ -47,7 +47,7 @@ static powerbuttondata_t Power_Button;
 
 /* IGR Thread ID and interrupt handler */
 static int IGR_Thread_ID = -1;
-static int IGR_Intc_ID = -1;
+static int IGR_Intc_ID   = -1;
 
 /* IGR thread stack & stack size */
 #define IGR_STACK_SIZE (4 * 1024)
@@ -269,8 +269,8 @@ static int IGR_Intc_Handler(int cause)
 
     if (Pad_Data.pad_buf != NULL) {
         // Copy values via the uncached segment, to bypass the cache.
-        pad_pos_state = ((u8 *)UNCACHED_SEG(Pad_Data.pad_buf))[Pad_Data.pos_state];
-        pad_pos_frame = ((u8 *)UNCACHED_SEG(Pad_Data.pad_buf))[Pad_Data.pos_frame];
+        pad_pos_state  = ((u8 *)UNCACHED_SEG(Pad_Data.pad_buf))[Pad_Data.pos_state];
+        pad_pos_frame  = ((u8 *)UNCACHED_SEG(Pad_Data.pad_buf))[Pad_Data.pos_frame];
         pad_pos_combo1 = ((u8 *)UNCACHED_SEG(Pad_Data.pad_buf))[Pad_Data.pos_combo1];
         pad_pos_combo2 = ((u8 *)UNCACHED_SEG(Pad_Data.pad_buf))[Pad_Data.pos_combo2];
 
@@ -281,7 +281,7 @@ static int IGR_Intc_Handler(int cause)
             // If pad frame change save it, otherwise tell to syshook to re-install padOpen hook
             if (Pad_Data.vb_count++ >= 10) {
                 if (pad_pos_frame != Pad_Data.prev_frame) {
-                    padOpen_hooked = 1;
+                    padOpen_hooked      = 1;
                     Pad_Data.prev_frame = pad_pos_frame;
                 } else {
                     padOpen_hooked = 0;
@@ -342,17 +342,17 @@ static int IGR_Intc_Handler(int cause)
         asm volatile("sync.l\n");
 
         // Stop all ongoing transfers (except for SIF0, SIF1 & SIF2 - DMA CH 5, 6 & 7).
-        u32 dmaEnableR = *R_EE_D_ENABLER;
+        u32 dmaEnableR  = *R_EE_D_ENABLER;
         *R_EE_D_ENABLEW = dmaEnableR | 0x10000;
         *R_EE_D_CTRL;
         *R_EE_D_STAT;
-        *R_EE_D0_CHCR = 0;
-        *R_EE_D1_CHCR = 0;
-        *R_EE_D2_CHCR = 0;
-        *R_EE_D3_CHCR = 0;
-        *R_EE_D4_CHCR = 0;
-        *R_EE_D8_CHCR = 0;
-        *R_EE_D9_CHCR = 0;
+        *R_EE_D0_CHCR   = 0;
+        *R_EE_D1_CHCR   = 0;
+        *R_EE_D2_CHCR   = 0;
+        *R_EE_D3_CHCR   = 0;
+        *R_EE_D4_CHCR   = 0;
+        *R_EE_D8_CHCR   = 0;
+        *R_EE_D9_CHCR   = 0;
         *R_EE_D_ENABLEW = dmaEnableR;
 
         // Wait for preceding loads & stores to complete.
@@ -398,19 +398,19 @@ static void Set_libpad_Params(void *addr)
         if (Pad_Data.libversion >= 0x0160) {
             Pad_Data.pos_combo1 = 3;
             Pad_Data.pos_combo2 = 2;
-            Pad_Data.pos_state = 112;
-            Pad_Data.pos_frame = 88;
+            Pad_Data.pos_state  = 112;
+            Pad_Data.pos_frame  = 88;
         } else {
             Pad_Data.pos_combo1 = 11;
             Pad_Data.pos_combo2 = 10;
-            Pad_Data.pos_state = 4;
-            Pad_Data.pos_frame = 0;
+            Pad_Data.pos_state  = 4;
+            Pad_Data.pos_frame  = 0;
         }
     } else if (Pad_Data.libpad == IGR_LIBPAD2) {
         Pad_Data.pos_combo1 = 29;
         Pad_Data.pos_combo2 = 28;
-        Pad_Data.pos_state = 4;
-        Pad_Data.pos_frame = 124;
+        Pad_Data.pos_state  = 4;
+        Pad_Data.pos_frame  = 124;
     }
 
     EI();
@@ -422,24 +422,24 @@ void Install_IGR(void)
     ee_thread_t thread_param;
 
     // Reset power button data
-    Power_Button.press = 0;
-    Pad_Data.pad_buf = NULL;
+    Power_Button.press    = 0;
+    Pad_Data.pad_buf      = NULL;
     Power_Button.vb_count = 0;
 
     // Init runtime Pad_Data information
-    Pad_Data.vb_count = 0;
+    Pad_Data.vb_count   = 0;
     Pad_Data.combo_type = 0x00;
     Pad_Data.prev_frame = 0x00;
 
     // Do not install the IGR thread or interrupt handler more than once.
     if (IGR_Thread_ID < 0) {
         // Create and start IGR thread
-        thread_param.gp_reg = &_gp;
-        thread_param.func = IGR_Thread;
-        thread_param.stack = (void *)IGR_Stack;
-        thread_param.stack_size = IGR_STACK_SIZE;
+        thread_param.gp_reg           = &_gp;
+        thread_param.func             = IGR_Thread;
+        thread_param.stack            = (void *)IGR_Stack;
+        thread_param.stack_size       = IGR_STACK_SIZE;
         thread_param.initial_priority = 127;
-        IGR_Thread_ID = CreateThread(&thread_param);
+        IGR_Thread_ID                 = CreateThread(&thread_param);
 
         StartThread(IGR_Thread_ID, NULL);
     }
@@ -453,7 +453,7 @@ void Install_IGR(void)
 
 void Reset_Padhook(void)
 {
-    IGR_Intc_ID = -1;
+    IGR_Intc_ID   = -1;
     IGR_Thread_ID = -1;
 }
 
@@ -520,7 +520,7 @@ int Install_PadOpen_Hook(u32 mem_start, u32 mem_end, int mode)
         {padPortOpenpattern2, padPortOpenpattern2_mask, sizeof(padPortOpenpattern2), 1, 0x0160},
         {padPortOpenpattern3, padPortOpenpattern3_mask, sizeof(padPortOpenpattern3), 1, 0x0150}};
 
-    found = 0;
+    found   = 0;
     patched = 0;
 
     // Loop for each libpad version
@@ -556,7 +556,7 @@ int Install_PadOpen_Hook(u32 mem_start, u32 mem_end, int mode)
 
                     // Ignore bit 26 for the mask because the jump type can be either J (000010) or JAL (000011)
                     pattern[0] = inst;
-                    mask[0] = 0xfbffffff;
+                    mask[0]    = 0xfbffffff;
 
                     DPRINTF("IGR: searching opcode %08x witk mask %08x\n", (int)pattern[0], (int)mask[0]);
 
@@ -589,7 +589,7 @@ int Install_PadOpen_Hook(u32 mem_start, u32 mem_end, int mode)
                             // Overwrite the original PadOpen function call with our function call
                             _sw(inst, fncall);
 
-                            Pad_Data.libpad = padopen_patterns[i].type;
+                            Pad_Data.libpad     = padopen_patterns[i].type;
                             Pad_Data.libversion = padopen_patterns[i].version;
                         }
                     }
@@ -600,7 +600,7 @@ int Install_PadOpen_Hook(u32 mem_start, u32 mem_end, int mode)
 
                         // Make pattern with function address saved above
                         pattern[0] = (u32)ptr;
-                        mask[0] = 0xffffffff;
+                        mask[0]    = 0xffffffff;
 
                         DPRINTF("IGR: searching opcode %08x witk mask %08x\n", (int)pattern[0], (int)mask[0]);
 
@@ -630,7 +630,7 @@ int Install_PadOpen_Hook(u32 mem_start, u32 mem_end, int mode)
                                 // Overwrite the original PadOpen function address with our function address
                                 _sw(inst, fncall);
 
-                                Pad_Data.libpad = padopen_patterns[i].type;
+                                Pad_Data.libpad     = padopen_patterns[i].type;
                                 Pad_Data.libversion = padopen_patterns[i].version;
                             }
                         }

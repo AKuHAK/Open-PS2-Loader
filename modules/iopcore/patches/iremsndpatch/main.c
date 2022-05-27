@@ -74,15 +74,15 @@ int _start(int argc, char **argv)
 
     if (m != NULL) {
         sema.initial = 1;
-        sema.max = 1;
-        sema.option = 0;
-        sema.attr = 0;
+        sema.max     = 1;
+        sema.option  = 0;
+        sema.attr    = 0;
 
         lockSema = CreateSema(&sema);
 
         // Generate pointer to the threadId variable.
-        hi16 = *(vu16 *)(m->text_start + 0x00000ac0);
-        lo16 = *(volatile s16 *)(m->text_start + 0x00000ac4);
+        hi16         = *(vu16 *)(m->text_start + 0x00000ac0);
+        lo16         = *(volatile s16 *)(m->text_start + 0x00000ac4);
         tickThreadId = (int *)(((u32)hi16 << 16) + lo16);
 
         // Apply patch on module. The module has not been initialized yet and has no running threads.

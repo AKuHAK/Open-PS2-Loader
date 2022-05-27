@@ -51,8 +51,8 @@ int sbCreateSemaphore(void)
     ee_sema_t sema;
 
     sema.option = sema.attr = 0;
-    sema.init_count = 1;
-    sema.max_count = 1;
+    sema.init_count         = 1;
+    sema.max_count          = 1;
     return CreateSema(&sema);
 }
 
@@ -133,7 +133,7 @@ static int loadISOGameListCache(const char *path, struct game_cache_list *cache)
                     LOG("loadISOGameListCache: %d games loaded.\n", count);
                     cache->count = count;
                     cache->games = games;
-                    result = 0;
+                    result       = 0;
                 } else {
                     LOG("loadISOGameListCache: I/O error.\n");
                     free(games);
@@ -286,7 +286,7 @@ static int scanForISO(char *path, char type, struct game_list_t **glist)
 
                     if (next != NULL) {
                         next->next = *glist;
-                        *glist = next;
+                        *glist     = next;
 
                         game = &(*glist)->gameinfo;
                         memset(game, 0, sizeof(base_game_info_t));
@@ -311,7 +311,7 @@ static int scanForISO(char *path, char type, struct game_list_t **glist)
 
                                 if (next != NULL) {
                                     next->next = *glist;
-                                    *glist = next;
+                                    *glist     = next;
 
                                     game = &(*glist)->gameinfo;
                                     memset(game, 0, sizeof(base_game_info_t));
@@ -343,7 +343,7 @@ static int scanForISO(char *path, char type, struct game_list_t **glist)
 
                         if (next != NULL) {
                             next->next = *glist;
-                            *glist = next;
+                            *glist     = next;
 
                             game = &(*glist)->gameinfo;
                             memcpy(game, &cachedGInfo, sizeof(base_game_info_t));
@@ -354,8 +354,8 @@ static int scanForISO(char *path, char type, struct game_list_t **glist)
                     }
                 }
 
-                game->parts = 1;
-                game->media = type;
+                game->parts  = 1;
+                game->media  = type;
                 game->format = format;
                 game->sizeMB = dirent->d_stat.st_size >> 20;
 
@@ -384,8 +384,8 @@ int sbReadList(base_game_info_t **list, const char *prefix, int *fsize, int *gam
     char path[256];
 
     free(*list);
-    *list = NULL;
-    *fsize = -1;
+    *list      = NULL;
+    *fsize     = -1;
     *gamecount = 0;
 
     // temporary storage for the game names
@@ -409,7 +409,7 @@ int sbReadList(base_game_info_t **list, const char *prefix, int *fsize, int *gam
 
         if (count < 0)
             count = 0;
-        size = getFileSize(fd);
+        size   = getFileSize(fd);
         *fsize = size;
         count += size / sizeof(USBExtreme_game_entry_t);
 
@@ -429,11 +429,11 @@ int sbReadList(base_game_info_t **list, const char *prefix, int *fsize, int *gam
                     g->name[UL_GAME_NAME_MAX] = '\0';
                     memcpy(g->startup, GameEntry.startup, GAME_STARTUP_MAX);
                     g->startup[GAME_STARTUP_MAX] = '\0';
-                    g->extension[0] = '\0';
-                    g->parts = GameEntry.parts;
-                    g->media = GameEntry.media;
-                    g->format = GAME_FORMAT_USBLD;
-                    g->sizeMB = 0;
+                    g->extension[0]              = '\0';
+                    g->parts                     = GameEntry.parts;
+                    g->media                     = GameEntry.media;
+                    g->format                    = GAME_FORMAT_USBLD;
+                    g->sizeMB                    = 0;
 
                     /* TODO: size calculation is very slow
                     implmented some caching, or do not touch at all */
@@ -464,7 +464,7 @@ int sbReadList(base_game_info_t **list, const char *prefix, int *fsize, int *gam
         while ((id < count) && dlist_head) {
             // copy one game, advance
             struct game_list_t *cur = dlist_head;
-            dlist_head = dlist_head->next;
+            dlist_head              = dlist_head->next;
 
             memcpy(&(*list)[id++], &cur->gameinfo, sizeof(base_game_info_t));
             free(cur);
@@ -494,7 +494,7 @@ static int ProbeZISO(int fd)
         // initialize ZSO
         ziso_init(&ziso_data.header, ziso_data.first_block);
         // set ISO file descriptor for ZSO reader
-        probed_fd = fd;
+        probed_fd  = fd;
         probed_lba = 0;
         return 1;
     } else {
@@ -588,7 +588,7 @@ int sbPrepare(base_game_info_t *game, config_set_t *configSet, int size_cdvdman,
 
     if (game != NULL) {
         settings->NumParts = game->parts;
-        settings->media = game->media;
+        settings->media    = game->media;
     }
     settings->flags = 0;
 
@@ -623,10 +623,10 @@ int sbPrepare(base_game_info_t *game, config_set_t *configSet, int size_cdvdman,
 #ifdef PADEMU
     config_set_t *configGame = configGetByType(CONFIG_GAME);
 
-    gPadEmuSource = 0;
-    gEnablePadEmu = 0;
-    gPadEmuSettings = 0;
-    gPadMacroSource = 0;
+    gPadEmuSource     = 0;
+    gEnablePadEmu     = 0;
+    gPadEmuSettings   = 0;
+    gPadMacroSource   = 0;
     gPadMacroSettings = 0;
 
     if (configGetInt(configSet, CONFIG_ITEM_PADEMUSOURCE, &gPadEmuSource)) {
@@ -776,7 +776,7 @@ static void sbCreateFoldersFromList(const char *path, const char **folders)
 
 void sbCreateFolders(const char *path, int createDiscImgFolders)
 {
-    const char *basicFolders[] = {"CFG", "THM", "LNG", "ART", "VMC", "CHT", "APPS", NULL};
+    const char *basicFolders[]   = {"CFG", "THM", "LNG", "ART", "VMC", "CHT", "APPS", NULL};
     const char *discImgFolders[] = {"CD", "DVD", NULL};
 
     sbCreateFoldersFromList(path, basicFolders);

@@ -38,7 +38,7 @@ void InitCheatsConfig(config_set_t *configSet)
     // Default values.
     gCheatSource = 0;
     gEnableCheat = 0;
-    gCheatMode = 0;
+    gCheatMode   = 0;
     memset(gCheatList, 0, sizeof(gCheatList));
 
     if (configGetInt(configSet, CONFIG_ITEM_CHEATSSOURCE, &gCheatSource)) {
@@ -84,7 +84,7 @@ static code_t make_code(const char *s)
 
     // Return Code Address and Value
     code.addr = address;
-    code.val = value;
+    code.val  = value;
     return code;
 }
 
@@ -118,7 +118,7 @@ static code_t parse_line(const char *line, int linenumber)
 {
     code_t code;
     code.addr = 0;
-    code.val = 0;
+    code.val  = 0;
     int ret;
     LOG("%4i  %s\n", linenumber, line);
     ret = is_cheat_code(line);
@@ -205,7 +205,7 @@ static int trim_str(char *s)
 
     /* Get last non-space char */
     last = strlen(s) - 1;
-    t = &s[last];
+    t    = &s[last];
     while (isspace((int)*t--))
         last--;
 

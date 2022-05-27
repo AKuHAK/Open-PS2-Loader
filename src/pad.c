@@ -41,7 +41,7 @@ struct pad_data_t
 };
 
 /// current time in miliseconds (last update time)
-static u32 curtime = 0;
+static u32 curtime         = 0;
 static u32 time_since_last = 0;
 
 static unsigned short pad_count;
@@ -195,7 +195,7 @@ static void updatePadState(struct pad_data_t *pad, int state)
 
 static int readPad(struct pad_data_t *pad)
 {
-    int rcode = 0, oldState, newState, ret, padsRead;
+    int rcode    = 0, oldState, newState, ret, padsRead;
     u32 newpdata = 0;
 
     padsRead = 0;
@@ -248,7 +248,7 @@ static int readPad(struct pad_data_t *pad)
             rcode = 0;
 
         pad->oldpaddata = pad->paddata;
-        pad->paddata = newpdata;
+        pad->paddata    = newpdata;
 
         // merge into the global vars
         paddata |= pad->paddata;
@@ -278,12 +278,12 @@ int readPads()
 {
     int i;
     oldpaddata = paddata;
-    paddata = 0;
+    paddata    = 0;
 
     // in ms.
-    u32 newtime = cpu_ticks() / CLOCKS_PER_MILISEC;
+    u32 newtime     = cpu_ticks() / CLOCKS_PER_MILISEC;
     time_since_last = newtime - curtime;
-    curtime = newtime;
+    curtime         = newtime;
 
     int rslt = 0;
 
@@ -315,9 +315,9 @@ int getKey(int id)
     // either the button was not pressed this frame, then reset counter and return
     // or it was, then handle the repetition
     if (getKeyOn(id)) {
-        delaycnt[kid] = getKeyDelay(id, 0);
+        delaycnt[kid]  = getKeyDelay(id, 0);
         KeyPressedOnce = 1;
-        DisableCron = 1;
+        DisableCron    = 1;
         return 1;
     }
 
@@ -325,9 +325,9 @@ int getKey(int id)
         return 0;
 
     if (delaycnt[kid] <= 0) {
-        delaycnt[kid] = getKeyDelay(id, 1);
+        delaycnt[kid]  = getKeyDelay(id, 1);
         KeyPressedOnce = 1;
-        DisableCron = 1;
+        DisableCron    = 1;
         return 1;
     }
 
@@ -453,8 +453,8 @@ int startPads()
 
             struct pad_data_t *cpad = &pad_data[pad_count];
 
-            cpad->port = port;
-            cpad->slot = slot;
+            cpad->port  = port;
+            cpad->slot  = slot;
             cpad->state = PAD_STATE_DISCONN;
 
             if (startPad(cpad))

@@ -151,7 +151,7 @@
 /**************************************
    Memory routines
 **************************************/
-//#include <stdlib.h>   /* malloc, calloc, free */
+// #include <stdlib.h>   /* malloc, calloc, free */
 #define ALLOCATOR(n, s) calloc(n, s)
 #define FREEMEM         free
 #include <string.h> /* memset, memcpy */
@@ -269,17 +269,17 @@ typedef struct
 } LZ4_Data_Structure;
 
 typedef enum { notLimited = 0,
-               limited = 1 } limitedOutput_directive;
+               limited    = 1 } limitedOutput_directive;
 typedef enum { byPtr,
                byU32,
                byU16 } tableType_t;
 
-typedef enum { noPrefix = 0,
+typedef enum { noPrefix   = 0,
                withPrefix = 1 } prefix64k_directive;
 
 typedef enum { endOnOutputSize = 0,
-               endOnInputSize = 1 } endCondition_directive;
-typedef enum { full = 0,
+               endOnInputSize  = 1 } endCondition_directive;
+typedef enum { full    = 0,
                partial = 1 } earlyEnd_directive;
 
 
@@ -304,13 +304,13 @@ typedef enum { full = 0,
 #define LZ4_READ_LITTLEENDIAN_16(d, s, p) \
     {                                     \
         U16 v = A16(p);                   \
-        v = lz4_bswap16(v);               \
-        d = (s)-v;                        \
+        v     = lz4_bswap16(v);           \
+        d     = (s)-v;                    \
     }
 #define LZ4_WRITE_LITTLEENDIAN_16(p, i) \
     {                                   \
-        U16 v = (U16)(i);               \
-        v = lz4_bswap16(v);             \
+        U16 v  = (U16)(i);              \
+        v      = lz4_bswap16(v);        \
         A16(p) = v;                     \
         p += 2;                         \
     }
@@ -338,13 +338,14 @@ typedef enum { full = 0,
         } while (d < e);      \
     } /* at the end, d>=e; */
 #else
-#define LZ4_WILDCOPY(d, s, e)           \
-    {                                   \
-        if (likely(e - d <= 8))         \
-            LZ4_COPY8(d, s)             \
-            else do { LZ4_COPY8(d, s) } \
-        while (d < e)                   \
-            ;                           \
+#define LZ4_WILDCOPY(d, s, e)   \
+    {                           \
+        if (likely(e - d <= 8)) \
+            LZ4_COPY8(d, s)     \
+        else                    \
+            do {                \
+                LZ4_COPY8(d, s) \
+            } while (d < e);    \
     }
 #endif
 #define LZ4_SECURECOPY(d, s, e)    \
@@ -379,13 +380,13 @@ FORCE_INLINE int LZ4_decompress_generic(
     const BYTE *ref;
     const BYTE *const iend = ip + inputSize;
 
-    BYTE *op = (BYTE *)dest;
+    BYTE *op         = (BYTE *)dest;
     BYTE *const oend = op + outputSize;
     BYTE *cpy;
     BYTE *oexit = op + targetOutputSize;
 
     /*const size_t dec32table[] = {0, 3, 2, 3, 0, 0, 0, 0};   / static reduces speed for LZ4_decompress_safe() on GCC64 */
-    const size_t dec32table[] = {4 - 0, 4 - 3, 4 - 2, 4 - 3, 4 - 0, 4 - 0, 4 - 0, 4 - 0}; /* static reduces speed for LZ4_decompress_safe() on GCC64 */
+    const size_t dec32table[]        = {4 - 0, 4 - 3, 4 - 2, 4 - 3, 4 - 0, 4 - 0, 4 - 0, 4 - 0}; /* static reduces speed for LZ4_decompress_safe() on GCC64 */
     static const size_t dec64table[] = {0, 0, 0, (size_t)-1, 0, 1, 2, 3};
 
 
@@ -457,10 +458,10 @@ FORCE_INLINE int LZ4_decompress_generic(
         /* copy repeated sequence */
         if (unlikely((op - ref) < (int)STEPSIZE)) {
             const size_t dec64 = dec64table[(sizeof(void *) == 4) ? 0 : op - ref];
-            op[0] = ref[0];
-            op[1] = ref[1];
-            op[2] = ref[2];
-            op[3] = ref[3];
+            op[0]              = ref[0];
+            op[1]              = ref[1];
+            op[2]              = ref[2];
+            op[3]              = ref[3];
             /*op += 4, ref += 4; ref -= dec32table[op-ref];
             A32(op) = A32(ref);
             op += STEPSIZE-4; ref -= dec64;*/

@@ -24,7 +24,7 @@ int set_reg_hook;
 int set_reg_disabled;
 int iop_reboot_count = 0;
 
-int padOpen_hooked = 0;
+int padOpen_hooked       = 0;
 int disable_padOpen_hook = 1;
 
 extern void *ModStorageStart, *ModStorageEnd;

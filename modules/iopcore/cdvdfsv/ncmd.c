@@ -81,7 +81,7 @@ enum CD_NCMD_CMDS {
     CD_NCMD_DISKREADY,
     CD_NCMD_READCHAIN,
     CD_NCMD_READDISKID = 0x11,
-    CD_NCMD_DISKTYPE = 0x17,
+    CD_NCMD_DISKTYPE   = 0x17,
 
     CD_NCMD_COUNT
 };
@@ -124,17 +124,17 @@ static inline void cdvd_readee(void *buf)
 
     r->eeaddr1 = (void *)((u32)r->eeaddr1 & 0x1fffffff);
     r->eeaddr2 = (void *)((u32)r->eeaddr2 & 0x1fffffff);
-    r->buf = (void *)((u32)r->buf & 0x1fffffff);
+    r->buf     = (void *)((u32)r->buf & 0x1fffffff);
 
     sceCdDiskReady(0);
 
     sectors_to_read = r->sectors;
-    bytesent = 0;
+    bytesent        = 0;
 
     memset((void *)curlsn_buf, 0, 16);
 
     readee.pdst1 = (void *)r->buf;
-    eeaddr_64b = (void *)(((u32)r->buf + 0x3f) & 0xffffffc0); // get the next 64-bytes aligned address
+    eeaddr_64b   = (void *)(((u32)r->buf + 0x3f) & 0xffffffc0); // get the next 64-bytes aligned address
 
     if ((u32)r->buf & 0x3f)
         readee.b1len = (((u32)r->buf & 0xffffffc0) - (u32)r->buf) + 64; // get how many bytes needed to get a 64 bytes alignment
@@ -143,7 +143,7 @@ static inline void cdvd_readee(void *buf)
 
     nbytes = r->sectors * sector_size;
 
-    temp = (u32)r->buf + nbytes;
+    temp        = (u32)r->buf + nbytes;
     eeaddr2_64b = (void *)(temp & 0xffffffc0);
     temp -= (u32)eeaddr2_64b;
     readee.pdst2 = eeaddr2_64b; // get the end address on a 64 bytes align
@@ -172,7 +172,7 @@ static inline void cdvd_readee(void *buf)
             }
 
             if (flag_64b == 0) { // not 64 bytes aligned buf
-                //The data of the last sector of the chunk will be used to correct buffer alignment.
+                // The data of the last sector of the chunk will be used to correct buffer alignment.
                 if (sectors_to_read < CDVDMAN_FS_SECTORS - 1)
                     nsectors = sectors_to_read;
                 else
@@ -197,7 +197,7 @@ static inline void cdvd_readee(void *buf)
             }
             sceCdSync(0);
 
-            size_64b = nsectors * sector_size;
+            size_64b  = nsectors * sector_size;
             size_64bb = size_64b;
 
             if (!flag_64b) {
@@ -222,7 +222,7 @@ static inline void cdvd_readee(void *buf)
 
         } while ((flag_64b) || (sectors_to_read));
 
-        //At the very last pass, copy readee.b2len bytes from the last sector, to complete the alignment correction.
+        // At the very last pass, copy readee.b2len bytes from the last sector, to complete the alignment correction.
         memcpy((void *)readee.buf2, (void *)(fsvRbuf + size_64b - readee.b2len), readee.b2len);
     }
 
@@ -317,9 +317,9 @@ static inline void cdvd_readchain(void *buf)
         if ((ch->lsn == -1) || (ch->sectors == -1) || ((u32)ch->buf == -1))
             break;
 
-        lsn = ch->lsn;
+        lsn      = ch->lsn;
         tsectors = ch->sectors;
-        addr = (u32)ch->buf & 0xfffffffc;
+        addr     = (u32)ch->buf & 0xfffffffc;
 
         if ((u32)ch->buf & 1) { // IOP addr
             if (sceCdRead(lsn, tsectors, (void *)addr, NULL) == 0) {
@@ -357,7 +357,7 @@ static inline void cdvd_readchain(void *buf)
             }
         }
 
-        //The pointer to the read position variable within EE RAM is stored at ((RpcCdvdchain_t *)buf)[65].sectors.
+        // The pointer to the read position variable within EE RAM is stored at ((RpcCdvdchain_t *)buf)[65].sectors.
         sysmemSendEE(&readpos, (void *)((RpcCdvdchain_t *)buf)[65].sectors, sizeof(readpos));
     }
 }
@@ -374,7 +374,7 @@ static inline void rpcNCmd_cdreadDiskID(void *buf)
 //-------------------------------------------------------------------------
 static inline void rpcNCmd_cdgetdisktype(void *buf)
 {
-    u8 *p = (u8 *)buf;
+    u8 *p         = (u8 *)buf;
     *(int *)&p[4] = sceCdGetDiskType();
     *(int *)&p[0] = 1;
 }

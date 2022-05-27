@@ -17,7 +17,7 @@ int configGetStat(config_set_t *configSet, iox_stat_t *stat);
 
 static u32 currentUID = 0;
 static config_set_t configFiles[CONFIG_INDEX_COUNT];
-static char legacyNetConfigPath[256] = "mc?:SYS-CONF/IPCONFIG.DAT";
+static char legacyNetConfigPath[256]                   = "mc?:SYS-CONF/IPCONFIG.DAT";
 static const char *configFilenames[CONFIG_INDEX_COUNT] = {
     "conf_opl.cfg",
     "conf_last.cfg",
@@ -128,7 +128,7 @@ static struct config_value_t *allocConfigItem(const char *key, const char *val)
     it->key[sizeof(it->key) - 1] = '\0';
     strncpy(it->val, val, sizeof(it->val));
     it->val[sizeof(it->val) - 1] = '\0';
-    it->next = NULL;
+    it->next                     = NULL;
 
     return it;
 }
@@ -141,7 +141,7 @@ static void addConfigValue(config_set_t *configSet, const char *key, const char 
         configSet->tail = configSet->head;
     } else {
         configSet->tail->next = allocConfigItem(key, val);
-        configSet->tail = configSet->tail->next;
+        configSet->tail       = configSet->tail->next;
     }
 }
 
@@ -235,12 +235,12 @@ config_set_t *configAlloc(int type, config_set_t *configSet, char *fileName)
     if (!configSet)
         configSet = (config_set_t *)malloc(sizeof(config_set_t));
 
-    configSet->uid = ++currentUID;
+    configSet->uid  = ++currentUID;
     configSet->type = type;
     configSet->head = NULL;
     configSet->tail = NULL;
     if (fileName) {
-        int length = strlen(fileName) + 1;
+        int length          = strlen(fileName) + 1;
         configSet->filename = (char *)malloc(length * sizeof(char));
         memcpy(configSet->filename, fileName, length);
     } else
@@ -251,7 +251,7 @@ config_set_t *configAlloc(int type, config_set_t *configSet, char *fileName)
 
 void configMove(config_set_t *configSet, const char *fileName)
 {
-    int length = strlen(fileName) + 1;
+    int length          = strlen(fileName) + 1;
     configSet->filename = realloc(configSet->filename, length);
     memcpy(configSet->filename, fileName, length);
 }
@@ -368,7 +368,7 @@ int configRemoveKey(config_set_t *configSet, const char *key)
     if (!configKeyValidate(key))
         return 0;
 
-    struct config_value_t *val = configSet->head;
+    struct config_value_t *val  = configSet->head;
     struct config_value_t *prev = NULL;
 
     while (val) {
@@ -389,7 +389,7 @@ int configRemoveKey(config_set_t *configSet, const char *key)
             }
         } else {
             prev = val;
-            val = val->next;
+            val  = val->next;
         }
     }
 
@@ -447,7 +447,7 @@ void configGetDiscIDBinary(config_set_t *configSet, void *dst)
     if (configGetStr(configSet, CONFIG_ITEM_DNAS, &gid)) {
         // convert from hex to binary
         char *cdst = dst;
-        int p = 0;
+        int p      = 0;
         while (*gid && p < 10) {
             int dv = -1;
 
@@ -573,13 +573,13 @@ void configClear(config_set_t *configSet)
 {
     while (configSet->head) {
         struct config_value_t *cur = configSet->head;
-        configSet->head = cur->next;
+        configSet->head            = cur->next;
 
         free(cur);
     }
 
-    configSet->head = NULL;
-    configSet->tail = NULL;
+    configSet->head     = NULL;
+    configSet->tail     = NULL;
     configSet->modified = 1;
 }
 

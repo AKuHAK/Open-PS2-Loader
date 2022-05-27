@@ -93,8 +93,8 @@ void tcp_init(void)
     /* Clear globals. */
     tcp_listen_pcbs = NULL;
     tcp_active_pcbs = NULL;
-    tcp_tw_pcbs = NULL;
-    tcp_tmp_pcb = NULL;
+    tcp_tw_pcbs     = NULL;
+    tcp_tmp_pcb     = NULL;
 
     /* initialize timer */
     tcp_ticks = 0;
@@ -206,7 +206,7 @@ void tcp_abort(struct tcp_pcb *pcb)
         ackno = pcb->rcv_nxt;
         ip_addr_set(&local_ip, &(pcb->local_ip));
         ip_addr_set(&remote_ip, &(pcb->remote_ip));
-        local_port = pcb->local_port;
+        local_port  = pcb->local_port;
         remote_port = pcb->remote_port;
 #if LWIP_CALLBACK_API
         errf = pcb->errf;
@@ -252,7 +252,7 @@ err_t tcp_bind(struct tcp_pcb *pcb, struct ip_addr *ipaddr, u16_t port)
     }
 #ifndef SO_REUSE
     /* Check if the address already is in use. */
-    for (cpcb = (struct tcp_pcb *)tcp_listen_pcbs;
+    for (cpcb               = (struct tcp_pcb *)tcp_listen_pcbs;
          cpcb != NULL; cpcb = cpcb->next) {
         if (cpcb->local_port == port) {
             if (ip_addr_isany(&(cpcb->local_ip)) ||
@@ -262,7 +262,7 @@ err_t tcp_bind(struct tcp_pcb *pcb, struct ip_addr *ipaddr, u16_t port)
             }
         }
     }
-    for (cpcb = tcp_active_pcbs;
+    for (cpcb               = tcp_active_pcbs;
          cpcb != NULL; cpcb = cpcb->next) {
         if (cpcb->local_port == port) {
             if (ip_addr_isany(&(cpcb->local_ip)) ||
@@ -404,9 +404,9 @@ tcp_listen(struct tcp_pcb *pcb)
         return NULL;
     }
     lpcb->callback_arg = pcb->callback_arg;
-    lpcb->local_port = pcb->local_port;
-    lpcb->state = LISTEN;
-    lpcb->so_options = pcb->so_options;
+    lpcb->local_port   = pcb->local_port;
+    lpcb->state        = LISTEN;
+    lpcb->so_options   = pcb->so_options;
     lpcb->so_options |= SOF_ACCEPTCONN;
     lpcb->ttl = pcb->ttl;
     lpcb->tos = pcb->tos;
@@ -517,17 +517,17 @@ err_t tcp_connect(struct tcp_pcb *pcb, struct ip_addr *ipaddr, u16_t port,
     if (pcb->local_port == 0) {
         pcb->local_port = tcp_new_port();
     }
-    iss = tcp_next_iss();
-    pcb->rcv_nxt = 0;
-    pcb->snd_nxt = iss;
-    pcb->lastack = iss - 1;
-    pcb->snd_lbb = iss - 1;
-    pcb->rcv_wnd = TCP_WND;
-    pcb->snd_wnd = TCP_WND;
-    pcb->mss = TCP_MSS;
-    pcb->cwnd = 1;
+    iss           = tcp_next_iss();
+    pcb->rcv_nxt  = 0;
+    pcb->snd_nxt  = iss;
+    pcb->lastack  = iss - 1;
+    pcb->snd_lbb  = iss - 1;
+    pcb->rcv_wnd  = TCP_WND;
+    pcb->snd_wnd  = TCP_WND;
+    pcb->mss      = TCP_MSS;
+    pcb->cwnd     = 1;
     pcb->ssthresh = pcb->mss * 10;
-    pcb->state = SYN_SENT;
+    pcb->state    = SYN_SENT;
 #if LWIP_CALLBACK_API
     pcb->connected = connected;
 #endif /* LWIP_CALLBACK_API */
@@ -567,7 +567,7 @@ void tcp_slowtmr(void)
 
     /* Steps through all of the active PCBs. */
     prev = NULL;
-    pcb = tcp_active_pcbs;
+    pcb  = tcp_active_pcbs;
     if (pcb == NULL)
         LWIP_DEBUGF(TCP_DEBUG, ("tcp_slowtmr: no active pcbs\n"));
     while (pcb != NULL) {
@@ -599,7 +599,7 @@ void tcp_slowtmr(void)
                 }
                 tcp_rexmit(pcb);
                 /* Reduce congestion window and ssthresh. */
-                eff_wnd = LWIP_MIN(pcb->cwnd, pcb->snd_wnd);
+                eff_wnd       = LWIP_MIN(pcb->cwnd, pcb->snd_wnd);
                 pcb->ssthresh = eff_wnd >> 1;
                 if (pcb->ssthresh < pcb->mss) {
                     pcb->ssthresh = pcb->mss * 2;
@@ -687,14 +687,14 @@ void tcp_slowtmr(void)
             }
 
             prev = pcb;
-            pcb = pcb->next;
+            pcb  = pcb->next;
         }
     }
 
 
     /* Steps through all of the TIME-WAIT PCBs. */
     prev = NULL;
-    pcb = tcp_tw_pcbs;
+    pcb  = tcp_tw_pcbs;
     while (pcb != NULL) {
         LWIP_ASSERT("tcp_slowtmr: TIME-WAIT pcb->state == TIME-WAIT", pcb->state == TIME_WAIT);
         pcb_remove = 0;
@@ -723,7 +723,7 @@ void tcp_slowtmr(void)
             pcb = pcb2;
         } else {
             prev = pcb;
-            pcb = pcb->next;
+            pcb  = pcb->next;
         }
     }
 }
@@ -838,14 +838,14 @@ tcp_kill_prio(u8_t prio)
     /* We kill the oldest active connection that has lower priority than
      prio. */
     inactivity = 0;
-    inactive = NULL;
+    inactive   = NULL;
     for (pcb = tcp_active_pcbs; pcb != NULL; pcb = pcb->next) {
         if (pcb->prio <= prio &&
             pcb->prio <= mprio &&
             (u32_t)(tcp_ticks - pcb->tmr) >= inactivity) {
             inactivity = tcp_ticks - pcb->tmr;
-            inactive = pcb;
-            mprio = pcb->prio;
+            inactive   = pcb;
+            mprio      = pcb->prio;
         }
     }
     if (inactive != NULL) {
@@ -863,11 +863,11 @@ tcp_kill_timewait(void)
     u32_t inactivity;
 
     inactivity = 0;
-    inactive = NULL;
+    inactive   = NULL;
     for (pcb = tcp_tw_pcbs; pcb != NULL; pcb = pcb->next) {
         if ((u32_t)(tcp_ticks - pcb->tmr) >= inactivity) {
             inactivity = tcp_ticks - pcb->tmr;
-            inactive = pcb;
+            inactive   = pcb;
         }
     }
     if (inactive != NULL) {
@@ -898,25 +898,25 @@ tcp_alloc(u8_t prio)
     }
     if (pcb != NULL) {
         mips_memset(pcb, 0, sizeof(struct tcp_pcb));
-        pcb->prio = TCP_PRIO_NORMAL;
-        pcb->snd_buf = TCP_SND_BUF;
+        pcb->prio         = TCP_PRIO_NORMAL;
+        pcb->snd_buf      = TCP_SND_BUF;
         pcb->snd_queuelen = 0;
-        pcb->rcv_wnd = TCP_WND;
-        pcb->tos = 0;
-        pcb->ttl = TCP_TTL;
-        pcb->mss = TCP_MSS;
-        pcb->rto = 3000 / TCP_SLOW_INTERVAL;
-        pcb->sa = 0;
-        pcb->sv = 3000 / TCP_SLOW_INTERVAL;
-        pcb->rtime = 0;
-        pcb->cwnd = 1;
-        iss = tcp_next_iss();
-        pcb->snd_wl2 = iss;
-        pcb->snd_nxt = iss;
-        pcb->snd_max = iss;
-        pcb->lastack = iss;
-        pcb->snd_lbb = iss;
-        pcb->tmr = tcp_ticks;
+        pcb->rcv_wnd      = TCP_WND;
+        pcb->tos          = 0;
+        pcb->ttl          = TCP_TTL;
+        pcb->mss          = TCP_MSS;
+        pcb->rto          = 3000 / TCP_SLOW_INTERVAL;
+        pcb->sa           = 0;
+        pcb->sv           = 3000 / TCP_SLOW_INTERVAL;
+        pcb->rtime        = 0;
+        pcb->cwnd         = 1;
+        iss               = tcp_next_iss();
+        pcb->snd_wl2      = iss;
+        pcb->snd_nxt      = iss;
+        pcb->snd_max      = iss;
+        pcb->lastack      = iss;
+        pcb->snd_lbb      = iss;
+        pcb->tmr          = tcp_ticks;
 
         pcb->polltmr = 0;
 
@@ -926,7 +926,7 @@ tcp_alloc(u8_t prio)
 
         /* Init KEEPALIVE timer */
         pcb->keepalive = TCP_KEEPDEFAULT;
-        pcb->keep_cnt = 0;
+        pcb->keep_cnt  = 0;
     }
     return pcb;
 }

@@ -199,9 +199,9 @@ int main(int argc, char *argv[2])
 
     memset(&p, 0, sizeof(createVMCparam_t));
     strcpy(p.VMC_filename, "mass:8MB_VMC0.bin");
-    p.VMC_card_slot = -1; // do not forget this for blank VMC file creation
-    p.VMC_size_mb = 8;
-    p.VMC_blocksize = 16; // usually official MC has blocksize of 16
+    p.VMC_card_slot       = -1; // do not forget this for blank VMC file creation
+    p.VMC_size_mb         = 8;
+    p.VMC_blocksize       = 16; // usually official MC has blocksize of 16
     p.VMC_thread_priority = 0xf;
     DPRINTF("requesting VMC file creation... ");
     ret = fileXioDevctl("genvmc:", GENVMC_DEVCTL_CREATE_VMC, (void *)&p, sizeof(p), NULL, 0);
@@ -232,7 +232,7 @@ int main(int argc, char *argv[2])
     // ----------------------------------------------------------------
     memset(&p, 0, sizeof(createVMCparam_t));
     strcpy(p.VMC_filename, "mass:8MB_VMC1.bin");
-    p.VMC_card_slot = 0; // 0=slot 1, 1=slot 2
+    p.VMC_card_slot       = 0; // 0=slot 1, 1=slot 2
     p.VMC_thread_priority = 0xf;
     DPRINTF("requesting VMC file creation... ");
     ret = fileXioDevctl("genvmc:", GENVMC_DEVCTL_CREATE_VMC, (void *)&p, sizeof(p), NULL, 0);

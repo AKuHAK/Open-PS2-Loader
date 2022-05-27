@@ -96,10 +96,10 @@ static void endMutableText(theme_element_t *elem)
 
 static mutable_text_t *initMutableText(const char *themePath, config_set_t *themeConfig, theme_t *theme, const char *name, int type, struct theme_element *elem, const char *value, const char *alias, int displayMode, int sizingMode)
 {
-    mutable_text_t *mutableText = (mutable_text_t *)malloc(sizeof(mutable_text_t));
+    mutable_text_t *mutableText  = (mutable_text_t *)malloc(sizeof(mutable_text_t));
     mutableText->currentConfigId = 0;
-    mutableText->currentValue = NULL;
-    mutableText->alias = NULL;
+    mutableText->currentValue    = NULL;
+    mutableText->alias           = NULL;
 
     char elemProp[64];
 
@@ -107,7 +107,7 @@ static mutable_text_t *initMutableText(const char *themePath, config_set_t *them
     configGetInt(themeConfig, elemProp, &displayMode);
     mutableText->displayMode = displayMode;
 
-    int length = strlen(value) + 1;
+    int length         = strlen(value) + 1;
     mutableText->value = (char *)malloc(length * sizeof(char));
     memcpy(mutableText->value, value, length);
 
@@ -156,7 +156,7 @@ static mutable_text_t *initMutableText(const char *themePath, config_set_t *them
         else
             temp = (char *)alias;
 
-        length = strlen(temp) + 1 + 2;
+        length             = strlen(temp) + 1 + 2;
         mutableText->alias = (char *)calloc(length, sizeof(char));
         if (mutableText->sizingMode == SIZING_WRAP)
             snprintf(mutableText->alias, length, "%s:\n", temp);
@@ -190,7 +190,7 @@ static void initStaticText(const char *themePath, config_set_t *themeConfig, the
     configGetStr(themeConfig, elemProp, &value);
     if (value) {
         elem->extended = initMutableText(themePath, themeConfig, theme, name, ELEM_TYPE_STATIC_TEXT, elem, value, NULL, DISPLAY_ALWAYS, SIZING_NONE);
-        elem->endElem = &endMutableText;
+        elem->endElem  = &endMutableText;
         elem->drawElem = &drawStaticText;
     } else
         LOG("THEMES StaticText %s: NO value, elem disabled !!\n", name);
@@ -205,7 +205,7 @@ static void drawAttributeText(struct menu_list *menu, struct submenu_list *item,
         if (mutableText->currentConfigId != config->uid) {
             // force refresh
             mutableText->currentConfigId = config->uid;
-            mutableText->currentValue = NULL;
+            mutableText->currentValue    = NULL;
             if (configGetStr(config, mutableText->value, (const char **)&mutableText->currentValue)) {
                 if (mutableText->sizingMode == SIZING_WRAP)
                     fntFitString(elem->font, mutableText->currentValue, elem->width);
@@ -256,7 +256,7 @@ static void initAttributeText(const char *themePath, config_set_t *themeConfig, 
     configGetStr(themeConfig, elemProp, &attribute);
     if (attribute) {
         elem->extended = initMutableText(themePath, themeConfig, theme, name, ELEM_TYPE_ATTRIBUTE_TEXT, elem, attribute, NULL, DISPLAY_ALWAYS, SIZING_NONE);
-        elem->endElem = &endMutableText;
+        elem->endElem  = &endMutableText;
         elem->drawElem = &drawAttributeText;
     } else
         LOG("THEMES AttributeText %s: NO attribute, elem disabled !!\n", name);
@@ -272,19 +272,19 @@ static void findDuplicate(theme_element_t *first, const char *cachePattern, cons
             mutable_image_t *source = (mutable_image_t *)elem->extended;
 
             if (cachePattern && source->cache && !strcmp(cachePattern, source->cache->suffix)) {
-                target->cache = source->cache;
+                target->cache       = source->cache;
                 target->cacheLinked = 1;
                 LOG("THEMES Re-using a cache for pattern %s\n", cachePattern);
             }
 
             if (defaultTexture && source->defaultTexture && !strcmp(defaultTexture, source->defaultTexture->name)) {
-                target->defaultTexture = source->defaultTexture;
+                target->defaultTexture       = source->defaultTexture;
                 target->defaultTextureLinked = 1;
                 LOG("THEMES Re-using the default texture for %s\n", defaultTexture);
             }
 
             if (overlayTexture && source->overlayTexture && !strcmp(overlayTexture, source->overlayTexture->name)) {
-                target->overlayTexture = source->overlayTexture;
+                target->overlayTexture       = source->overlayTexture;
                 target->overlayTextureLinked = 1;
                 LOG("THEMES Re-using the overlay texture for %s\n", overlayTexture);
             }
@@ -317,9 +317,9 @@ static void freeImageTexture(image_texture_t *texture)
 static image_texture_t *initImageTexture(const char *themePath, config_set_t *themeConfig, const char *name, const char *imgName, int isOverlay)
 {
     image_texture_t *texture = (image_texture_t *)malloc(sizeof(image_texture_t));
-    texture->name = NULL;
+    texture->name            = NULL;
 
-    int texId = -1;
+    int texId  = -1;
     int result = 0;
 
     if (themePath) {
@@ -336,7 +336,7 @@ static image_texture_t *initImageTexture(const char *themePath, config_set_t *th
     }
 
     if (result) {
-        int length = strlen(imgName) + 1;
+        int length    = strlen(imgName) + 1;
         texture->name = (char *)malloc(length * sizeof(char));
         memcpy(texture->name, imgName, length);
 
@@ -379,12 +379,12 @@ static image_texture_t *initImageTexture(const char *themePath, config_set_t *th
 static image_texture_t *initImageInternalTexture(config_set_t *themeConfig, const char *name)
 {
     image_texture_t *texture = (image_texture_t *)malloc(sizeof(image_texture_t));
-    texture->name = NULL;
+    texture->name            = NULL;
     int result;
 
     if ((result = texLookupInternalTexId(name)) >= 0) {
-        result = texLoadInternal(&texture->source, result);
-        int length = strlen(name) + 1;
+        result        = texLoadInternal(&texture->source, result);
+        int length    = strlen(name) + 1;
         texture->name = (char *)malloc(length * sizeof(char));
         memcpy(texture->name, name, length);
     }
@@ -418,15 +418,15 @@ static void endMutableImage(struct theme_element *elem)
 
 static mutable_image_t *initMutableImage(const char *themePath, config_set_t *themeConfig, theme_t *theme, const char *name, int type, const char *cachePattern, int cacheCount, const char *defaultTexture, const char *overlayTexture)
 {
-    mutable_image_t *mutableImage = (mutable_image_t *)malloc(sizeof(mutable_image_t));
-    mutableImage->currentUid = -1;
-    mutableImage->currentConfigId = 0;
-    mutableImage->currentValue = NULL;
-    mutableImage->cache = NULL;
-    mutableImage->cacheLinked = 0;
-    mutableImage->defaultTexture = NULL;
+    mutable_image_t *mutableImage      = (mutable_image_t *)malloc(sizeof(mutable_image_t));
+    mutableImage->currentUid           = -1;
+    mutableImage->currentConfigId      = 0;
+    mutableImage->currentValue         = NULL;
+    mutableImage->cache                = NULL;
+    mutableImage->cacheLinked          = 0;
+    mutableImage->defaultTexture       = NULL;
     mutableImage->defaultTextureLinked = 0;
-    mutableImage->overlayTexture = NULL;
+    mutableImage->overlayTexture       = NULL;
     mutableImage->overlayTextureLinked = 0;
 
     char elemProp[64];
@@ -490,8 +490,8 @@ static void drawStaticImage(struct menu_list *menu, struct submenu_list *item, c
 static void initStaticImage(const char *themePath, config_set_t *themeConfig, theme_t *theme, theme_element_t *elem, const char *name, const char *imageName)
 {
     mutable_image_t *mutableImage = initMutableImage(themePath, themeConfig, theme, name, elem->type, NULL, 0, imageName, NULL);
-    elem->extended = mutableImage;
-    elem->endElem = &endMutableImage;
+    elem->extended                = mutableImage;
+    elem->endElem                 = &endMutableImage;
 
     if (mutableImage->defaultTexture)
         elem->drawElem = &drawStaticImage;
@@ -505,7 +505,7 @@ static GSTEXTURE *getGameImageTexture(image_cache_t *cache, void *support, struc
 {
     if (gEnableArt) {
         item_list_t *list = (item_list_t *)support;
-        char *startup = list->itemGetStartup(item->id);
+        char *startup     = list->itemGetStartup(item->id);
         return cacheGetTexture(cache, list, &item->cache_id[cache->userId], &item->cache_uid[cache->userId], startup);
     }
 
@@ -545,8 +545,8 @@ static void drawGameImage(struct menu_list *menu, struct submenu_list *item, con
 static void initGameImage(const char *themePath, config_set_t *themeConfig, theme_t *theme, theme_element_t *elem, const char *name, const char *pattern, int count, const char *texture, const char *overlay)
 {
     mutable_image_t *mutableImage = initMutableImage(themePath, themeConfig, theme, name, elem->type, pattern, count, texture, overlay);
-    elem->extended = mutableImage;
-    elem->endElem = &endMutableImage;
+    elem->extended                = mutableImage;
+    elem->endElem                 = &endMutableImage;
 
     if (mutableImage->cache)
         elem->drawElem = &drawGameImage;
@@ -562,9 +562,9 @@ static void drawAttributeImage(struct menu_list *menu, struct submenu_list *item
     if (config) {
         if (attributeImage->currentConfigId != config->uid) {
             // force refresh
-            attributeImage->currentUid = -1;
+            attributeImage->currentUid      = -1;
             attributeImage->currentConfigId = config->uid;
-            attributeImage->currentValue = NULL;
+            attributeImage->currentValue    = NULL;
             configGetStr(config, attributeImage->cache->suffix, (const char **)&attributeImage->currentValue);
         }
         if (attributeImage->currentValue) {
@@ -584,7 +584,7 @@ static void drawAttributeImage(struct menu_list *menu, struct submenu_list *item
 
                 return;
             } else {
-                int posZ = 0;
+                int posZ           = 0;
                 GSTEXTURE *texture = cacheGetTexture(attributeImage->cache, menu->item->userdata, &posZ, &attributeImage->currentUid, attributeImage->currentValue);
                 if (texture && texture->Mem) {
                     if (attributeImage->overlayTexture) {
@@ -606,8 +606,8 @@ static void drawAttributeImage(struct menu_list *menu, struct submenu_list *item
 static void initAttributeImage(const char *themePath, config_set_t *themeConfig, theme_t *theme, theme_element_t *elem, const char *name)
 {
     mutable_image_t *mutableImage = initMutableImage(themePath, themeConfig, theme, name, elem->type, NULL, 1, NULL, NULL);
-    elem->extended = mutableImage;
-    elem->endElem = &endMutableImage;
+    elem->extended                = mutableImage;
+    elem->endElem                 = &endMutableImage;
 
     if (mutableImage->cache)
         elem->drawElem = &drawAttributeImage;
@@ -634,11 +634,11 @@ static theme_element_t *initBasic(const char *themePath, config_set_t *themeConf
 
     theme_element_t *elem = (theme_element_t *)malloc(sizeof(theme_element_t));
 
-    elem->type = type;
+    elem->type     = type;
     elem->extended = NULL;
     elem->drawElem = NULL;
-    elem->endElem = &endBasic;
-    elem->next = NULL;
+    elem->endElem  = &endBasic;
+    elem->next     = NULL;
 
     snprintf(elemProp, sizeof(elemProp), "%s_x", name);
     if (configGetStr(themeConfig, elemProp, &temp)) {
@@ -719,8 +719,8 @@ static void drawBackground(struct menu_list *menu, struct submenu_list *item, co
 static void initBackground(const char *themePath, config_set_t *themeConfig, theme_t *theme, theme_element_t *elem, const char *name, const char *pattern, int count, const char *texture)
 {
     mutable_image_t *mutableImage = initMutableImage(themePath, themeConfig, theme, name, elem->type, pattern, count, texture, NULL);
-    elem->extended = mutableImage;
-    elem->endElem = &endMutableImage;
+    elem->extended                = mutableImage;
+    elem->endElem                 = &endMutableImage;
 
     if (mutableImage->cache)
         elem->drawElem = &drawGameImage;
@@ -772,7 +772,7 @@ static void drawItemsList(struct menu_list *menu, struct submenu_list *item, con
         }
 
         submenu_list_t *ps = menu->item->pagestart;
-        int others = 0;
+        int others         = 0;
         u64 color;
         while (ps && (others++ < itemsList->displayedItems)) {
             if (ps == item)
@@ -855,7 +855,7 @@ static void drawInfoHintText(struct menu_list *menu, struct submenu_list *item, 
 {
     int infoHints[2] = {_STR_RUN, _STR_BACK};
     int infoIcons[2] = {CIRCLE_ICON, CROSS_ICON};
-    int x = elem->posX;
+    int x            = elem->posX;
 
     if (elem->aligned)
         x = guiAlignSubMenuHints(2, infoHints, infoIcons, elem->font, elem->width, 1);
@@ -874,7 +874,7 @@ static void validateGUIElems(const char *themePath, config_set_t *themeConfig, t
         LOG("THEMES No valid background found for main, add default BG_ART\n");
         theme_element_t *backgroundElem = initBasic(themePath, themeConfig, theme, "bg", ELEM_TYPE_BACKGROUND, 0, 0, ALIGN_NONE, screenWidth, screenHeight, SCALING_NONE, gDefaultCol, theme->fonts[0]);
         initBackground(themePath, themeConfig, theme, backgroundElem, "bg", "BG", 1, NULL);
-        backgroundElem->next = theme->mainElems.first;
+        backgroundElem->next   = theme->mainElems.first;
         theme->mainElems.first = backgroundElem;
     }
 
@@ -883,7 +883,7 @@ static void validateGUIElems(const char *themePath, config_set_t *themeConfig, t
             LOG("THEMES No valid background found for info, add default BG_ART\n");
             theme_element_t *backgroundElem = initBasic(themePath, themeConfig, theme, "bg", ELEM_TYPE_BACKGROUND, 0, 0, ALIGN_NONE, screenWidth, screenHeight, SCALING_NONE, gDefaultCol, theme->fonts[0]);
             initBackground(themePath, themeConfig, theme, backgroundElem, "bg", "BG", 1, NULL);
-            backgroundElem->next = theme->infoElems.first;
+            backgroundElem->next   = theme->infoElems.first;
             theme->infoElems.first = backgroundElem;
         }
     }
@@ -913,7 +913,7 @@ static void validateGUIElems(const char *themePath, config_set_t *themeConfig, t
         LOG("THEMES No itemsList found, adding a default one\n");
         theme->itemsList = initBasic(themePath, themeConfig, theme, "il", ELEM_TYPE_ITEMS_LIST, 42, 42, ALIGN_NONE, 373, 316, SCALING_RATIO, theme->textColor, theme->fonts[0]);
         initItemsList(themePath, themeConfig, theme, theme->itemsList, "il", NULL);
-        theme->itemsList->next = theme->mainElems.first->next; // Position the itemsList as second element (right after the Background)
+        theme->itemsList->next       = theme->mainElems.first->next; // Position the itemsList as second element (right after the Background)
         theme->mainElems.first->next = theme->itemsList;
     }
 }
@@ -952,10 +952,10 @@ static int addGUIElem(const char *themePath, config_set_t *themeConfig, theme_t 
                     initBackground(themePath, themeConfig, theme, elem, name, NULL, 1, NULL);
                 }
             } else if (!strcmp(elementsType[ELEM_TYPE_MENU_ICON], type)) {
-                elem = initBasic(themePath, themeConfig, theme, name, ELEM_TYPE_MENU_ICON, screenWidth >> 1, 400, ALIGN_CENTER, DIM_UNDEF, DIM_UNDEF, SCALING_RATIO, gDefaultCol, theme->fonts[0]);
+                elem           = initBasic(themePath, themeConfig, theme, name, ELEM_TYPE_MENU_ICON, screenWidth >> 1, 400, ALIGN_CENTER, DIM_UNDEF, DIM_UNDEF, SCALING_RATIO, gDefaultCol, theme->fonts[0]);
                 elem->drawElem = &drawMenuIcon;
             } else if (!strcmp(elementsType[ELEM_TYPE_MENU_TEXT], type)) {
-                elem = initBasic(themePath, themeConfig, theme, name, ELEM_TYPE_MENU_TEXT, screenWidth >> 1, 20, ALIGN_CENTER, 200, 20, SCALING_RATIO, theme->textColor, theme->fonts[0]);
+                elem           = initBasic(themePath, themeConfig, theme, name, ELEM_TYPE_MENU_TEXT, screenWidth >> 1, 20, ALIGN_CENTER, 200, 20, SCALING_RATIO, theme->textColor, theme->fonts[0]);
                 elem->drawElem = &drawMenuText;
             } else if (!strcmp(elementsType[ELEM_TYPE_ITEMS_LIST], type)) {
                 if (!theme->itemsList) {
@@ -970,13 +970,13 @@ static int addGUIElem(const char *themePath, config_set_t *themeConfig, theme_t 
                 elem = initBasic(themePath, themeConfig, theme, name, ELEM_TYPE_GAME_IMAGE, 0, 0, ALIGN_CENTER, DIM_UNDEF, DIM_UNDEF, SCALING_RATIO, gDefaultCol, theme->fonts[0]);
                 initGameImage(themePath, themeConfig, theme, elem, name, "COV", 10, NULL, NULL);
             } else if (!strcmp(elementsType[ELEM_TYPE_ITEM_TEXT], type)) {
-                elem = initBasic(themePath, themeConfig, theme, name, ELEM_TYPE_ITEM_TEXT, 0, 0, ALIGN_CENTER, DIM_UNDEF, DIM_UNDEF, SCALING_RATIO, theme->textColor, theme->fonts[0]);
+                elem           = initBasic(themePath, themeConfig, theme, name, ELEM_TYPE_ITEM_TEXT, 0, 0, ALIGN_CENTER, DIM_UNDEF, DIM_UNDEF, SCALING_RATIO, theme->textColor, theme->fonts[0]);
                 elem->drawElem = &drawItemText;
             } else if (!strcmp(elementsType[ELEM_TYPE_HINT_TEXT], type)) {
-                elem = initBasic(themePath, themeConfig, theme, name, ELEM_TYPE_HINT_TEXT, 16, -HINT_HEIGHT, ALIGN_NONE, 12, 20, SCALING_RATIO, theme->textColor, theme->fonts[0]);
+                elem           = initBasic(themePath, themeConfig, theme, name, ELEM_TYPE_HINT_TEXT, 16, -HINT_HEIGHT, ALIGN_NONE, 12, 20, SCALING_RATIO, theme->textColor, theme->fonts[0]);
                 elem->drawElem = &drawHintText;
             } else if (!strcmp(elementsType[ELEM_TYPE_INFO_HINT_TEXT], type)) {
-                elem = initBasic(themePath, themeConfig, theme, name, ELEM_TYPE_INFO_HINT_TEXT, 16, -HINT_HEIGHT, ALIGN_NONE, 12, 20, SCALING_RATIO, theme->textColor, theme->fonts[0]);
+                elem           = initBasic(themePath, themeConfig, theme, name, ELEM_TYPE_INFO_HINT_TEXT, 16, -HINT_HEIGHT, ALIGN_NONE, 12, 20, SCALING_RATIO, theme->textColor, theme->fonts[0]);
                 elem->drawElem = &drawInfoHintText;
             } else if (!strcmp(elementsType[ELEM_TYPE_LOADING_ICON], type)) {
                 if (!theme->loadingIcon)
@@ -991,7 +991,7 @@ static int addGUIElem(const char *themePath, config_set_t *themeConfig, theme_t 
                     elems->last = elem;
                 else {
                     elems->last->next = elem;
-                    elems->last = elem;
+                    elems->last       = elem;
                 }
             }
         } else
@@ -1060,12 +1060,12 @@ static int thmReadEntry(int index, const char *path, const char *separator, cons
     if (S_ISDIR(mode) && strstr(name, "thm_")) {
         theme_file_t *currTheme = &themes[nThemes + index];
 
-        int length = strlen(name) - 4 + 1;
+        int length      = strlen(name) - 4 + 1;
         currTheme->name = (char *)malloc(length * sizeof(char));
         memcpy(currTheme->name, name + 4, length);
         currTheme->name[length - 1] = '\0';
 
-        length = strlen(path) + 1 + strlen(name) + 1 + 1;
+        length              = strlen(path) + 1 + strlen(name) + 1 + 1;
         currTheme->filePath = (char *)malloc(length * sizeof(char));
         sprintf(currTheme->filePath, "%s%s%s%s", path, separator, name, separator);
 
@@ -1093,14 +1093,14 @@ static int thmLoadResource(GSTEXTURE *texture, int texId, const char *themePath,
 static void thmSetColors(theme_t *theme)
 {
     memcpy(theme->bgColor, gDefaultBgColor, 3);
-    theme->textColor = GS_SETREG_RGBA(gDefaultTextColor[0], gDefaultTextColor[1], gDefaultTextColor[2], 0x80);
-    theme->uiTextColor = GS_SETREG_RGBA(gDefaultUITextColor[0], gDefaultUITextColor[1], gDefaultUITextColor[2], 0x80);
+    theme->textColor    = GS_SETREG_RGBA(gDefaultTextColor[0], gDefaultTextColor[1], gDefaultTextColor[2], 0x80);
+    theme->uiTextColor  = GS_SETREG_RGBA(gDefaultUITextColor[0], gDefaultUITextColor[1], gDefaultUITextColor[2], 0x80);
     theme->selTextColor = GS_SETREG_RGBA(gDefaultSelTextColor[0], gDefaultSelTextColor[1], gDefaultSelTextColor[2], 0x80);
 
     theme_element_t *elem = theme->mainElems.first;
     while (elem) {
         elem->color = theme->textColor;
-        elem = elem->next;
+        elem        = elem->next;
     }
 }
 
@@ -1143,13 +1143,13 @@ static void thmLoad(const char *themePath)
     newT->useDefault = 1;
     newT->usedHeight = 480;
     thmSetColors(newT);
-    newT->mainElems.first = NULL;
-    newT->mainElems.last = NULL;
-    newT->infoElems.first = NULL;
-    newT->infoElems.last = NULL;
-    newT->gameCacheCount = 0;
-    newT->itemsList = NULL;
-    newT->loadingIcon = NULL;
+    newT->mainElems.first  = NULL;
+    newT->mainElems.last   = NULL;
+    newT->infoElems.first  = NULL;
+    newT->infoElems.last   = NULL;
+    newT->gameCacheCount   = 0;
+    newT->itemsList        = NULL;
+    newT->loadingIcon      = NULL;
     newT->loadingIconCount = LOAD7_ICON - LOAD0_ICON + 1;
 
     config_set_t *themeConfig = NULL;
@@ -1216,7 +1216,7 @@ static void thmLoad(const char *themePath)
 
     // First start with busy icon
     const char *themePath_temp = themePath;
-    int customBusy = 0;
+    int customBusy             = 0;
     for (i = LOAD0_ICON; i <= LOAD7_ICON; i++) {
         if (thmLoadResource(&newT->textures[i], i, themePath_temp, GS_PSM_CT32, newT->useDefault) >= 0)
             customBusy = 1;
@@ -1308,10 +1308,10 @@ void thmReinit(const char *path)
             LOG("THEMES Remove theme: %s\n", themes[i].filePath);
             nThemes--;
             free(themes[i].name);
-            themes[i].name = themes[nThemes].name;
+            themes[i].name       = themes[nThemes].name;
             themes[nThemes].name = NULL;
             free(themes[i].filePath);
-            themes[i].filePath = themes[nThemes].filePath;
+            themes[i].filePath       = themes[nThemes].filePath;
             themes[nThemes].filePath = NULL;
         } else
             i++;
@@ -1369,7 +1369,7 @@ const char **thmGetGuiList(void)
 char *thmGetFilePath(int themeID)
 {
     theme_file_t *currTheme = &themes[themeID - 1];
-    char *path = currTheme->filePath;
+    char *path              = currTheme->filePath;
 
     return path;
 }

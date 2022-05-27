@@ -87,16 +87,16 @@ int _start(int argc, char **argv)
 
     if (m != NULL) {
         sema.initial = 1;
-        sema.max = 1;
-        sema.option = 0;
-        sema.attr = SA_THFIFO;
+        sema.max     = 1;
+        sema.option  = 0;
+        sema.attr    = SA_THFIFO;
 
         lockSema = CreateSema(&sema);
 
-        event.attr = EA_SINGLE;
+        event.attr   = EA_SINGLE;
         event.option = 0;
-        event.bits = 0;
-        evFlag = CreateEventFlag(&event);
+        event.bits   = 0;
+        evFlag       = CreateEventFlag(&event);
 
         /* Apply patch on module.  */
         *(vu32 *)(m->text_start + 0x00003bf8) = JAL((u32)&_lock);

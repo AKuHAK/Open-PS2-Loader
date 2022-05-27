@@ -53,7 +53,7 @@ int sceCdGetToc(u8 *toc)
 
     cdvdman_stat.err = SCECdErREAD;
 
-    return 0; //Not supported
+    return 0; // Not supported
 }
 
 //-------------------------------------------------------------------------
@@ -76,7 +76,7 @@ int sceCdSeek(u32 lsn)
 //-------------------------------------------------------------------------
 int sceCdStandby(void)
 {
-    cdvdman_stat.err = SCECdErNO;
+    cdvdman_stat.err    = SCECdErNO;
     cdvdman_stat.status = SCECdStatPause;
 
     cdvdman_cb_event(SCECdFuncStandby);

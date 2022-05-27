@@ -49,10 +49,10 @@ int _start(int argc, char *argv[])
     if (RegisterLibraryEntries(&_exp_nbnsman) == 0) {
         nbnsInit();
 
-        thread.attr = TH_C;
-        thread.option = 0x0B0B0001;
-        thread.thread = &RpcThread;
-        thread.priority = 0x20;
+        thread.attr      = TH_C;
+        thread.option    = 0x0B0B0001;
+        thread.thread    = &RpcThread;
+        thread.priority  = 0x20;
         thread.stacksize = 0x800;
         if ((RpcThreadID = CreateThread(&thread)) > 0) {
             StartThread(RpcThreadID, NULL);

@@ -87,28 +87,28 @@ void UpdateGSMParams(s16 interlace, s16 mode, s16 ffmd, u64 display, u64 syncv, 
     int gs_DH, gs_DW, gs_DY, gs_DX;
 
     GSMDestSetGsCrt.interlace = interlace;
-    GSMDestSetGsCrt.mode = mode;
-    GSMDestSetGsCrt.ffmd = ffmd;
+    GSMDestSetGsCrt.mode      = mode;
+    GSMDestSetGsCrt.ffmd      = ffmd;
 
-    GSMDestGSRegs.smode2 = (u8)smode2;
+    GSMDestGSRegs.smode2   = (u8)smode2;
     GSMDestGSRegs.display1 = (u64)display;
     GSMDestGSRegs.display2 = (u64)display;
-    GSMDestGSRegs.syncv = (u64)syncv;
+    GSMDestGSRegs.syncv    = (u64)syncv;
 
     GSMFlags.dx_offset = (u32)dx_offset; // X-axis offset -> Use it only when automatic adaptations formulas don't suffice
     GSMFlags.dy_offset = (u32)dy_offset; // Y-axis offset -> Use it only when automatic adaptations formulas don't suffice
     // 0 = Off, 1 = On
     GSMFlags.ADAPTATION_fix = 1; // Default = 1 = On
-    GSMFlags.PMODE_fix = 0;      // Default = 0 = Off
-    GSMFlags.SMODE1_fix = 0;     // Default = 0 = Off
-    GSMFlags.SMODE2_fix = 1;     // Default = 1 = On
-    GSMFlags.SRFSH_fix = 0;      // Default = 0 = Off
-    GSMFlags.SYNCH_fix = 0;      // Default = 0 = Off
-    GSMFlags.SYNCV_fix = 0;      // Default = 0 = Off
-    GSMFlags.DISPFB_fix = 1;     // Default = 1 = On
-    GSMFlags.DISPLAY_fix = 1;    // Default = 1 = On
-    GSMFlags.FIELD_fix = (FIELD_fix ? (1 << 2) : 0);
-    GSMFlags.gs576P_param = (k576p_fix ? (1 << 1) : 0) | (hvParam & 1);
+    GSMFlags.PMODE_fix      = 0; // Default = 0 = Off
+    GSMFlags.SMODE1_fix     = 0; // Default = 0 = Off
+    GSMFlags.SMODE2_fix     = 1; // Default = 1 = On
+    GSMFlags.SRFSH_fix      = 0; // Default = 0 = Off
+    GSMFlags.SYNCH_fix      = 0; // Default = 0 = Off
+    GSMFlags.SYNCV_fix      = 0; // Default = 0 = Off
+    GSMFlags.DISPFB_fix     = 1; // Default = 1 = On
+    GSMFlags.DISPLAY_fix    = 1; // Default = 1 = On
+    GSMFlags.FIELD_fix      = (FIELD_fix ? (1 << 2) : 0);
+    GSMFlags.gs576P_param   = (k576p_fix ? (1 << 1) : 0) | (hvParam & 1);
 
     if (kGsDxDyOffsetSupported && (!(mode >= GS_MODE_NTSC && mode <= GS_MODE_PAL))) {
         _GetGsDxDyOffset(mode, &gs_DX, &gs_DY, &gs_DW, &gs_DH);

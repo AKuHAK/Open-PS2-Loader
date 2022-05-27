@@ -19,7 +19,7 @@ s32 guiThreadID;
 
 static int order;
 static short int vmode = -1;
-static u8 hires = 0;
+static u8 hires        = 0;
 static u8 guiWakeupCount;
 static int vsync_id = -1;
 
@@ -63,7 +63,7 @@ static struct rm_mode rm_mode_table[NUM_RM_VMODES] = {
 // clang-format on
 
 // Display Aspect Ratio
-static int iAspectWidth = 4;
+static int iAspectWidth   = 4;
 static enum rm_aratio DAR = RM_ARATIO_4_3;
 
 // Display dimensions after overscan compensation
@@ -76,12 +76,12 @@ static int iDisplayYOff;
 static float fRenderXOff = 0.0f;
 static float fRenderYOff = 0.0f;
 
-const u64 gColWhite = GS_SETREG_RGBA(0xFF, 0xFF, 0xFF, 0x80);  // Alpha 0x80 -> solid white
-const u64 gColBlack = GS_SETREG_RGBA(0x00, 0x00, 0x00, 0x80);  // Alpha 0x80 -> solid black
+const u64 gColWhite  = GS_SETREG_RGBA(0xFF, 0xFF, 0xFF, 0x80); // Alpha 0x80 -> solid white
+const u64 gColBlack  = GS_SETREG_RGBA(0x00, 0x00, 0x00, 0x80); // Alpha 0x80 -> solid black
 const u64 gColDarker = GS_SETREG_RGBA(0x00, 0x00, 0x00, 0x60); // Alpha 0x60 -> transparent overlay color
-const u64 gColFocus = GS_SETREG_RGBA(0xFF, 0xFF, 0xFF, 0x50);  // Alpha 0x50 -> transparent overlay color
+const u64 gColFocus  = GS_SETREG_RGBA(0xFF, 0xFF, 0xFF, 0x50); // Alpha 0x50 -> transparent overlay color
 
-const u64 gDefaultCol = GS_SETREG_RGBA(0x80, 0x80, 0x80, 0x80); // Special color for texture multiplication
+const u64 gDefaultCol   = GS_SETREG_RGBA(0x80, 0x80, 0x80, 0x80); // Special color for texture multiplication
 const u64 gDefaultAlpha = GS_SETREG_ALPHA(0, 1, 0, 1, 0);
 
 void rmInvalidateTexture(GSTEXTURE *txt)
@@ -147,9 +147,9 @@ void rmInit()
 {
     short int mode = gsKit_check_rom();
 
-    rm_mode_table[RM_VMODE_AUTO].mode = mode;
+    rm_mode_table[RM_VMODE_AUTO].mode   = mode;
     rm_mode_table[RM_VMODE_AUTO].height = (mode == GS_MODE_PAL) ? 512 : 448;
-    rm_mode_table[RM_VMODE_AUTO].PAR1 = (mode == GS_MODE_PAL) ? 16 : 14;
+    rm_mode_table[RM_VMODE_AUTO].PAR1   = (mode == GS_MODE_PAL) ? 16 : 14;
 
     dmaKit_init(D_CTRL_RELE_OFF, D_CTRL_MFD_OFF, D_CTRL_STS_UNSPEC,
                 D_CTRL_STD_OFF, D_CTRL_RCYC_8, 1 << DMA_CHANNEL_GIF);
@@ -162,7 +162,7 @@ void rmInit()
     order = 0;
 
     guiWakeupCount = 0;
-    guiThreadID = GetThreadId();
+    guiThreadID    = GetThreadId();
 }
 
 int rmSetMode(int force)
@@ -186,26 +186,26 @@ int rmSetMode(int force)
             gsGlobal = gsKit_init_global();
             vsync_id = gsKit_add_vsync_handler(&rmOnVSync);
         }
-        gsGlobal->Mode = rm_mode_table[vmode].mode;
-        gsGlobal->Width = rm_mode_table[vmode].width;
-        gsGlobal->Height = rm_mode_table[vmode].height;
+        gsGlobal->Mode      = rm_mode_table[vmode].mode;
+        gsGlobal->Width     = rm_mode_table[vmode].width;
+        gsGlobal->Height    = rm_mode_table[vmode].height;
         gsGlobal->Interlace = rm_mode_table[vmode].interlace;
-        gsGlobal->Field = rm_mode_table[vmode].field;
-        gsGlobal->PSM = GS_PSM_CT24;
+        gsGlobal->Field     = rm_mode_table[vmode].field;
+        gsGlobal->PSM       = GS_PSM_CT24;
         // Higher resolution use too much VRAM
         // so automatically switch back to 16bit color depth
         if ((gsGlobal->Width * gsGlobal->Height) > (704 * 576))
             gsGlobal->PSM = GS_PSM_CT16S;
-        gsGlobal->PSMZ = GS_PSMZ_16S;
-        gsGlobal->ZBuffering = GS_SETTING_OFF;
+        gsGlobal->PSMZ            = GS_PSMZ_16S;
+        gsGlobal->ZBuffering      = GS_SETTING_OFF;
         gsGlobal->PrimAlphaEnable = GS_SETTING_ON;
         gsGlobal->DoubleBuffering = GS_SETTING_ON;
-        gsGlobal->Dithering = GS_SETTING_ON;
+        gsGlobal->Dithering       = GS_SETTING_ON;
 
         // Do not draw pixels if they are fully transparent
         // gsGlobal->Test->ATE  = GS_SETTING_ON;
-        gsGlobal->Test->ATST = 7; // NOTEQUAL to AREF passes
-        gsGlobal->Test->AREF = 0x00;
+        gsGlobal->Test->ATST  = 7; // NOTEQUAL to AREF passes
+        gsGlobal->Test->AREF  = 0x00;
         gsGlobal->Test->AFAIL = 0; // KEEP
 
         if ((gsGlobal->Interlace == GS_INTERLACED) && (gsGlobal->Field == GS_FRAME))
@@ -309,7 +309,7 @@ static void rmSetupQuad(GSTEXTURE *txt, int x, int y, short aligned, int w, int 
 
     q->color = color;
     if (txt) {
-        q->txt = txt;
+        q->txt  = txt;
         q->ul.u = 0;
         q->ul.v = 0;
         q->br.u = txt->Width;
@@ -472,9 +472,9 @@ int rmUnScaleY(int y)
 
 void rmSetOverscan(int overscan)
 {
-    iDisplayXOff = (gsGlobal->Width * overscan) / (2 * 1000);
-    iDisplayYOff = (gsGlobal->Height * overscan) / (2 * 1000);
-    iDisplayWidth = gsGlobal->Width - (2 * iDisplayXOff);
+    iDisplayXOff   = (gsGlobal->Width * overscan) / (2 * 1000);
+    iDisplayYOff   = (gsGlobal->Height * overscan) / (2 * 1000);
+    iDisplayWidth  = gsGlobal->Width - (2 * iDisplayXOff);
     iDisplayHeight = gsGlobal->Height - (2 * iDisplayYOff);
 
     fRenderXOff = (float)iDisplayXOff - 0.5f;

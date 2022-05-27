@@ -15,7 +15,7 @@
 #include "sys_utils.h"
 #include "padmacro.h"
 
-//#define DPRINTF(x...) printf(x)
+// #define DPRINTF(x...) printf(x)
 #define DPRINTF(x...)
 
 static int bt_probe(int devId);
@@ -24,7 +24,7 @@ static int bt_disconnect(int devId);
 static void bt_config_set(int result, int count, void *arg);
 
 static UsbDriver bt_driver = {NULL, NULL, "ds34bt", bt_probe, bt_connect, bt_disconnect};
-static bt_device bt_dev = {-1, -1, -1, -1, -1, -1, DS34BT_STATE_USB_DISCONNECTED};
+static bt_device bt_dev    = {-1, -1, -1, -1, -1, -1, DS34BT_STATE_USB_DISCONNECTED};
 
 static int chrg_probe(int devId);
 static int chrg_connect(int devId);
@@ -38,8 +38,8 @@ static void ds34pad_init();
 
 static int bt_probe(int devId)
 {
-    UsbDeviceDescriptor *device = NULL;
-    UsbConfigDescriptor *config = NULL;
+    UsbDeviceDescriptor *device  = NULL;
+    UsbConfigDescriptor *config  = NULL;
     UsbInterfaceDescriptor *intf = NULL;
 
     DPRINTF("DS34BT: probe: devId=%i\n", devId);
@@ -101,13 +101,13 @@ static int bt_connect(int devId)
     bt_dev.status = DS34BT_STATE_USB_DISCONNECTED;
 
     bt_dev.interruptEndp = -1;
-    bt_dev.inEndp = -1;
-    bt_dev.outEndp = -1;
+    bt_dev.inEndp        = -1;
+    bt_dev.outEndp       = -1;
 
     bt_dev.controlEndp = UsbOpenEndpoint(devId, NULL);
 
-    device = (UsbDeviceDescriptor *)UsbGetDeviceStaticDescriptor(devId, NULL, USB_DT_DEVICE);
-    config = (UsbConfigDescriptor *)UsbGetDeviceStaticDescriptor(devId, device, USB_DT_CONFIG);
+    device    = (UsbDeviceDescriptor *)UsbGetDeviceStaticDescriptor(devId, NULL, USB_DT_DEVICE);
+    config    = (UsbConfigDescriptor *)UsbGetDeviceStaticDescriptor(devId, device, USB_DT_CONFIG);
     interface = (UsbInterfaceDescriptor *)((char *)config + config->bLength);
 
     epCount = interface->bNumEndpoints - 1;
@@ -142,7 +142,7 @@ static int bt_connect(int devId)
         return -1;
     }
 
-    bt_dev.devId = devId;
+    bt_dev.devId  = devId;
     bt_dev.status = DS34BT_STATE_USB_AUTHORIZED;
 
     UsbSetDeviceConfiguration(bt_dev.controlEndp, config->bConfigurationValue, bt_config_set, NULL);
@@ -165,12 +165,12 @@ static int bt_disconnect(int devId)
         if (bt_dev.outEndp >= 0)
             UsbCloseEndpoint(bt_dev.outEndp);
 
-        bt_dev.devId = -1;
+        bt_dev.devId         = -1;
         bt_dev.interruptEndp = -1;
-        bt_dev.inEndp = -1;
-        bt_dev.outEndp = -1;
-        bt_dev.controlEndp = -1;
-        bt_dev.status = DS34BT_STATE_USB_DISCONNECTED;
+        bt_dev.inEndp        = -1;
+        bt_dev.outEndp       = -1;
+        bt_dev.controlEndp   = -1;
+        bt_dev.status        = DS34BT_STATE_USB_DISCONNECTED;
 
         ds34pad_init();
         SignalSema(bt_dev.hid_sema);
@@ -330,12 +330,12 @@ static u8 GenuineMacAddress[][3] =
 #define MAX_PADS  4
 #define MAX_DELAY 10
 
-static u8 hci_buf[MAX_BUFFER_SIZE] __attribute((aligned(4))) = {0};
-static u8 l2cap_buf[MAX_BUFFER_SIZE + 32] __attribute((aligned(4))) = {0};
-static u8 hci_cmd_buf[MAX_BUFFER_SIZE] __attribute((aligned(4))) = {0};
+static u8 hci_buf[MAX_BUFFER_SIZE] __attribute((aligned(4)))            = {0};
+static u8 l2cap_buf[MAX_BUFFER_SIZE + 32] __attribute((aligned(4)))     = {0};
+static u8 hci_cmd_buf[MAX_BUFFER_SIZE] __attribute((aligned(4)))        = {0};
 static u8 l2cap_cmd_buf[MAX_BUFFER_SIZE + 32] __attribute((aligned(4))) = {0};
 
-static u8 identifier = 0;
+static u8 identifier  = 0;
 static u8 g_press_emu = 0;
 static u8 enable_fake = 0;
 
@@ -410,16 +410,16 @@ static int hci_accept_connection(u8 *bdaddr)
 
 static int hci_remote_name(u8 *bdaddr)
 {
-    hci_cmd_buf[0] = HCI_OCF_REMOTE_NAME; // HCI OCF = 19
-    hci_cmd_buf[1] = HCI_OGF_LINK_CNTRL;  // HCI OGF = 1
-    hci_cmd_buf[2] = 0x0A;                // parameter length = 10
-    hci_cmd_buf[3] = *bdaddr;             // 6 octet bluetooth address
-    hci_cmd_buf[4] = *(bdaddr + 1);
-    hci_cmd_buf[5] = *(bdaddr + 2);
-    hci_cmd_buf[6] = *(bdaddr + 3);
-    hci_cmd_buf[7] = *(bdaddr + 4);
-    hci_cmd_buf[8] = *(bdaddr + 5);
-    hci_cmd_buf[9] = 0x01;  // Page Scan Repetition Mode
+    hci_cmd_buf[0]  = HCI_OCF_REMOTE_NAME; // HCI OCF = 19
+    hci_cmd_buf[1]  = HCI_OGF_LINK_CNTRL;  // HCI OGF = 1
+    hci_cmd_buf[2]  = 0x0A;                // parameter length = 10
+    hci_cmd_buf[3]  = *bdaddr;             // 6 octet bluetooth address
+    hci_cmd_buf[4]  = *(bdaddr + 1);
+    hci_cmd_buf[5]  = *(bdaddr + 2);
+    hci_cmd_buf[6]  = *(bdaddr + 3);
+    hci_cmd_buf[7]  = *(bdaddr + 4);
+    hci_cmd_buf[8]  = *(bdaddr + 5);
+    hci_cmd_buf[9]  = 0x01; // Page Scan Repetition Mode
     hci_cmd_buf[10] = 0x00; // Reserved
     hci_cmd_buf[11] = 0x00; // Clock offset - low byte
     hci_cmd_buf[12] = 0x00; // Clock offset - high byte
@@ -600,7 +600,7 @@ static void HCI_event_task(int result)
                         break;
                     }
                     if (memcmp(hci_buf + 9, "Wireless Controller", 19) == 0) {
-                        ds34pad[i].type = DS4;
+                        ds34pad[i].type   = DS4;
                         ds34pad[i].isfake = 0;
                         DPRINTF("\t Type: Dualshock 4 \n");
                     } else {
@@ -719,17 +719,17 @@ static void ds34pad_clear(int pad)
     if (pad >= MAX_PADS)
         return;
 
-    ds34pad[pad].hci_handle = 0x0FFF;
-    ds34pad[pad].control_scid = 0;
+    ds34pad[pad].hci_handle     = 0x0FFF;
+    ds34pad[pad].control_scid   = 0;
     ds34pad[pad].interrupt_scid = 0;
     mips_memset(ds34pad[pad].bdaddr, 0, 6);
     ds34pad[pad].status = bt_dev.status;
     ds34pad[pad].status |= DS34BT_STATE_USB_CONFIGURED;
-    ds34pad[pad].isfake = 0;
-    ds34pad[pad].type = 0;
+    ds34pad[pad].isfake    = 0;
+    ds34pad[pad].type      = 0;
     ds34pad[pad].btn_delay = 0;
-    ds34pad[pad].data[0] = 0xFF;
-    ds34pad[pad].data[1] = 0xFF;
+    ds34pad[pad].data[0]   = 0xFF;
+    ds34pad[pad].data[1]   = 0xFF;
     mips_memset(&ds34pad[pad].data[2], 0x7F, 4);
     mips_memset(&ds34pad[pad].data[6], 0x00, 12);
 }
@@ -743,7 +743,7 @@ static void ds34pad_init()
     }
 
     g_press_emu = 0;
-    identifier = 0;
+    identifier  = 0;
 }
 
 static void hci_event_cb(int resultCode, int bytes, void *arg)
@@ -795,16 +795,16 @@ static int l2cap_connection_response(u16 handle, u8 rxid, u16 dcid, u16 scid, u8
 {
     u8 cmd_buf[12];
 
-    cmd_buf[0] = L2CAP_CMD_CONNECTION_RESPONSE; // Code
-    cmd_buf[1] = rxid;                          // Identifier
-    cmd_buf[2] = 0x08;                          // Length
-    cmd_buf[3] = 0x00;
-    cmd_buf[4] = (u8)(dcid & 0xff); // Destination CID (Our)
-    cmd_buf[5] = (u8)(dcid >> 8);
-    cmd_buf[6] = (u8)(scid & 0xff); // Source CID (PS Remote)
-    cmd_buf[7] = (u8)(scid >> 8);
-    cmd_buf[8] = result; // Result
-    cmd_buf[9] = 0x00;
+    cmd_buf[0]  = L2CAP_CMD_CONNECTION_RESPONSE; // Code
+    cmd_buf[1]  = rxid;                          // Identifier
+    cmd_buf[2]  = 0x08;                          // Length
+    cmd_buf[3]  = 0x00;
+    cmd_buf[4]  = (u8)(dcid & 0xff); // Destination CID (Our)
+    cmd_buf[5]  = (u8)(dcid >> 8);
+    cmd_buf[6]  = (u8)(scid & 0xff); // Source CID (PS Remote)
+    cmd_buf[7]  = (u8)(scid >> 8);
+    cmd_buf[8]  = result; // Result
+    cmd_buf[9]  = 0x00;
     cmd_buf[10] = 0x00; // Status
     cmd_buf[11] = 0x00;
 
@@ -842,16 +842,16 @@ static int l2cap_config_response(u16 handle, u8 rxid, u16 scid)
 {
     u8 cmd_buf[14];
 
-    cmd_buf[0] = L2CAP_CMD_CONFIG_RESPONSE; // Code
-    cmd_buf[1] = rxid;                      // Identifier
-    cmd_buf[2] = 0x0A;                      // Length
-    cmd_buf[3] = 0x00;
-    cmd_buf[4] = (u8)(scid & 0xff); // Source CID
-    cmd_buf[5] = (u8)(scid >> 8);
-    cmd_buf[6] = 0x00; // Result
-    cmd_buf[7] = 0x00;
-    cmd_buf[8] = 0x00; // Config
-    cmd_buf[9] = 0x00;
+    cmd_buf[0]  = L2CAP_CMD_CONFIG_RESPONSE; // Code
+    cmd_buf[1]  = rxid;                      // Identifier
+    cmd_buf[2]  = 0x0A;                      // Length
+    cmd_buf[3]  = 0x00;
+    cmd_buf[4]  = (u8)(scid & 0xff); // Source CID
+    cmd_buf[5]  = (u8)(scid >> 8);
+    cmd_buf[6]  = 0x00; // Result
+    cmd_buf[7]  = 0x00;
+    cmd_buf[8]  = 0x00; // Config
+    cmd_buf[9]  = 0x00;
     cmd_buf[10] = 0x01; // Config
     cmd_buf[11] = 0x02;
     cmd_buf[12] = 0xA0;
@@ -896,8 +896,8 @@ static int l2cap_disconnection_response(u16 handle, u8 rxid, u16 scid, u16 dcid)
 
 static int L2CAP_event_task(int result, int bytes)
 {
-    int pad = -1;
-    u16 control_dcid = 0x0040;   // Channel endpoint on command source
+    int pad            = -1;
+    u16 control_dcid   = 0x0040; // Channel endpoint on command source
     u16 interrupt_dcid = 0x0041; // Channel endpoint on interrupt source
 
     if (!result) {
@@ -913,7 +913,7 @@ static int L2CAP_event_task(int result, int bytes)
 
         if (l2cap_handle_ok(ds34pad[pad].hci_handle)) {
             if (ds34pad[pad].type == DS4) {
-                control_dcid = 0x0070;
+                control_dcid   = 0x0070;
                 interrupt_dcid = 0x0071;
             }
 
@@ -1185,7 +1185,7 @@ static int hid_LEDRumbleCommand(u8 *led, u8 lrum, u8 rrum, int pad)
         led_buf[7] = rrum * 255;
         led_buf[8] = lrum;
 
-        led_buf[9] = led[0];  // r
+        led_buf[9]  = led[0]; // r
         led_buf[10] = led[1]; // g
         led_buf[11] = led[2]; // b
 
@@ -1324,8 +1324,8 @@ void ds34bt_set_rumble(u8 lrum, u8 rrum, int port)
     WaitSema(bt_dev.hid_sema);
 
     ds34pad[port].update_rum = 1;
-    ds34pad[port].lrum = lrum;
-    ds34pad[port].rrum = rrum;
+    ds34pad[port].lrum       = lrum;
+    ds34pad[port].rrum       = rrum;
 
     SignalSema(bt_dev.hid_sema);
 }

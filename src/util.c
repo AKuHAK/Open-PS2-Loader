@@ -46,28 +46,28 @@ static int checkMC()
     int mc0_has_folder, mc1_has_folder;
 
     if (mcID == -1) {
-        mc0_is_ps2card = 0;
+        mc0_is_ps2card    = 0;
         DIR *mc0_root_dir = opendir("mc0:/");
         if (mc0_root_dir != NULL) {
             closedir(mc0_root_dir);
             mc0_is_ps2card = 1;
         }
 
-        mc1_is_ps2card = 0;
+        mc1_is_ps2card    = 0;
         DIR *mc1_root_dir = opendir("mc1:/");
         if (mc1_root_dir != NULL) {
             closedir(mc1_root_dir);
             mc1_is_ps2card = 1;
         }
 
-        mc0_has_folder = 0;
+        mc0_has_folder   = 0;
         DIR *mc0_opl_dir = opendir("mc0:OPL/");
         if (mc0_opl_dir != NULL) {
             closedir(mc0_opl_dir);
             mc0_has_folder = 1;
         }
 
-        mc1_has_folder = 0;
+        mc1_has_folder   = 0;
         DIR *mc1_opl_dir = opendir("mc1:OPL/");
         if (mc1_opl_dir != NULL) {
             closedir(mc1_opl_dir);
@@ -156,7 +156,7 @@ static int checkFile(char *path, int mode)
             if (pos) {
                 memcpy(dirPath, path, (pos - path));
                 dirPath[(pos - path)] = '\0';
-                DIR *dir = opendir(dirPath);
+                DIR *dir              = opendir(dirPath);
                 if (dir == NULL) {
                     int res = mkdir(dirPath, 0777);
                     if (res != 0)
@@ -239,10 +239,10 @@ file_buffer_t *openFileBuffer(char *fpath, int mode, short allocResult, unsigned
 
     int fd = openFile(fpath, mode);
     if (fd >= 0) {
-        fileBuffer = (file_buffer_t *)malloc(sizeof(file_buffer_t));
-        fileBuffer->size = size;
+        fileBuffer            = (file_buffer_t *)malloc(sizeof(file_buffer_t));
+        fileBuffer->size      = size;
         fileBuffer->available = 0;
-        fileBuffer->buffer = (char *)malloc(size * sizeof(char));
+        fileBuffer->buffer    = (char *)malloc(size * sizeof(char));
         if (mode == O_RDONLY) {
             fileBuffer->lastPtr = NULL;
 
@@ -255,8 +255,8 @@ file_buffer_t *openFileBuffer(char *fpath, int mode, short allocResult, unsigned
         } else
             fileBuffer->lastPtr = fileBuffer->buffer;
         fileBuffer->allocResult = allocResult;
-        fileBuffer->fd = fd;
-        fileBuffer->mode = mode;
+        fileBuffer->fd          = fd;
+        fileBuffer->mode        = mode;
     }
 
     return fileBuffer;
@@ -267,14 +267,14 @@ file_buffer_t *openFileBufferBuffer(short allocResult, const void *buffer, unsig
 {
     file_buffer_t *fileBuffer = NULL;
 
-    fileBuffer = (file_buffer_t *)malloc(sizeof(file_buffer_t));
-    fileBuffer->size = size;
-    fileBuffer->available = size;
-    fileBuffer->buffer = (char *)malloc((size + 1) * sizeof(char));
-    fileBuffer->lastPtr = fileBuffer->buffer; // O_RDONLY, but with the data in the buffer.
+    fileBuffer              = (file_buffer_t *)malloc(sizeof(file_buffer_t));
+    fileBuffer->size        = size;
+    fileBuffer->available   = size;
+    fileBuffer->buffer      = (char *)malloc((size + 1) * sizeof(char));
+    fileBuffer->lastPtr     = fileBuffer->buffer; // O_RDONLY, but with the data in the buffer.
     fileBuffer->allocResult = allocResult;
-    fileBuffer->fd = -1;
-    fileBuffer->mode = O_RDONLY;
+    fileBuffer->fd          = -1;
+    fileBuffer->mode        = O_RDONLY;
 
     memcpy(fileBuffer->buffer, buffer, size);
     fileBuffer->buffer[size] = '\0';
@@ -285,7 +285,7 @@ file_buffer_t *openFileBufferBuffer(short allocResult, const void *buffer, unsig
 int readFileBuffer(file_buffer_t *fileBuffer, char **outBuf)
 {
     int lineSize = 0, readSize, length;
-    char *posLF = NULL;
+    char *posLF  = NULL;
 
     while (1) {
         // if lastPtr is set, then we continue the read from this point as reference
@@ -311,7 +311,7 @@ int readFileBuffer(file_buffer_t *fileBuffer, char **outBuf)
                 // Load as many characters necessary to fill the buffer
                 length = fileBuffer->size - lineSize - 1;
                 // LOG("##### Asking for %d characters to complete buffer\n", length);
-                readSize = read(fileBuffer->fd, fileBuffer->buffer + lineSize, length);
+                readSize                                = read(fileBuffer->fd, fileBuffer->buffer + lineSize, length);
                 fileBuffer->buffer[lineSize + readSize] = '\0';
 
                 // Search again (from the lastly added chars only), the result will be "analyzed" in next if
@@ -329,7 +329,7 @@ int readFileBuffer(file_buffer_t *fileBuffer, char **outBuf)
                 }
             }
 
-            fileBuffer->lastPtr = fileBuffer->buffer;
+            fileBuffer->lastPtr   = fileBuffer->buffer;
             fileBuffer->available = lineSize;
         }
 
@@ -342,7 +342,7 @@ int readFileBuffer(file_buffer_t *fileBuffer, char **outBuf)
                 lineSize--;
 
         fileBuffer->lastPtr[lineSize] = '\0';
-        *outBuf = fileBuffer->lastPtr;
+        *outBuf                       = fileBuffer->lastPtr;
 
         // LOG("##### Result line is \"%s\" size: %d avail: %d pos: %d\n", fileBuffer->lastPtr, lineSize, fileBuffer->available, fileBuffer->lastPtr - fileBuffer->buffer);
 
@@ -380,7 +380,7 @@ void writeFileBuffer(file_buffer_t *fileBuffer, char *inBuf, int size)
     if (fileBuffer->available && fileBuffer->available + size > fileBuffer->size) {
         // LOG("writeFileBuffer flushing: %d\n", fileBuffer->available);
         write(fileBuffer->fd, fileBuffer->buffer, fileBuffer->available);
-        fileBuffer->lastPtr = fileBuffer->buffer;
+        fileBuffer->lastPtr   = fileBuffer->buffer;
         fileBuffer->available = 0;
     }
 
@@ -440,15 +440,15 @@ char toHex(int digit)
     return htab[digit & 0x0F];
 }
 
-static short int ConsoleRegion = CONSOLE_REGION_INVALID;
+static short int ConsoleRegion     = CONSOLE_REGION_INVALID;
 static char SystemDataFolderPath[] = "BRDATA-SYSTEM";
-static char SystemFolderLetter = 'R';
+static char SystemFolderLetter     = 'R';
 
 static void UpdateSystemPaths(void)
 {
     char regions[CONSOLE_REGION_COUNT] = {'I', 'A', 'E', 'C'};
 
-    SystemFolderLetter = regions[ConsoleRegion];
+    SystemFolderLetter      = regions[ConsoleRegion];
     SystemDataFolderPath[1] = SystemFolderLetter;
 }
 
@@ -517,7 +517,7 @@ int CheckPS2Logo(int fd, u32 lba)
     u8 logo[12 * 2048] ALIGNED(64);
     void *buffer = logo;
     u32 j, k, w;
-    u8 ValidPS2Logo = 0;
+    u8 ValidPS2Logo     = 0;
     u32 ps2logochecksum = 0;
     char text[1024];
 
@@ -538,7 +538,7 @@ int CheckPS2Logo(int fd, u32 lba)
     if (*(u32 *)logo == ZSO_MAGIC) {
         // initialize ZSO
         ziso_init(logo, *(u32 *)((u8 *)logo + sizeof(ZISO_header)));
-        probed_fd = fd;
+        probed_fd  = fd;
         probed_lba = lba;
         // read ZISO data
         w = (ziso_read_sector(logo, 0, 12) == 12);
