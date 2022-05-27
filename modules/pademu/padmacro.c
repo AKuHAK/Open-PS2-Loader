@@ -51,9 +51,9 @@ static struct
 } gPreviousButtons = {0};
 static u16 gLeftStickSlowdownMask;
 enum StickSlowdownToggle {
-    SLOWDOWN_PRESS_MODE = 0,
+    SLOWDOWN_PRESS_MODE  = 0,
     SLOWDOWN_TOGGLE_MODE = 2,
-    SLOWDOWN_TOGGLE_ON = 3,
+    SLOWDOWN_TOGGLE_ON   = 3,
 
 };
 static u8 gLeftStickSlowdownToggle;
@@ -61,27 +61,27 @@ static u16 gRightStickSlowdownMask;
 static u8 gRightStickSlowdownToggle;
 static u8 gStickInvertBitfield;
 static bool gTurboButtonWaiting = false; // Waiting for user to choose which button to add to turbo
-static u16 gTurboButtonMask = 0;         // bit 1 for each button added to turbo
-static u8 gTurboSpeed = 0;
-static u8 gTurboButtonCounter = 0;
+static u16 gTurboButtonMask     = 0;     // bit 1 for each button added to turbo
+static u8 gTurboSpeed           = 0;
+static u8 gTurboButtonCounter   = 0;
 
 void padMacroInit(u32 padMacroSettings)
 {
     PadMacroSettings_t settings;
     settings.raw = padMacroSettings;
     if (settings.l_slowdown_enable != 0) {
-        gLeftStickSlowdownMask = (1 << settings.left_stick_slowdown);
+        gLeftStickSlowdownMask   = (1 << settings.left_stick_slowdown);
         gLeftStickSlowdownToggle = settings.l_slowdown_toggle ? SLOWDOWN_TOGGLE_MODE : SLOWDOWN_PRESS_MODE;
     } else {
-        gLeftStickSlowdownMask = 0;
+        gLeftStickSlowdownMask   = 0;
         gLeftStickSlowdownToggle = SLOWDOWN_PRESS_MODE;
     }
 
     if (settings.r_slowdown_enable != 0) {
-        gRightStickSlowdownMask = (1 << settings.right_stick_slowdown);
+        gRightStickSlowdownMask   = (1 << settings.right_stick_slowdown);
         gRightStickSlowdownToggle = settings.r_slowdown_toggle ? SLOWDOWN_TOGGLE_MODE : SLOWDOWN_PRESS_MODE;
     } else {
-        gRightStickSlowdownMask = 0;
+        gRightStickSlowdownMask   = 0;
         gRightStickSlowdownToggle = SLOWDOWN_PRESS_MODE;
     }
 
@@ -104,9 +104,9 @@ static u8 scaleAnalogStick(u16 buttons, u8 stick_input, u8 axis)
         }
     }
 
-    bool left_stick = (axis < PadMacroAxisRX);
-    u16 mask = left_stick ? gLeftStickSlowdownMask : gRightStickSlowdownMask;
-    u8 toggle_mode = left_stick ? gLeftStickSlowdownToggle : gRightStickSlowdownToggle;
+    bool left_stick  = (axis < PadMacroAxisRX);
+    u16 mask         = left_stick ? gLeftStickSlowdownMask : gRightStickSlowdownMask;
+    u8 toggle_mode   = left_stick ? gLeftStickSlowdownToggle : gRightStickSlowdownToggle;
     bool do_slowdown = false;
     if (toggle_mode == SLOWDOWN_PRESS_MODE) {
         do_slowdown = (buttons & mask) != 0;
@@ -129,16 +129,16 @@ static u8 scaleAnalogStick(u16 buttons, u8 stick_input, u8 axis)
 
 static void scaleAnalogSticks(struct ds2report *rep)
 {
-    u16 buttons = ~rep->nButtonState;
+    u16 buttons      = ~rep->nButtonState;
     rep->RightStickX = scaleAnalogStick(buttons, rep->RightStickX, PadMacroAxisRX); // rx
     rep->RightStickY = scaleAnalogStick(buttons, rep->RightStickY, PadMacroAxisRY); // ry
-    rep->LeftStickX = scaleAnalogStick(buttons, rep->LeftStickX, PadMacroAxisLX);   // lx
-    rep->LeftStickY = scaleAnalogStick(buttons, rep->LeftStickY, PadMacroAxisLY);   // ly
+    rep->LeftStickX  = scaleAnalogStick(buttons, rep->LeftStickX, PadMacroAxisLX);  // lx
+    rep->LeftStickY  = scaleAnalogStick(buttons, rep->LeftStickY, PadMacroAxisLY);  // ly
 }
 
 static bool changeInternalState(struct ds2report *rep, bool special_button)
 {
-    u16 buttons = ~rep->nButtonState;
+    u16 buttons          = ~rep->nButtonState;
     bool action_happened = false;
     if (!special_button) {
         if (gTurboButtonWaiting) {
@@ -149,7 +149,7 @@ static bool changeInternalState(struct ds2report *rep, bool special_button)
                 rep->nButtonState = 0xFFFF;
                 gTurboButtonMask ^= buttons;
                 gTurboButtonWaiting = false;
-                action_happened = true;
+                action_happened     = true;
             }
         }
 
@@ -171,7 +171,7 @@ static bool changeInternalState(struct ds2report *rep, bool special_button)
             }
         }
 
-        gPreviousButtons.buttons = buttons;
+        gPreviousButtons.buttons        = buttons;
         gPreviousButtons.special_button = special_button;
         return action_happened;
     } else if (
@@ -182,8 +182,8 @@ static bool changeInternalState(struct ds2report *rep, bool special_button)
         return action_happened;
     }
 
-    rep->nButtonState = 0xFFFF;
-    gPreviousButtons.buttons = buttons;
+    rep->nButtonState               = 0xFFFF;
+    gPreviousButtons.buttons        = buttons;
     gPreviousButtons.special_button = special_button;
 
     switch (buttons) {
@@ -209,7 +209,7 @@ static bool changeInternalState(struct ds2report *rep, bool special_button)
 
         case DS2ButtonStart:
             gTurboButtonWaiting = !gTurboButtonWaiting;
-            action_happened = true;
+            action_happened     = true;
             break;
 
         default:

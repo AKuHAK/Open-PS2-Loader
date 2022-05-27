@@ -36,14 +36,14 @@ static void ps2ip_init(void)
     getModInfo("ps2ip\0\0\0", &info);
 
     // Set functions pointers here
-    plwip_close = info.exports[6];
-    plwip_connect = info.exports[7];
-    plwip_recv = info.exports[9];
-    plwip_recvfrom = info.exports[10];
-    plwip_send = info.exports[11];
-    plwip_socket = info.exports[13];
+    plwip_close      = info.exports[6];
+    plwip_connect    = info.exports[7];
+    plwip_recv       = info.exports[9];
+    plwip_recvfrom   = info.exports[10];
+    plwip_send       = info.exports[11];
+    plwip_socket     = info.exports[13];
     plwip_setsockopt = info.exports[19];
-    pinet_addr = info.exports[24];
+    pinet_addr       = info.exports[24];
 }
 
 void smb_NegotiateProt(OplSmbPwHashFunc_t hash_callback)
@@ -128,13 +128,13 @@ int DeviceReadSectors(u32 lsn, void *buffer, unsigned int sectors)
 {
     register u32 r, sectors_to_read, lbound, ubound, nlsn, offslsn;
     register int i, esc_flag = 0;
-    u8 *p = (u8 *)buffer;
+    u8 *p  = (u8 *)buffer;
     int rv = SCECdErNO;
 
-    lbound = 0;
-    ubound = (cdvdman_settings.common.NumParts > 1) ? 0x80000 : 0xFFFFFFFF;
+    lbound  = 0;
+    ubound  = (cdvdman_settings.common.NumParts > 1) ? 0x80000 : 0xFFFFFFFF;
     offslsn = lsn;
-    r = nlsn = 0;
+    r = nlsn        = 0;
     sectors_to_read = sectors;
 
     for (i = 0; i < cdvdman_settings.common.NumParts; i++, lbound = ubound, ubound += 0x80000, offslsn -= 0x80000) {
@@ -155,7 +155,7 @@ int DeviceReadSectors(u32 lsn, void *buffer, unsigned int sectors)
             r += sectors_to_read * 2048;
             offslsn += sectors_to_read;
             sectors_to_read = sectors;
-            lsn = nlsn;
+            lsn             = nlsn;
         }
 
         if (esc_flag)

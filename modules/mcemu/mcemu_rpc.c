@@ -29,7 +29,7 @@ int hookMcman62()
         }
 
         /* initializing buffer pointers */
-        pFastBuf = ptr;
+        pFastBuf    = ptr;
         pFastRpcBuf = &ptr[MC2_CLUSTER_SIZE];
         pClientData = (SifRpcClientData_t *)&ptr[MC2_CLUSTER_SIZE + LIBMC_RPC_BUFFER_SIZE];
     } else
@@ -78,7 +78,7 @@ int hookMcman63(int fd, u32 eeaddr, int nbyte)
 
         /* preparing to transfer data to libmc */
         sdd.dest = (void *)((u32)fiobuf);
-        sdd.src = (void *)eeaddr;
+        sdd.src  = (void *)eeaddr;
         sdd.size = MC2_CLUSTER_SIZE;
         sdd.attr = 0;
 
@@ -110,7 +110,7 @@ int hookMcman68(int fd, u32 eeaddr, int nbyte)
 
     fiobuf = (char *)pFastBuf;
 
-    ea = eeaddr;
+    ea   = eeaddr;
     wlen = nbyte;
 
     /* check for EE address alignment (64 bytes) */

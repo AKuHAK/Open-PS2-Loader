@@ -40,11 +40,11 @@ static void *SifRpc_handler(int fno, void *buffer, int nbytes)
                 ((struct HttpClientSendGetArgs *)buffer)->out_len = sizeof(DmaBuffer);
             }
 
-            ((struct HttpClientSendGetResult *)SifServerTxBuffer)->result = HttpSendGetRequest(((struct HttpClientSendGetArgs *)buffer)->socket, ((struct HttpClientSendGetArgs *)buffer)->UserAgent, ((struct HttpClientSendGetArgs *)buffer)->host, &((struct HttpClientSendGetArgs *)buffer)->mode, ((struct HttpClientSendGetArgs *)buffer)->hasMtime ? ((struct HttpClientSendGetArgs *)buffer)->mtime : NULL, ((struct HttpClientSendGetArgs *)buffer)->uri, (char *)DmaBuffer, &((struct HttpClientSendGetArgs *)buffer)->out_len);
-            ((struct HttpClientSendGetResult *)SifServerTxBuffer)->mode = ((struct HttpClientSendGetArgs *)buffer)->mode;
+            ((struct HttpClientSendGetResult *)SifServerTxBuffer)->result  = HttpSendGetRequest(((struct HttpClientSendGetArgs *)buffer)->socket, ((struct HttpClientSendGetArgs *)buffer)->UserAgent, ((struct HttpClientSendGetArgs *)buffer)->host, &((struct HttpClientSendGetArgs *)buffer)->mode, ((struct HttpClientSendGetArgs *)buffer)->hasMtime ? ((struct HttpClientSendGetArgs *)buffer)->mtime : NULL, ((struct HttpClientSendGetArgs *)buffer)->uri, (char *)DmaBuffer, &((struct HttpClientSendGetArgs *)buffer)->out_len);
+            ((struct HttpClientSendGetResult *)SifServerTxBuffer)->mode    = ((struct HttpClientSendGetArgs *)buffer)->mode;
             ((struct HttpClientSendGetResult *)SifServerTxBuffer)->out_len = ((struct HttpClientSendGetArgs *)buffer)->out_len;
 
-            dmat.src = DmaBuffer;
+            dmat.src  = DmaBuffer;
             dmat.dest = ((struct HttpClientSendGetArgs *)buffer)->output;
             dmat.size = (((struct HttpClientSendGetArgs *)buffer)->out_len + 0xF) & ~0xF;
             dmat.attr = 0;
@@ -76,10 +76,10 @@ int _start(int argc, char *argv[])
     printf("HTTPClient start\n");
 
     if (RegisterLibraryEntries(&_exp_httpc) == 0) {
-        thread.attr = TH_C;
-        thread.option = 0x00001B14;
-        thread.thread = &RpcThread;
-        thread.priority = 0x20;
+        thread.attr      = TH_C;
+        thread.option    = 0x00001B14;
+        thread.thread    = &RpcThread;
+        thread.priority  = 0x20;
         thread.stacksize = 0x800;
         if ((RpcThreadID = CreateThread(&thread)) > 0) {
             StartThread(RpcThreadID, NULL);

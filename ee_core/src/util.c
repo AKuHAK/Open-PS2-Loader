@@ -91,11 +91,11 @@ char *_strrchr(const char *string, int c)
        before strchr returned 0 */
 
     lastmatch = 0;
-    result = _strchr(string, c);
+    result    = _strchr(string, c);
 
     while ((int)result != 0) {
         lastmatch = result;
-        result = _strchr(lastmatch + 1, c);
+        result    = _strchr(lastmatch + 1, c);
     }
 
     return lastmatch;
@@ -347,7 +347,7 @@ void CopyToIop(void *eedata, unsigned int size, void *iopptr)
     SifDmaTransfer_t dmadata;
     register int id;
 
-    dmadata.src = eedata;
+    dmadata.src  = eedata;
     dmadata.dest = iopptr;
     dmadata.size = size;
     dmadata.attr = 0;

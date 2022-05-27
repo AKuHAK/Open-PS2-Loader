@@ -57,7 +57,7 @@ SMapLowLevelOutput(NetIF *pNetIF, PBuf *pOutput)
 
     if (pOutput->next != NULL) {
         TotalLength = 0;
-        pbuf = pOutput;
+        pbuf        = pOutput;
         while (pbuf != NULL) {
             mips_memcpy(&FrameBuffer[TotalLength], pbuf->payload, pbuf->len);
             TotalLength += pbuf->len;
@@ -66,7 +66,7 @@ SMapLowLevelOutput(NetIF *pNetIF, PBuf *pOutput)
 
         buffer = FrameBuffer;
     } else {
-        buffer = pOutput->payload;
+        buffer      = pOutput->payload;
         TotalLength = pOutput->tot_len;
     }
 

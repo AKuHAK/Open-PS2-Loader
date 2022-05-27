@@ -37,7 +37,7 @@ static const uint8_t utf8d[] = {
 
 uint32_t static utf8Decode(uint32_t *state, uint32_t *codep, char c)
 {
-    uint8_t byte = (uint8_t)c;
+    uint8_t byte  = (uint8_t)c;
     uint32_t type = utf8d[byte];
 
     *codep = (*state != UTF8_ACCEPT) ?

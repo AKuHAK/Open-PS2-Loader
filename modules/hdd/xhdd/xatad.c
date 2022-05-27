@@ -22,7 +22,7 @@ static void ata_multiword_dma_mode(int mode)
     }
 
     SPD_REG16(SPD_R_MWDMA_MODE) = val;
-    SPD_REG16(SPD_R_IF_CTRL) = (SPD_REG16(SPD_R_IF_CTRL) & 0xfffe) | 0x48;
+    SPD_REG16(SPD_R_IF_CTRL)    = (SPD_REG16(SPD_R_IF_CTRL) & 0xfffe) | 0x48;
 }
 
 static void ata_ultra_dma_mode(int mode)

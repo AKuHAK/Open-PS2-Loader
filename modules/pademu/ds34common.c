@@ -10,19 +10,19 @@ void translate_pad_ds3(const struct ds3report *in, struct ds2report *out, u8 pre
 
     out->RightStickX = in->RightStickX;
     out->RightStickY = in->RightStickY;
-    out->LeftStickX = in->LeftStickX;
-    out->LeftStickY = in->LeftStickY;
+    out->LeftStickX  = in->LeftStickX;
+    out->LeftStickY  = in->LeftStickY;
 
     if (pressure_emu) { // needs emulating pressure buttons
         out->PressureRight = in->Right * 255;
-        out->PressureLeft = in->Left * 255;
-        out->PressureUp = in->Up * 255;
-        out->PressureDown = in->Down * 255;
+        out->PressureLeft  = in->Left * 255;
+        out->PressureUp    = in->Up * 255;
+        out->PressureDown  = in->Down * 255;
 
         out->PressureTriangle = in->Triangle * 255;
-        out->PressureCircle = in->Circle * 255;
-        out->PressureCross = in->Cross * 255;
-        out->PressureSquare = in->Square * 255;
+        out->PressureCircle   = in->Circle * 255;
+        out->PressureCross    = in->Cross * 255;
+        out->PressureSquare   = in->Square * 255;
 
         out->PressureL1 = in->L1 * 255;
         out->PressureR1 = in->R1 * 255;
@@ -30,14 +30,14 @@ void translate_pad_ds3(const struct ds3report *in, struct ds2report *out, u8 pre
         out->PressureR2 = in->R2 * 255;
     } else {
         out->PressureRight = in->PressureRight;
-        out->PressureLeft = in->PressureLeft;
-        out->PressureUp = in->PressureUp;
-        out->PressureDown = in->PressureDown;
+        out->PressureLeft  = in->PressureLeft;
+        out->PressureUp    = in->PressureUp;
+        out->PressureDown  = in->PressureDown;
 
         out->PressureTriangle = in->PressureTriangle;
-        out->PressureCircle = in->PressureCircle;
-        out->PressureCross = in->PressureCross;
-        out->PressureSquare = in->PressureSquare;
+        out->PressureCircle   = in->PressureCircle;
+        out->PressureCross    = in->PressureCross;
+        out->PressureSquare   = in->PressureSquare;
 
         out->PressureL1 = in->PressureL1;
         out->PressureR1 = in->PressureR1;
@@ -61,9 +61,9 @@ void translate_pad_ds4(const struct ds4report *in, struct ds2report *out, u8 hav
     };
 
     u8
-        dpad = in->Dpad > DS4DpadDirectionReleased ? DS4DpadDirectionReleased : in->Dpad, // Just in case an unexpected value appears
+        dpad   = in->Dpad > DS4DpadDirectionReleased ? DS4DpadDirectionReleased : in->Dpad, // Just in case an unexpected value appears
         select = in->Share,
-        start = in->Option;
+        start  = in->Option;
 
     if (have_touchpad && in->TPad) {
         if (!in->nFinger1Active) {
@@ -86,18 +86,18 @@ void translate_pad_ds4(const struct ds4report *in, struct ds2report *out, u8 hav
 
     out->RightStickX = in->RightStickX;
     out->RightStickY = in->RightStickY;
-    out->LeftStickX = in->LeftStickX;
-    out->LeftStickY = in->LeftStickY;
+    out->LeftStickX  = in->LeftStickX;
+    out->LeftStickY  = in->LeftStickY;
 
     out->PressureRight = out->nRight ? 0 : 255;
-    out->PressureLeft = out->nLeft ? 0 : 255;
-    out->PressureUp = out->nUp ? 0 : 255;
-    out->PressureDown = out->nDown ? 0 : 255;
+    out->PressureLeft  = out->nLeft ? 0 : 255;
+    out->PressureUp    = out->nUp ? 0 : 255;
+    out->PressureDown  = out->nDown ? 0 : 255;
 
     out->PressureTriangle = in->Triangle * 255;
-    out->PressureCircle = in->Circle * 255;
-    out->PressureCross = in->Cross * 255;
-    out->PressureSquare = in->Square * 255;
+    out->PressureCircle   = in->Circle * 255;
+    out->PressureCross    = in->Cross * 255;
+    out->PressureSquare   = in->Square * 255;
 
     out->PressureL1 = in->L1 * 255;
     out->PressureR1 = in->R1 * 255;

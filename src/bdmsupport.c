@@ -23,7 +23,7 @@ static int bdmGameCount = 0;
 static base_game_info_t *bdmGames;
 static char bdmDriver[5];
 
-static int iLinkModLoaded = 0;
+static int iLinkModLoaded  = 0;
 static int mx4sioModLoaded = 0;
 
 // forward declaration
@@ -114,11 +114,11 @@ void bdmLoadModules(void)
 void bdmInit(void)
 {
     LOG("BDMSUPPORT Init\n");
-    bdmULSizePrev = -2;
-    bdmModifiedCDPrev = 0;
+    bdmULSizePrev      = -2;
+    bdmModifiedCDPrev  = 0;
     bdmModifiedDVDPrev = 0;
-    bdmGameCount = 0;
-    bdmGames = NULL;
+    bdmGameCount       = 0;
+    bdmGames           = NULL;
     configGetInt(configGetByType(CONFIG_OPL), "usb_frames_delay", &bdmGameList.delay);
     bdmGameList.enabled = 1;
 }
@@ -133,10 +133,10 @@ item_list_t *bdmGetObject(int initOnly)
 static int bdmNeedsUpdate(void)
 {
     char path[256];
-    static unsigned int OldGeneration = 0;
-    static unsigned char ThemesLoaded = 0;
+    static unsigned int OldGeneration    = 0;
+    static unsigned char ThemesLoaded    = 0;
     static unsigned char LanguagesLoaded = 0;
-    int result = 0;
+    int result                           = 0;
     struct stat st;
 
     ioPutRequest(IO_CUSTOM_SIMPLEACTION, &bdmLoadBlockDeviceModules);
@@ -150,7 +150,7 @@ static int bdmNeedsUpdate(void)
     DIR *dir = opendir("mass0:/");
     if (dir != NULL) {
         int *pBDMDriver = (int *)bdmDriver;
-        *pBDMDriver = fileXioIoctl(dir->dd_fd, USBMASS_IOCTL_GET_DRIVERNAME, "");
+        *pBDMDriver     = fileXioIoctl(dir->dd_fd, USBMASS_IOCTL_GET_DRIVERNAME, "");
         closedir(dir);
     }
 
@@ -159,7 +159,7 @@ static int bdmNeedsUpdate(void)
         st.st_mtime = 0;
     if (bdmModifiedCDPrev != st.st_mtime) {
         bdmModifiedCDPrev = st.st_mtime;
-        result = 1;
+        result            = 1;
     }
 
     sprintf(path, "%sDVD", bdmPrefix);
@@ -167,7 +167,7 @@ static int bdmNeedsUpdate(void)
         st.st_mtime = 0;
     if (bdmModifiedDVDPrev != st.st_mtime) {
         bdmModifiedDVDPrev = st.st_mtime;
-        result = 1;
+        result             = 1;
     }
 
     if (!sbIsSameSize(bdmPrefix, bdmULSizePrev))
@@ -261,9 +261,9 @@ static void bdmLaunchGame(int id, config_set_t *configSet)
             if (sysCheckVMC(bdmPrefix, "/", vmc_name, 0, &vmc_superblock) > 0) {
                 bdm_vmc_infos.flags = vmc_superblock.mc_flag & 0xFF;
                 bdm_vmc_infos.flags |= 0x100;
-                bdm_vmc_infos.specs.page_size = vmc_superblock.page_size;
+                bdm_vmc_infos.specs.page_size  = vmc_superblock.page_size;
                 bdm_vmc_infos.specs.block_size = vmc_superblock.pages_per_block;
-                bdm_vmc_infos.specs.card_size = vmc_superblock.pages_per_cluster * vmc_superblock.clusters_per_card;
+                bdm_vmc_infos.specs.card_size  = vmc_superblock.pages_per_cluster * vmc_superblock.clusters_per_card;
 
                 sprintf(vmc_path, "%sVMC/%s.bin", bdmPrefix, vmc_name);
 
@@ -274,8 +274,8 @@ static void bdmLaunchGame(int id, config_set_t *configSet)
                         // Check VMC cluster chain for fragmentation (write operation can cause damage to the filesystem).
                         if (fileXioIoctl(fd, USBMASS_IOCTL_CHECK_CHAIN, "") == 1) {
                             LOG("BDMSUPPORT Cluster Chain OK\n");
-                            have_error = 0;
-                            bdm_vmc_infos.active = 1;
+                            have_error                 = 0;
+                            bdm_vmc_infos.active       = 1;
                             bdm_vmc_infos.start_sector = start;
                             LOG("BDMSUPPORT VMC slot %d start: 0x%X\n", vmc_id, start);
                         } else {
@@ -310,16 +310,16 @@ static void bdmLaunchGame(int id, config_set_t *configSet)
         }
     }
 
-    void **irx = &bdm_cdvdman_irx;
+    void **irx   = &bdm_cdvdman_irx;
     int irx_size = size_bdm_cdvdman_irx;
-    compatmask = sbPrepare(game, configSet, irx_size, irx, &index);
-    settings = (struct cdvdman_settings_bdm *)((u8 *)irx + index);
+    compatmask   = sbPrepare(game, configSet, irx_size, irx, &index);
+    settings     = (struct cdvdman_settings_bdm *)((u8 *)irx + index);
     for (i = 0; i < game->parts; i++) {
         sbCreatePath(game, partname, bdmPrefix, "/", i);
         fd = open(partname, O_RDONLY);
         if (fd >= 0) {
             int *pBDMDriver = (int *)bdmDriver;
-            *pBDMDriver = fileXioIoctl(fd, USBMASS_IOCTL_GET_DRIVERNAME, "");
+            *pBDMDriver     = fileXioIoctl(fd, USBMASS_IOCTL_GET_DRIVERNAME, "");
             LOG("bdmDriver=%s\n", bdmDriver);
 
             if (settings != NULL)
@@ -354,12 +354,12 @@ static void bdmLaunchGame(int id, config_set_t *configSet)
 
     switch (game->format) {
         case GAME_FORMAT_USBLD:
-            layer1_part = layer1_start / 0x80000;
+            layer1_part   = layer1_start / 0x80000;
             layer1_offset = layer1_start % 0x80000;
             sbCreatePath(game, partname, bdmPrefix, "/", layer1_part);
             break;
         default: // Raw ISO9660 disc image; one part.
-            layer1_part = 0;
+            layer1_part   = 0;
             layer1_offset = layer1_start;
     }
 

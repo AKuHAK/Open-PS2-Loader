@@ -11,7 +11,7 @@
 #include "device.h"
 
 extern struct cdvdman_settings_bdm cdvdman_settings;
-static struct block_device *g_bd = NULL;
+static struct block_device *g_bd   = NULL;
 static u32 g_bd_sectors_per_sector = 4;
 static int bdm_io_sema;
 
@@ -26,7 +26,7 @@ void bdm_connect_bd(struct block_device *bd)
     DPRINTF("connecting device %s%dp%d\n", bd->name, bd->devNr, bd->parNr);
 
     if (g_bd == NULL) {
-        g_bd = bd;
+        g_bd                    = bd;
         g_bd_sectors_per_sector = (2048 / bd->sectorSize);
         // Free usage of block device
         SignalSema(bdm_io_sema);
@@ -55,9 +55,9 @@ void DeviceInit(void)
 
     // Create semaphore, initially locked
     smp.initial = 0;
-    smp.max = 1;
-    smp.option = 0;
-    smp.attr = SA_THPRI;
+    smp.max     = 1;
+    smp.option  = 0;
+    smp.attr    = SA_THPRI;
     bdm_io_sema = CreateSema(&smp);
 
     RegisterLibraryEntries(&_exp_bdm);
@@ -123,7 +123,7 @@ int DeviceReadSectors(u32 lsn, void *buffer, unsigned int sectors)
     u16 count;
     register u32 r, sectors_to_read, lbound, ubound, nlsn, offslsn;
     register int i, esc_flag = 0;
-    u8 *p = (u8 *)buffer;
+    u8 *p  = (u8 *)buffer;
     int rv = SCECdErNO;
 
     // DPRINTF("%s(%u, 0x%p, %u)\n", __func__, (unsigned int)lsn, buffer, sectors);
@@ -131,10 +131,10 @@ int DeviceReadSectors(u32 lsn, void *buffer, unsigned int sectors)
     if (g_bd == NULL)
         return SCECdErTRMOPN;
 
-    lbound = 0;
-    ubound = (cdvdman_settings.common.NumParts > 1) ? 0x80000 : 0xFFFFFFFF;
+    lbound  = 0;
+    ubound  = (cdvdman_settings.common.NumParts > 1) ? 0x80000 : 0xFFFFFFFF;
     offslsn = lsn;
-    r = nlsn = 0;
+    r = nlsn        = 0;
     sectors_to_read = sectors;
 
     WaitSema(bdm_io_sema);
@@ -149,7 +149,7 @@ int DeviceReadSectors(u32 lsn, void *buffer, unsigned int sectors)
                 esc_flag = 1;
 
             sector = cdvdman_settings.LBAs[i] + (offslsn * g_bd_sectors_per_sector);
-            count = sectors_to_read * g_bd_sectors_per_sector;
+            count  = sectors_to_read * g_bd_sectors_per_sector;
             if (g_bd->read(g_bd, sector, &p[r], count) != count) {
                 rv = SCECdErREAD;
                 break;
@@ -158,7 +158,7 @@ int DeviceReadSectors(u32 lsn, void *buffer, unsigned int sectors)
             r += sectors_to_read * 2048;
             offslsn += sectors_to_read;
             sectors_to_read = sectors;
-            lsn = nlsn;
+            lsn             = nlsn;
         }
 
         if (esc_flag)

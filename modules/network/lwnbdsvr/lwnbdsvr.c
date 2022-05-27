@@ -7,7 +7,7 @@ IRX_ID(APP_NAME, 1, 1);
 static int nbd_tid;
 extern struct irx_export_table _exp_lwnbdsvr;
 
-//need to be global to be accessible from thread
+// need to be global to be accessible from thread
 atad_driver hdd[2]; // could have 2 ATA disks
 ioman_driver iodev[32];
 nbd_context *nbd_contexts[10];
@@ -54,12 +54,12 @@ int _start(int argc, char **argv)
     // register exports
     RegisterLibraryEntries(&_exp_lwnbdsvr);
 
-    nbd_thread.attr = TH_C;
-    nbd_thread.thread = (void *)nbd_init;
-    nbd_thread.priority = 0x10;
+    nbd_thread.attr      = TH_C;
+    nbd_thread.thread    = (void *)nbd_init;
+    nbd_thread.priority  = 0x10;
     nbd_thread.stacksize = 0x800;
-    nbd_thread.option = 0;
-    nbd_tid = CreateThread(&nbd_thread);
+    nbd_thread.option    = 0;
+    nbd_tid              = CreateThread(&nbd_thread);
 
     // int StartThreadArgs(int thid, int args, void *argp);
     StartThread(nbd_tid, (struct nbd_context **)nbd_contexts);

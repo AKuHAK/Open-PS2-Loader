@@ -5,8 +5,8 @@
 #include "include/ioman.h"
 #include "include/themes.h"
 
-static int guiLangID = 0;
-static char **lang_strs = internalEnglish;
+static int guiLangID     = 0;
+static char **lang_strs  = internalEnglish;
 static int nValidEntries = LANG_STR_COUNT;
 
 static int nLanguages = 0;
@@ -106,12 +106,12 @@ static int lngReadEntry(int index, const char *path, const char *separator, cons
             language_t *currLang = &languages[nLanguages + index];
 
             // filepath for this language file
-            int length = strlen(path) + 1 + strlen(name) + 1;
+            int length         = strlen(path) + 1 + strlen(name) + 1;
             currLang->filePath = (char *)malloc(length * sizeof(char));
             sprintf(currLang->filePath, "%s%s%s", path, separator, name);
 
             // extract name for this language (will be used for the English translation)
-            length = strlen(name) - 5 - 4 + 1;
+            length         = strlen(name) - 5 - 4 + 1;
             currLang->name = (char *)malloc(length * sizeof(char));
             memcpy(currLang->name, name + 5, length);
             currLang->name[length - 1] = '\0';
@@ -235,7 +235,7 @@ char **lngGetGuiList(void)
 char *lngGetFilePath(int langID)
 {
     language_t *currLang = &languages[langID - 1];
-    char *path = currLang->filePath;
+    char *path           = currLang->filePath;
 
     return path;
 }

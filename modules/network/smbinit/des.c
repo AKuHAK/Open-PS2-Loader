@@ -453,7 +453,7 @@ static unsigned char *DES_createkeys(unsigned char *key)
 
     key7TOkey8(key, k8);
 
-    k = (unsigned int *)DES_Keys;
+    k  = (unsigned int *)DES_Keys;
     in = (unsigned char *)k8;
 
     c2l(in, c);
@@ -496,9 +496,9 @@ static unsigned char *DES_createkeys(unsigned char *key)
 
         /* table contained 0213 4657 */
         *(k++) = ((t << 16) | (s & 0x0000ffff)) & 0xffffffff;
-        s = ((s >> 16) | (t & 0xffff0000));
+        s      = ((s >> 16) | (t & 0xffff0000));
 
-        s = (s << 4) | (s >> 28);
+        s      = (s << 4) | (s >> 28);
         *(k++) = s & 0xffffffff;
     }
 

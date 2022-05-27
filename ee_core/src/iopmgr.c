@@ -43,7 +43,7 @@ static void ResetIopSpecial(const char *args, unsigned int arglen)
     GetOPLModInfo(OPL_MODULE_ID_IMGDRV, &imgdrv_irx, &size_imgdrv_irx);
 
     length_rounded = (size_IOPRP_img + 0xF) & ~0xF;
-    pIOP_buffer = SifAllocIopHeap(length_rounded);
+    pIOP_buffer    = SifAllocIopHeap(length_rounded);
 
     CopyToIop(IOPRP_img, length_rounded, pIOP_buffer);
 
@@ -59,7 +59,7 @@ static void ResetIopSpecial(const char *args, unsigned int arglen)
     }
 
     *(void **)(UNCACHED_SEG(&((unsigned char *)imgdrv_irx)[imgdrv_offset_ioprpimg])) = pIOP_buffer;
-    *(u32 *)(UNCACHED_SEG(&((unsigned char *)imgdrv_irx)[imgdrv_offset_ioprpsiz])) = size_IOPRP_img;
+    *(u32 *)(UNCACHED_SEG(&((unsigned char *)imgdrv_irx)[imgdrv_offset_ioprpsiz]))   = size_IOPRP_img;
 
     LoadMemModule(0, imgdrv_irx, size_imgdrv_irx, 0, NULL);
 
@@ -235,11 +235,11 @@ int Reset_Iop(const char *arg, int mode)
         reset_pkt.arg[arglen] = arg[arglen];
 
     reset_pkt.header.psize = sizeof reset_pkt; // dsize is not initialized (and not processed, even on the IOP).
-    reset_pkt.header.cid = SIF_CMD_RESET_CMD;
-    reset_pkt.arglen = arglen;
-    reset_pkt.mode = mode;
+    reset_pkt.header.cid   = SIF_CMD_RESET_CMD;
+    reset_pkt.arglen       = arglen;
+    reset_pkt.mode         = mode;
 
-    dmat.src = &reset_pkt;
+    dmat.src  = &reset_pkt;
     dmat.dest = (void *)SifGetReg(SIF_SYSREG_SUBADDR);
     dmat.size = sizeof(reset_pkt);
     dmat.attr = SIF_DMA_ERT | SIF_DMA_INT_O;

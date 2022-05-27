@@ -52,7 +52,7 @@ int sceCdTrayReq(int mode, u32 *traycnt)
     }
 
     if (mode == SCECdTrayOpen) {
-        cdvdman_stat.status = SCECdStatShellOpen;
+        cdvdman_stat.status        = SCECdStatShellOpen;
         cdvdman_stat.disc_type_reg = 0;
 
         DelayThread(11000);
@@ -63,8 +63,8 @@ int sceCdTrayReq(int mode, u32 *traycnt)
     } else if (mode == SCECdTrayClose) {
         DelayThread(25000);
 
-        cdvdman_stat.status = SCECdStatPause; /* not sure if the status is right, may be - SCECdStatSpin */
-        cdvdman_stat.err = SCECdErNO;         /* not sure if this error code is suitable here */
+        cdvdman_stat.status        = SCECdStatPause; /* not sure if the status is right, may be - SCECdStatSpin */
+        cdvdman_stat.err           = SCECdErNO;      /* not sure if this error code is suitable here */
         cdvdman_stat.disc_type_reg = (int)cdvdman_settings.common.media;
 
         cdvdman_media_changed = 1;
@@ -127,11 +127,11 @@ int cdvdman_readID(int mode, u8 *buf)
     if (mode == 0) { // GUID
         u32 *GUID0 = (u32 *)&buf[0];
         u32 *GUID1 = (u32 *)&buf[4];
-        *GUID0 = lbuf[0] | 0x08004600; //Replace the MODEL ID segment with the SCE OUI, to get the console's IEEE1394 EUI-64.
-        *GUID1 = *(u32 *)&lbuf[4];
+        *GUID0     = lbuf[0] | 0x08004600; // Replace the MODEL ID segment with the SCE OUI, to get the console's IEEE1394 EUI-64.
+        *GUID1     = *(u32 *)&lbuf[4];
     } else { // ModelID
         u32 *ModelID = (u32 *)&buf[0];
-        *ModelID = (*(u32 *)&lbuf[0]) >> 8;
+        *ModelID     = (*(u32 *)&lbuf[0]) >> 8;
     }
 
     return 1;
@@ -153,12 +153,12 @@ int sceCdReadModelID(unsigned long int *ModelID)
 int sceCdReadDvdDualInfo(int *on_dual, u32 *layer1_start)
 {
     if (cdvdman_settings.common.flags & IOPCORE_COMPAT_EMU_DVDDL) {
-        //Make layer 1 point to layer 0.
+        // Make layer 1 point to layer 0.
         *layer1_start = 0;
-        *on_dual = 1;
+        *on_dual      = 1;
     } else {
         *layer1_start = cdvdman_settings.common.layer1_start;
-        *on_dual = (cdvdman_settings.common.layer1_start > 0) ? 1 : 0;
+        *on_dual      = (cdvdman_settings.common.layer1_start > 0) ? 1 : 0;
     }
 
     return 1;
@@ -212,7 +212,7 @@ int sceCdRM(char *m, u32 *stat)
     u8 wrbuf[16];
 
     *stat = 0;
-    r = cdvdman_readMechaconVersion(rdbuf, stat);
+    r     = cdvdman_readMechaconVersion(rdbuf, stat);
     if ((r == 1) && (0x104FE < (rdbuf[3] | (rdbuf[2] << 8) | (rdbuf[1] << 16)))) {
 
         memcpy(&m[0], "M_NAME_UNKNOWN\0\0", 16);

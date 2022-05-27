@@ -40,8 +40,8 @@ static int cdvdman_read(u32 lsn, u32 sectors, void *buf);
 
 // Sector cache to improve IO
 static u8 MAX_SECTOR_CACHE = 0;
-static u8 *sector_cache = NULL;
-static int cur_sector = -1;
+static u8 *sector_cache    = NULL;
+static int cur_sector      = -1;
 
 struct cdvdman_cb_data
 {
@@ -69,7 +69,7 @@ static int cdvdman_debug_print_flag = 0;
 
 unsigned char sync_flag;
 unsigned char cdvdman_cdinited = 0;
-static unsigned int ReadPos = 0; /* Current buffer offset in 2048-byte sectors. */
+static unsigned int ReadPos    = 0; /* Current buffer offset in 2048-byte sectors. */
 
 #ifdef __USE_DEV9
 static int POFFThreadID;
@@ -133,11 +133,11 @@ void cdvdman_init(void)
 
 #ifdef __USE_DEV9
         if (cdvdman_settings.common.flags & IOPCORE_ENABLE_POFF) {
-            ThreadData.attr = TH_C;
-            ThreadData.option = 0xABCD0001;
-            ThreadData.priority = 1;
+            ThreadData.attr      = TH_C;
+            ThreadData.option    = 0xABCD0001;
+            ThreadData.priority  = 1;
             ThreadData.stacksize = 0x1000;
-            ThreadData.thread = &cdvdman_poff_thread;
+            ThreadData.thread    = &cdvdman_poff_thread;
             StartThread(POFFThreadID = CreateThread(&ThreadData), NULL);
         }
 #endif
@@ -206,8 +206,8 @@ int DeviceReadSectorsCached(u32 lsn, void *buffer, unsigned int sectors)
 int read_raw_data(u8 *addr, u32 size, u32 offset, u32 shift)
 {
     u32 o_size = size;
-    u32 lba = offset / (2048 >> shift); // avoid overflow by shifting sector size instead of offset
-    u32 pos = (offset << shift) & 2047; // doesn't matter if it overflows since we only care about the 11 LSB anyways
+    u32 lba    = offset / (2048 >> shift); // avoid overflow by shifting sector size instead of offset
+    u32 pos    = (offset << shift) & 2047; // doesn't matter if it overflows since we only care about the 11 LSB anyways
 
     // read first block if not aligned to sector size
     if (pos) {
@@ -319,7 +319,7 @@ static int cdvdman_read_sectors(u32 lsn, unsigned int sectors, void *buf)
            was the value used for scrambling. */
         if (lsn < 13) {
             u32 j;
-            u8 *logo = (u8 *)ptr;
+            u8 *logo      = (u8 *)ptr;
             static u8 key = 0;
             if (lsn == 0) // First sector? Copy the first byte as the value for unscrambling the logo.
                 key = logo[0];
@@ -427,9 +427,9 @@ int cdvdman_AsyncRead(u32 lsn, u32 sectors, void *buf)
         return 0;
     }
 
-    cdvdman_stat.cdread_lba = lsn;
+    cdvdman_stat.cdread_lba     = lsn;
     cdvdman_stat.cdread_sectors = sectors;
-    cdvdman_stat.cdread_buf = buf;
+    cdvdman_stat.cdread_buf     = buf;
 
     CpuResumeIntr(OldState);
 
@@ -496,10 +496,10 @@ sceCdlLOCCD *sceCdIntToPos(u32 i, sceCdlLOCCD *p)
     register u32 sc, se, mi;
 
     i += 150;
-    se = i / 75;
-    sc = i - se * 75;
-    mi = se / 60;
-    se = se - mi * 60;
+    se        = i / 75;
+    sc        = i - se * 75;
+    mi        = se / 60;
+    se        = se - mi * 60;
     p->sector = (sc - (sc / 10) * 10) + (sc / 10) * 16;
     p->second = (se / 10) * 16 + se - (se / 10) * 10;
     p->minute = (mi / 10) * 16 + mi - (mi / 10) * 10;
@@ -520,7 +520,7 @@ sceCdCBFunc sceCdCallback(sceCdCBFunc func)
 
     CpuSuspendIntr(&oldstate);
 
-    old_cb = cb_data.user_cb;
+    old_cb          = cb_data.user_cb;
     cb_data.user_cb = func;
 
     CpuResumeIntr(oldstate);
@@ -589,7 +589,7 @@ static int cdvdman_writeSCmd(u8 cmd, const void *in, u16 in_size, void *out, u16
 
     if (in_size > 0) {
         for (i = 0; i < in_size; i++) {
-            p = (void *)((const u8 *)in + i);
+            p               = (void *)((const u8 *)in + i);
             CDVDreg_SDATAIN = *p;
         }
     }
@@ -607,7 +607,7 @@ static int cdvdman_writeSCmd(u8 cmd, const void *in, u16 in_size, void *out, u16
             if (i >= out_size) {
                 break;
             }
-            p = (void *)((u8 *)out + i);
+            p  = (void *)((u8 *)out + i);
             *p = CDVDreg_SDATAOUT;
             i++;
         } while (!(CDVDreg_SDATAIN & 0x40));
@@ -717,13 +717,13 @@ static void cdvdman_startThreads(void)
     iop_thread_t thread_param;
 
     cdvdman_stat.status = SCECdStatPause;
-    cdvdman_stat.err = SCECdErNO;
+    cdvdman_stat.err    = SCECdErNO;
 
-    thread_param.thread = &cdvdman_cdread_Thread;
+    thread_param.thread    = &cdvdman_cdread_Thread;
     thread_param.stacksize = 0x1000;
-    thread_param.priority = 0x0f;
-    thread_param.attr = TH_C;
-    thread_param.option = 0xABCD0000;
+    thread_param.priority  = 0x0f;
+    thread_param.attr      = TH_C;
+    thread_param.option    = 0xABCD0000;
 
     cdvdman_ReadingThreadID = CreateThread(&thread_param);
     StartThread(cdvdman_ReadingThreadID, NULL);
@@ -735,12 +735,12 @@ static void cdvdman_create_semaphores(void)
     iop_sema_t smp;
 
     smp.initial = 1;
-    smp.max = 1;
-    smp.attr = 0;
-    smp.option = 0;
+    smp.max     = 1;
+    smp.attr    = 0;
+    smp.option  = 0;
 
-    cdvdman_scmdsema = CreateSema(&smp);
-    smp.initial = 0;
+    cdvdman_scmdsema   = CreateSema(&smp);
+    smp.initial        = 0;
     cdrom_rthread_sema = CreateSema(&smp);
 }
 

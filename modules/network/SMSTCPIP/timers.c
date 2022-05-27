@@ -148,8 +148,8 @@ void sys_timeout(u32_t msecs, sys_timeout_handler handler, void *arg)
         return;
     }
     timeout->next = NULL;
-    timeout->h = handler;
-    timeout->arg = arg;
+    timeout->h    = handler;
+    timeout->arg  = arg;
     timeout->time = msecs;
 #if LWIP_DEBUG_TIMERNAMES
     timeout->handler_name = handler_name;
@@ -165,7 +165,7 @@ void sys_timeout(u32_t msecs, sys_timeout_handler handler, void *arg)
     if (next_timeout->time > msecs) {
         next_timeout->time -= msecs;
         timeout->next = next_timeout;
-        next_timeout = timeout;
+        next_timeout  = timeout;
     } else {
         for (t = next_timeout; t != NULL; t = t->next) {
             timeout->time -= t->time;
@@ -174,7 +174,7 @@ void sys_timeout(u32_t msecs, sys_timeout_handler handler, void *arg)
                     t->next->time -= timeout->time;
                 }
                 timeout->next = t->next;
-                t->next = timeout;
+                t->next       = timeout;
                 break;
             }
         }
@@ -248,10 +248,10 @@ again:
             /* If time == SYS_ARCH_TIMEOUT, a timeout occured before a message
          could be fetched. We should now call the timeout handler and
          deallocate the memory allocated for the timeout. */
-            tmptimeout = next_timeout;
+            tmptimeout   = next_timeout;
             next_timeout = tmptimeout->next;
-            handler = tmptimeout->h;
-            arg = tmptimeout->arg;
+            handler      = tmptimeout->h;
+            arg          = tmptimeout->arg;
 #if LWIP_DEBUG_TIMERNAMES
             if (handler != NULL) {
                 LWIP_DEBUGF(TIMERS_DEBUG, ("stmf calling h=%s arg=%p\n",

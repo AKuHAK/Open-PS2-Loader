@@ -14,7 +14,7 @@
 #include <elf-loader.h>
 
 static int appForceUpdate = 1;
-static int appItemCount = 0;
+static int appItemCount   = 0;
 
 static config_set_t *configApps;
 static app_info_t *appsList;
@@ -103,8 +103,8 @@ void appInit(void)
     LOG("APPSUPPORT Init\n");
     appForceUpdate = 1;
     configGetInt(configGetByType(CONFIG_OPL), "app_frames_delay", &appItemList.delay);
-    configApps = oplGetLegacyAppsConfig();
-    appsList = NULL;
+    configApps          = oplGetLegacyAppsConfig();
+    appsList            = NULL;
     appItemList.enabled = 1;
 }
 
@@ -122,7 +122,7 @@ static int appNeedsUpdate(void)
     update = 0;
     if (appForceUpdate) {
         appForceUpdate = 0;
-        update = 1;
+        update         = 1;
     }
     if (oplShouldAppsUpdate())
         update = 1;
@@ -143,16 +143,16 @@ static int addAppsLegacyList(struct app_info_linked **appsLinkedList)
     configRead(configApps);
 
     count = 0;
-    cur = configApps->head;
+    cur   = configApps->head;
     while (cur != NULL) {
         if (*appsLinkedList == NULL) {
             *appsLinkedList = malloc(sizeof(struct app_info_linked));
-            app = *appsLinkedList;
-            app->next = NULL;
+            app             = *appsLinkedList;
+            app->next       = NULL;
         } else {
             app = malloc(sizeof(struct app_info_linked));
             if (app != NULL) {
-                app->next = *appsLinkedList;
+                app->next       = *appsLinkedList;
                 *appsLinkedList = app;
             }
         }
@@ -203,12 +203,12 @@ static int appScanCallback(const char *path, config_set_t *appConfig, void *arg)
     if (configGetStr(appConfig, APP_CONFIG_TITLE, &title) != 0 && configGetStr(appConfig, APP_CONFIG_BOOT, &boot) != 0) {
         if (*appsLinkedList == NULL) {
             *appsLinkedList = malloc(sizeof(struct app_info_linked));
-            app = *appsLinkedList;
-            app->next = NULL;
+            app             = *appsLinkedList;
+            app->next       = NULL;
         } else {
             app = malloc(sizeof(struct app_info_linked));
             if (app != NULL) {
-                app->next = *appsLinkedList;
+                app->next       = *appsLinkedList;
                 *appsLinkedList = app;
             }
         }
@@ -224,7 +224,7 @@ static int appScanCallback(const char *path, config_set_t *appConfig, void *arg)
         app->app.boot[APP_BOOT_MAX] = '\0';
         strncpy(app->app.path, path, APP_PATH_MAX + 1);
         app->app.path[APP_PATH_MAX] = '\0';
-        app->app.legacy = 0;
+        app->app.legacy             = 0;
         return 0;
     } else {
         LOG("APPSUPPORT item has no boot/title.\n");
@@ -275,7 +275,7 @@ static int appUpdateItemList(void)
 static void appFreeList(void)
 {
     if (appsList != NULL) {
-        appsList = NULL;
+        appsList     = NULL;
         appItemCount = 0;
     }
 }
@@ -312,7 +312,7 @@ static void appDeleteItem(int id)
     if (appsList[id].legacy) {
         struct config_value_t *cur = appGetConfigValue(id);
         unlink(cur->val);
-        cur->key[0] = '\0';
+        cur->key[0]          = '\0';
         configApps->modified = 1;
         configWrite(configApps);
     } else {
@@ -390,7 +390,7 @@ static config_set_t *appGetConfig(int id)
 
     if (appsList[id].legacy) {
         struct config_value_t *cur = appGetConfigValue(id);
-        config = oplGetLegacyAppsInfo(appGetELFName(cur->val));
+        config                     = oplGetLegacyAppsInfo(appGetELFName(cur->val));
         configRead(config);
 
         configSetStr(config, CONFIG_ITEM_NAME, appGetELFName(cur->val));

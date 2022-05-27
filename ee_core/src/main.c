@@ -64,7 +64,7 @@ static int eecoreInit(int argc, char **argv)
         GameMode = HDD_MODE;
     DPRINTF("Game Mode = %d\n", GameMode);
 
-    p = _strtok(NULL, " ");
+    p           = _strtok(NULL, " ");
     EnableDebug = 0;
     if (!_strncmp(p, "1", 1)) {
         EnableDebug = 1;
@@ -78,7 +78,7 @@ static int eecoreInit(int argc, char **argv)
         _strcpy(ExitPath, p);
     DPRINTF("Exit Path = (%s)\n", ExitPath);
 
-    p = _strtok(NULL, " ");
+    p           = _strtok(NULL, " ");
     HDDSpindown = _strtoui(p);
     DPRINTF("HDD Spindown = %d\n", HDDSpindown);
 
@@ -105,12 +105,12 @@ static int eecoreInit(int argc, char **argv)
 
     i++;
 
-    eeloadCopy = (void *)_strtoui(_strtok(argv[i], " "));
+    eeloadCopy     = (void *)_strtoui(_strtok(argv[i], " "));
     initUserMemory = (void *)_strtoui(_strtok(NULL, " "));
     i++;
 
     ModStorageStart = (void *)_strtoui(_strtok(argv[i], " "));
-    ModStorageEnd = (void *)_strtoui(_strtok(NULL, " "));
+    ModStorageEnd   = (void *)_strtoui(_strtok(NULL, " "));
     i++;
 
     strncpy(GameID, argv[i], sizeof(GameID) - 1);
@@ -133,17 +133,17 @@ static int eecoreInit(int argc, char **argv)
         u64 display, syncv, smode2;
         int k576P_fix, kGsDxDyOffsetSupported, FIELD_fix;
 
-        interlace = _strtoi(_strtok(argv[i], " "));
-        mode = _strtoi(_strtok(NULL, " "));
-        ffmd = _strtoi(_strtok(NULL, " "));
-        display = _strtoul(_strtok(NULL, " "));
-        syncv = _strtoul(_strtok(NULL, " "));
-        smode2 = _strtoui(_strtok(NULL, " "));
-        dx_offset = _strtoui(_strtok(NULL, " "));
-        dy_offset = _strtoui(_strtok(NULL, " "));
-        k576P_fix = _strtoui(_strtok(NULL, " "));
+        interlace              = _strtoi(_strtok(argv[i], " "));
+        mode                   = _strtoi(_strtok(NULL, " "));
+        ffmd                   = _strtoi(_strtok(NULL, " "));
+        display                = _strtoul(_strtok(NULL, " "));
+        syncv                  = _strtoul(_strtok(NULL, " "));
+        smode2                 = _strtoui(_strtok(NULL, " "));
+        dx_offset              = _strtoui(_strtok(NULL, " "));
+        dy_offset              = _strtoui(_strtok(NULL, " "));
+        k576P_fix              = _strtoui(_strtok(NULL, " "));
         kGsDxDyOffsetSupported = _strtoui(_strtok(NULL, " "));
-        FIELD_fix = _strtoui(_strtok(NULL, " "));
+        FIELD_fix              = _strtoui(_strtok(NULL, " "));
 
         UpdateGSMParams(interlace, mode, ffmd, display, syncv, smode2, dx_offset, dy_offset, k576P_fix, kGsDxDyOffsetSupported, FIELD_fix);
         EnableGSM();
@@ -175,7 +175,7 @@ int main(int argc, char **argv)
         sysLoadElf(argv[0], argc, argv);
     } else {
         argOffset = eecoreInit(argc, argv);
-        isInit = 1;
+        isInit    = 1;
 
         LoadExecPS2(argv[argOffset], argc - 1 - argOffset, &argv[1 + argOffset]);
     }

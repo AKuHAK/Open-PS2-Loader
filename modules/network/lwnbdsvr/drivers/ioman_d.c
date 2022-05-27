@@ -36,7 +36,7 @@ int ioman_ctor(ioman_driver *const me, iop_device_t *device)
     };
     nbd_context_ctor(&me->super); /* call the superclass' ctor */
     me->super.vptr = &nbdopts;    /* override the vptr */
-    me->device = device;
+    me->device     = device;
     strncpy(me->super.export_name, me->device->name, 31);
     strncpy(me->super.export_desc, me->device->desc, 31);
     me->super.buffer = nbd_buffer;
@@ -47,8 +47,8 @@ int ioman_ctor(ioman_driver *const me, iop_device_t *device)
         return -1;
     }
 
-    me->super.eflags = NBD_FLAG_HAS_FLAGS;
-    me->super.blocksize = 512;
+    me->super.eflags      = NBD_FLAG_HAS_FLAGS;
+    me->super.blocksize   = 512;
     me->super.export_size = stat.size;
     LOG("found %s\n", me->super.export_name);
     return 0;

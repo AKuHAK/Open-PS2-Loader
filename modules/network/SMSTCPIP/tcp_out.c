@@ -105,23 +105,23 @@ err_t tcp_enqueue(
     void *ptr;
     u8_t queuelen;
     flags_t lPCBFlags = pcb->flags;
-    int iSegCNT = 0;
+    int iSegCNT       = 0;
 
     left = len;
-    ptr = arg;
+    ptr  = arg;
 
     if (len > pcb->snd_buf)
         return ERR_MEM;
 
-    seqno = pcb->snd_lbb;
-    queue = NULL;
+    seqno    = pcb->snd_lbb;
+    queue    = NULL;
     queuelen = pcb->snd_queuelen;
 
     if (queuelen >= TCP_SND_QUEUELEN)
         goto memerr;
 
     seg = useg = NULL;
-    seglen = 0;
+    seglen     = 0;
 
     while (!queue || left > 0) {
 
@@ -139,13 +139,13 @@ err_t tcp_enqueue(
             goto memerr;
 
         seg->next = NULL;
-        seg->p = NULL;
+        seg->p    = NULL;
 
         if (!queue)
             useg = queue = seg;
         else {
             useg->next = seg;
-            useg = seg;
+            useg       = seg;
         } /* end else */
 
         if (optdata != NULL) {
@@ -178,7 +178,7 @@ err_t tcp_enqueue(
                 goto memerr;
             }
             ++queuelen;
-            p->payload = ptr;
+            p->payload   = ptr;
             seg->dataptr = ptr;
 
             /* Second, allocate a pbuf for the headers. */
@@ -212,11 +212,11 @@ err_t tcp_enqueue(
             TCP_STATS_INC(tcp.err);
             goto memerr;
         }
-        seg->tcphdr = seg->p->payload;
-        seg->tcphdr->src = htons(pcb->local_port);
-        seg->tcphdr->dest = htons(pcb->remote_port);
+        seg->tcphdr        = seg->p->payload;
+        seg->tcphdr->src   = htons(pcb->local_port);
+        seg->tcphdr->dest  = htons(pcb->remote_port);
         seg->tcphdr->seqno = htonl(seqno);
-        seg->tcphdr->urgp = 0;
+        seg->tcphdr->urgp  = 0;
         TCPH_FLAGS_SET(seg->tcphdr, flags);
         /* don't fill in tcphdr->ackno and tcphdr->wnd until later */
 
@@ -352,13 +352,13 @@ err_t tcp_output(struct tcp_pcb *pcb)
         }
         LWIP_DEBUGF(TCP_OUTPUT_DEBUG, ("tcp_output: sending ACK for %lu\n", pcb->rcv_nxt));
 
-        tcphdr = p->payload;
-        tcphdr->src = htons(pcb->local_port);
-        tcphdr->dest = htons(pcb->remote_port);
+        tcphdr        = p->payload;
+        tcphdr->src   = htons(pcb->local_port);
+        tcphdr->dest  = htons(pcb->remote_port);
         tcphdr->seqno = htonl(pcb->snd_nxt);
         tcphdr->ackno = htonl(pcb->rcv_nxt);
         TCPH_FLAGS_SET(tcphdr, TCP_ACK);
-        tcphdr->wnd = htons(pcb->rcv_wnd);
+        tcphdr->wnd  = htons(pcb->rcv_wnd);
         tcphdr->urgp = 0;
         TCPH_HDRLEN_SET(tcphdr, 5);
 
@@ -394,10 +394,10 @@ err_t tcp_output(struct tcp_pcb *pcb)
             seg->next = NULL;
             if (pcb->unacked == NULL) {
                 pcb->unacked = seg;
-                useg = seg;
+                useg         = seg;
             } else {
                 useg->next = seg;
-                useg = useg->next;
+                useg       = useg->next;
             }
         } else {
             tcp_seg_free(seg);
@@ -440,7 +440,7 @@ tcp_output_segment(struct tcp_seg *seg, struct tcp_pcb *pcb)
 
     if (pcb->rttest == 0) {
         pcb->rttest = tcp_ticks;
-        pcb->rtseq = ntohl(seg->tcphdr->seqno);
+        pcb->rtseq  = ntohl(seg->tcphdr->seqno);
 
         LWIP_DEBUGF(TCP_RTO_DEBUG, ("tcp_output_segment: rtseq %lu\n", pcb->rtseq));
     }
@@ -477,13 +477,13 @@ void tcp_rst(u32_t seqno, u32_t ackno,
         return;
     }
 
-    tcphdr = p->payload;
-    tcphdr->src = htons(local_port);
-    tcphdr->dest = htons(remote_port);
+    tcphdr        = p->payload;
+    tcphdr->src   = htons(local_port);
+    tcphdr->dest  = htons(remote_port);
     tcphdr->seqno = htonl(seqno);
     tcphdr->ackno = htonl(ackno);
     TCPH_FLAGS_SET(tcphdr, TCP_RST | TCP_ACK);
-    tcphdr->wnd = htons(TCP_WND);
+    tcphdr->wnd  = htons(TCP_WND);
     tcphdr->urgp = 0;
     TCPH_HDRLEN_SET(tcphdr, 5);
 
@@ -510,7 +510,7 @@ void tcp_rexmit(struct tcp_pcb *pcb)
     for (seg = pcb->unacked; seg->next != NULL; seg = seg->next)
         ;
 
-    seg->next = pcb->unsent;
+    seg->next   = pcb->unsent;
     pcb->unsent = pcb->unacked;
 
     pcb->unacked = NULL;
@@ -545,13 +545,13 @@ void tcp_keepalive(struct tcp_pcb *pcb)
         return;
     }
 
-    tcphdr = p->payload;
-    tcphdr->src = htons(pcb->local_port);
-    tcphdr->dest = htons(pcb->remote_port);
+    tcphdr        = p->payload;
+    tcphdr->src   = htons(pcb->local_port);
+    tcphdr->dest  = htons(pcb->remote_port);
     tcphdr->seqno = htonl(pcb->snd_nxt - 1);
     tcphdr->ackno = htonl(pcb->rcv_nxt);
-    tcphdr->wnd = htons(pcb->rcv_wnd);
-    tcphdr->urgp = 0;
+    tcphdr->wnd   = htons(pcb->rcv_wnd);
+    tcphdr->urgp  = 0;
     TCPH_HDRLEN_SET(tcphdr, 5);
 
     tcphdr->chksum = 0;

@@ -202,17 +202,17 @@ PACK_STRUCT_END
                                            0))
 
 enum tcp_state {
-    CLOSED = 0,
-    LISTEN = 1,
-    SYN_SENT = 2,
-    SYN_RCVD = 3,
+    CLOSED      = 0,
+    LISTEN      = 1,
+    SYN_SENT    = 2,
+    SYN_RCVD    = 3,
     ESTABLISHED = 4,
-    FIN_WAIT_1 = 5,
-    FIN_WAIT_2 = 6,
-    CLOSE_WAIT = 7,
-    CLOSING = 8,
-    LAST_ACK = 9,
-    TIME_WAIT = 10
+    FIN_WAIT_1  = 5,
+    FIN_WAIT_2  = 6,
+    CLOSE_WAIT  = 7,
+    CLOSING     = 8,
+    LAST_ACK    = 9,
+    TIME_WAIT   = 10
 };
 
 
@@ -495,7 +495,7 @@ extern struct tcp_pcb *tcp_tmp_pcb; /* Only used for temporary storage. */
 #define TCP_REG(pcbs, npcb) \
     do {                    \
         npcb->next = *pcbs; \
-        *(pcbs) = npcb;     \
+        *(pcbs)    = npcb;  \
         tcp_timer_needed(); \
     } while (0)
 #define TCP_RMV(pcbs, npcb)                                                                   \

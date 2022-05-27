@@ -21,9 +21,9 @@ static int EstablishConnection(struct in_addr *server, unsigned short int port)
 
     HostSocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
 
-    SockAddr.sin_family = AF_INET;
+    SockAddr.sin_family      = AF_INET;
     SockAddr.sin_addr.s_addr = server->s_addr;
-    SockAddr.sin_port = htons(port);
+    SockAddr.sin_port        = htons(port);
     if (connect(HostSocket, (struct sockaddr *)&SockAddr, sizeof(SockAddr)) != 0) {
         HttpCloseConnection(HostSocket);
         HostSocket = -1;
@@ -56,7 +56,7 @@ static int GetData(int socket, char *buffer, int length)
         ToRead = remaining;
 
         // This safeguards against a deadlock, if the TCP connection gets broken for long enough. Long enough for the RST packet from the other side gets lost.
-        timeout.tv_sec = 10;
+        timeout.tv_sec  = 10;
         timeout.tv_usec = 0;
         FD_ZERO(&readfds);
         FD_SET(socket, &readfds);
@@ -125,15 +125,15 @@ static int HttpGetResponse(s32 socket, s8 *mode, char *buffer, u16 *length)
     int result, DataAvailable, PayloadAmount;
 
     // TransferEncoding = TRANFER_ENCODING_PLAIN;
-    ConnectionMode = *mode;
-    ContentLength = -1;
-    StatusCode = -1;
-    HeaderLineNumber = 0;
-    PayloadPtr = buffer;
-    PayloadAmount = 0;
-    EndOfEntity = 0;
-    ptr = work;
-    DataAvailable = 0;
+    ConnectionMode              = *mode;
+    ContentLength               = -1;
+    StatusCode                  = -1;
+    HeaderLineNumber            = 0;
+    PayloadPtr                  = buffer;
+    PayloadAmount               = 0;
+    EndOfEntity                 = 0;
+    ptr                         = work;
+    DataAvailable               = 0;
     work[HTTP_WORK_BUFFER_SIZE] = '\0';
     do {
         if ((result = GetData(socket, ptr, HTTP_WORK_BUFFER_SIZE - DataAvailable)) > 0) {
@@ -158,7 +158,7 @@ static int HttpGetResponse(s32 socket, s8 *mode, char *buffer, u16 *length)
                 if (DataAvailable > 0) {
                     memmove(work, ptr, DataAvailable);
                     work[DataAvailable] = '\0';
-                    ptr = &work[DataAvailable];
+                    ptr                 = &work[DataAvailable];
                 } else
                     ptr = work;
             }
@@ -174,8 +174,8 @@ static int HttpGetResponse(s32 socket, s8 *mode, char *buffer, u16 *length)
     {
         memcpy(buffer, ptr, DataAvailable);
         buffer[DataAvailable] = '\0';
-        PayloadPtr = buffer + DataAvailable;
-        PayloadAmount = DataAvailable;
+        PayloadPtr            = buffer + DataAvailable;
+        PayloadAmount         = DataAvailable;
     }
 
     if (ContentLength < 0 || PayloadAmount < ContentLength) {
@@ -232,7 +232,7 @@ int HttpEstabConnection(char *server, u16 port)
 static const char *GetDayInWeek(const unsigned char *mtime)
 {
     static const unsigned char daysInMonth[12] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
-    static const char *dayLabels[7] = {"Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"};
+    static const char *dayLabels[7]            = {"Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"};
     unsigned short int DaysInYear;
     unsigned char LeapDays, month;
     unsigned int days;

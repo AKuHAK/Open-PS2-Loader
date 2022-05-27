@@ -121,7 +121,7 @@ ip_reass(struct pbuf *p)
     u16_t offset, len;
     u16_t i;
 
-    iphdr = (struct ip_hdr *)ip_reassbuf;
+    iphdr   = (struct ip_hdr *)ip_reassbuf;
     fraghdr = (struct ip_hdr *)p->payload;
     /* If ip_reasstmr is zero, no packet is present in the buffer, so we
      write the IP header of the fragment into the reassembly
@@ -143,7 +143,7 @@ ip_reass(struct pbuf *p)
         IPH_ID(iphdr) == IPH_ID(fraghdr)) {
         /* Find out the offset in the reassembly buffer where we should
        copy the fragment. */
-        len = ntohs(IPH_LEN(fraghdr)) - IPH_HL(fraghdr) * 4;
+        len    = ntohs(IPH_LEN(fraghdr)) - IPH_HL(fraghdr) * 4;
         offset = (ntohs(IPH_OFFSET(fraghdr)) & IP_OFFMASK) * 8;
 
         /* If the offset or the offset + fragment length overflows the
@@ -269,9 +269,9 @@ err_t ip_frag(struct pbuf *p, struct netif *netif, struct ip_addr *dest)
     u16_t tmp;
 
     /* Get a RAM based MTU sized pbuf */
-    rambuf = pbuf_alloc(PBUF_LINK, 0, PBUF_REF);
+    rambuf          = pbuf_alloc(PBUF_LINK, 0, PBUF_REF);
     rambuf->tot_len = rambuf->len = mtu;
-    rambuf->payload = MEM_ALIGN((void *)buf);
+    rambuf->payload               = MEM_ALIGN((void *)buf);
 
 
     /* Copy the IP header in it */

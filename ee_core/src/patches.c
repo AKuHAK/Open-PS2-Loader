@@ -215,7 +215,7 @@ static int delayed_cdRead(u32 lsn, u32 nsectors, void *buf, int *mode)
     int r;
     unsigned int count;
 
-    r = cdRead(lsn, nsectors, buf, mode);
+    r     = cdRead(lsn, nsectors, buf, mode);
     count = g_delay_cycles;
     while (count--)
         asm("nop\nnop\nnop\nnop");
@@ -240,7 +240,7 @@ static int (*capcom_lmb)(void *modpack_addr, int mod_index, int mod_argc, char *
 static void apply_capcom_protection_patch(void *modpack_addr, int mod_index, int mod_argc, char **mod_argv)
 {
     u32 iop_addr = _lw((u32)modpack_addr + (mod_index << 3) + 8);
-    u32 opcode = 0x10000025;
+    u32 opcode   = 0x10000025;
     SyncDCache((void *)opcode, (void *)((unsigned int)&opcode + sizeof(opcode)));
     smem_write((void *)(iop_addr + 0x270), (void *)&opcode, sizeof(opcode));
 
@@ -381,7 +381,7 @@ static void ZombieZone_patches(unsigned int address)
     // Locate scePadEnd().
     ptr = find_pattern_with_mask((u32 *)0x001c0000, 0x01f00000, ZZpattern, ZZpattern_mask, sizeof(ZZpattern));
     if (ptr) {
-        pZZInitIOP = (void *)FNADDR(_lw(address));
+        pZZInitIOP   = (void *)FNADDR(_lw(address));
         pZZscePadEnd = (void *)(ptr - 3);
 
         _sw(JAL((unsigned int)&ZombieZone_preIOPInit), address);
@@ -402,24 +402,24 @@ static void DotHack_patches(const char *path)
     u32 *ptr, *pPadEnd, *pLoadExecPS2;
 
     if (_strcmp(path, "cdrom0:\\SLES_522.37;1") == 0) {
-        ptr = (void *)0x0011a5fc;
-        pPadEnd = (void *)0x00119290;
+        ptr          = (void *)0x0011a5fc;
+        pPadEnd      = (void *)0x00119290;
         pLoadExecPS2 = (void *)FNADDR(ptr[2]);
     } else if (_strcmp(path, "cdrom0:\\SLES_524.67;1") == 0) {
-        ptr = (void *)0x0011a8bc;
-        pPadEnd = (void *)0x00119550;
+        ptr          = (void *)0x0011a8bc;
+        pPadEnd      = (void *)0x00119550;
         pLoadExecPS2 = (void *)FNADDR(ptr[2]);
     } else if (_strcmp(path, "cdrom0:\\SLES_524.68;1") == 0) {
-        ptr = (void *)0x00111d34;
-        pPadEnd = (void *)0x001109b0;
+        ptr          = (void *)0x00111d34;
+        pPadEnd      = (void *)0x001109b0;
         pLoadExecPS2 = (void *)FNADDR(ptr[3]);
     } else if (_strcmp(path, "cdrom0:\\SLES_524.69;1") == 0) {
-        ptr = (void *)0x00111d34;
-        pPadEnd = (void *)0x001109b0;
+        ptr          = (void *)0x00111d34;
+        pPadEnd      = (void *)0x001109b0;
         pLoadExecPS2 = (void *)FNADDR(ptr[3]);
     } else {
-        ptr = NULL;
-        pPadEnd = NULL;
+        ptr          = NULL;
+        pPadEnd      = NULL;
         pLoadExecPS2 = NULL;
     }
 
@@ -495,27 +495,27 @@ static int SOS_SifLoadModuleHook(const char *path, int arg_len, const char *args
 
     switch (g_mode) {
         case 0: // NTSC-J
-            _pSifLoadModule = (void *)0x001d0680;
-            pSifAllocIopHeap = (void *)0x001cfc30;
-            pSifFreeIopHeap = (void *)0x001cfd20;
+            _pSifLoadModule      = (void *)0x001d0680;
+            pSifAllocIopHeap     = (void *)0x001cfc30;
+            pSifFreeIopHeap      = (void *)0x001cfd20;
             pSifLoadModuleBuffer = (void *)0x001d0640;
             break;
         case 1: // NTSC-U/C
-            _pSifLoadModule = (void *)0x001d0580;
-            pSifAllocIopHeap = (void *)0x001cfb30;
-            pSifFreeIopHeap = (void *)0x001cfc20;
+            _pSifLoadModule      = (void *)0x001d0580;
+            pSifAllocIopHeap     = (void *)0x001cfb30;
+            pSifFreeIopHeap      = (void *)0x001cfc20;
             pSifLoadModuleBuffer = (void *)0x001d0540;
             break;
         case 2: // PAL
-            _pSifLoadModule = (void *)0x001d11c0;
-            pSifAllocIopHeap = (void *)0x001d0770;
-            pSifFreeIopHeap = (void *)0x001d0860;
+            _pSifLoadModule      = (void *)0x001d11c0;
+            pSifAllocIopHeap     = (void *)0x001d0770;
+            pSifFreeIopHeap      = (void *)0x001d0860;
             pSifLoadModuleBuffer = (void *)0x001d1180;
             break;
         default:
-            _pSifLoadModule = NULL;
-            pSifAllocIopHeap = NULL;
-            pSifFreeIopHeap = NULL;
+            _pSifLoadModule      = NULL;
+            pSifAllocIopHeap     = NULL;
+            pSifFreeIopHeap      = NULL;
             pSifLoadModuleBuffer = NULL;
             // Should not happen.
             asm volatile("break\n");
@@ -528,7 +528,7 @@ static int SOS_SifLoadModuleHook(const char *path, int arg_len, const char *args
 
         iopmem = pSifAllocIopHeap(iremsndpatch_irx_size);
         if (iopmem != NULL) {
-            sifdma.src = iremsndpatch_irx;
+            sifdma.src  = iremsndpatch_irx;
             sifdma.dest = iopmem;
             sifdma.size = iremsndpatch_irx_size;
             sifdma.attr = 0;
@@ -610,33 +610,33 @@ static int UltProPinball_SifLoadModuleHook(const char *path, int arg_len, const 
 
     switch (g_mode & 0xf) {
         case ULTPROPINBALL_ELF_MAIN:
-            pSifLoadModule = (void *)0x001d0140;
-            pSifAllocIopHeap = (void *)0x001cf278;
-            pSifFreeIopHeap = (void *)0x001cf368;
+            pSifLoadModule       = (void *)0x001d0140;
+            pSifAllocIopHeap     = (void *)0x001cf278;
+            pSifFreeIopHeap      = (void *)0x001cf368;
             pSifLoadModuleBuffer = (void *)0x001cfed8;
             break;
         case ULTPROPINBALL_ELF_BR:
-            pSifLoadModule = (void *)0x0023aa80;
-            pSifAllocIopHeap = (void *)0x00239bb8;
-            pSifFreeIopHeap = (void *)0x00239ca8;
+            pSifLoadModule       = (void *)0x0023aa80;
+            pSifAllocIopHeap     = (void *)0x00239bb8;
+            pSifFreeIopHeap      = (void *)0x00239ca8;
             pSifLoadModuleBuffer = (void *)0x0023a818;
             break;
         case ULTPROPINBALL_ELF_FJ:
-            pSifLoadModule = (void *)0x00224740;
-            pSifAllocIopHeap = (void *)0x00223878;
-            pSifFreeIopHeap = (void *)0x00223968;
+            pSifLoadModule       = (void *)0x00224740;
+            pSifAllocIopHeap     = (void *)0x00223878;
+            pSifFreeIopHeap      = (void *)0x00223968;
             pSifLoadModuleBuffer = (void *)0x002244d8;
             break;
         case ULTPROPINBALL_ELF_TS:
-            pSifLoadModule = (void *)0x00233040;
-            pSifAllocIopHeap = (void *)0x00232178;
-            pSifFreeIopHeap = (void *)0x00232268;
+            pSifLoadModule       = (void *)0x00233040;
+            pSifAllocIopHeap     = (void *)0x00232178;
+            pSifFreeIopHeap      = (void *)0x00232268;
             pSifLoadModuleBuffer = (void *)0x00232dd8;
             break;
         default:
-            pSifLoadModule = NULL;
-            pSifAllocIopHeap = NULL;
-            pSifFreeIopHeap = NULL;
+            pSifLoadModule       = NULL;
+            pSifAllocIopHeap     = NULL;
+            pSifFreeIopHeap      = NULL;
             pSifLoadModuleBuffer = NULL;
             // Should not happen.
             asm volatile("break\n");
@@ -649,7 +649,7 @@ static int UltProPinball_SifLoadModuleHook(const char *path, int arg_len, const 
 
         iopmem = pSifAllocIopHeap(apemodpatch_irx_size);
         if (iopmem != NULL) {
-            sifdma.src = apemodpatch_irx;
+            sifdma.src  = apemodpatch_irx;
             sifdma.dest = iopmem;
             sifdma.size = apemodpatch_irx_size;
             sifdma.attr = 0;
@@ -743,26 +743,26 @@ static int ShadowMan2_SifLoadModuleHook(const char *path, int arg_len, const cha
     switch (g_mode) {
         case 1: // NTSC-U/C
             // pSifLoadModule = (void *)0x00234188;
-            pSifAllocIopHeap = (void *)0x239df0;
-            pSifFreeIopHeap = (void *)0x239f58;
+            pSifAllocIopHeap     = (void *)0x239df0;
+            pSifFreeIopHeap      = (void *)0x239f58;
             pSifLoadModuleBuffer = (void *)0x00233f20;
             break;
         case 2: // PAL
             // pSifLoadModule = (void *)0x002336c8;
-            pSifAllocIopHeap = (void *)0x00239330;
-            pSifFreeIopHeap = (void *)0x00239498;
+            pSifAllocIopHeap     = (void *)0x00239330;
+            pSifFreeIopHeap      = (void *)0x00239498;
             pSifLoadModuleBuffer = (void *)0x00233460;
             break;
         case 3: // PAL German
             // pSifLoadModule = (void *)0x00233588;
-            pSifAllocIopHeap = (void *)0x002391f0;
-            pSifFreeIopHeap = (void *)0x00239358;
+            pSifAllocIopHeap     = (void *)0x002391f0;
+            pSifFreeIopHeap      = (void *)0x00239358;
             pSifLoadModuleBuffer = (void *)0x00233320;
             break;
         default:
             // pSifLoadModule = NULL;
-            pSifAllocIopHeap = NULL;
-            pSifFreeIopHeap = NULL;
+            pSifAllocIopHeap     = NULL;
+            pSifFreeIopHeap      = NULL;
             pSifLoadModuleBuffer = NULL;
             // Should not happen.
             asm volatile("break\n");
@@ -772,7 +772,7 @@ static int ShadowMan2_SifLoadModuleHook(const char *path, int arg_len, const cha
 
     iopmem = pSifAllocIopHeap(f2techioppatch_irx_size);
     if (iopmem != NULL) {
-        sifdma.src = f2techioppatch_irx;
+        sifdma.src  = f2techioppatch_irx;
         sifdma.dest = iopmem;
         sifdma.size = f2techioppatch_irx_size;
         sifdma.attr = 0;

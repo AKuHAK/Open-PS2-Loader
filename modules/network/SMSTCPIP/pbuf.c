@@ -114,10 +114,10 @@ void pbuf_init(void)
     for (i = 0; i < PBUF_POOL_SIZE; ++i) {
         p->next = (struct pbuf *)((u8_t *)p + PBUF_POOL_BUFSIZE + sizeof(struct pbuf));
         p->len = p->tot_len = PBUF_POOL_BUFSIZE;
-        p->payload = MEM_ALIGN((void *)((u8_t *)p + sizeof(struct pbuf)));
-        p->flags = PBUF_FLAG_POOL;
-        q = p;
-        p = p->next;
+        p->payload          = MEM_ALIGN((void *)((u8_t *)p + sizeof(struct pbuf)));
+        p->flags            = PBUF_FLAG_POOL;
+        q                   = p;
+        p                   = p->next;
     }
 
     /* The ->next pointer of last pbuf is NULL to indicate that there
@@ -126,8 +126,8 @@ void pbuf_init(void)
 
 #if !SYS_LIGHTWEIGHT_PROT
     pbuf_pool_alloc_lock = 0;
-    pbuf_pool_free_lock = 0;
-    pbuf_pool_free_sem = sys_sem_new(1);
+    pbuf_pool_free_lock  = 0;
+    pbuf_pool_free_sem   = sys_sem_new(1);
 #endif
 }
 
@@ -290,7 +290,7 @@ pbuf_alloc(pbuf_layer l, u16_t length, pbuf_flag flag)
                 /* set total length of this pbuf and next in chain */
                 q->tot_len = rem_len;
                 /* this pbuf length is pool size, unless smaller sized tail */
-                q->len = rem_len > PBUF_POOL_BUFSIZE ? PBUF_POOL_BUFSIZE : rem_len;
+                q->len     = rem_len > PBUF_POOL_BUFSIZE ? PBUF_POOL_BUFSIZE : rem_len;
                 q->payload = (void *)((u8_t *)q + sizeof(struct pbuf));
                 LWIP_ASSERT("pbuf_alloc: pbuf q->payload properly aligned",
                             ((u32_t)q->payload % MEM_ALIGNMENT) == 0);
@@ -319,8 +319,8 @@ pbuf_alloc(pbuf_layer l, u16_t length, pbuf_flag flag)
             p->payload = (void *)((u8_t *)p + sizeof(struct pbuf) + offset);
 
             p->len = p->tot_len = length;
-            p->next = NULL;
-            p->flags = PBUF_FLAG_RAM;
+            p->next             = NULL;
+            p->flags            = PBUF_FLAG_RAM;
 
             LWIP_ASSERT("pbuf_alloc: pbuf->payload properly aligned",
                         ((u32_t)p->payload % MEM_ALIGNMENT) == 0);
@@ -338,8 +338,8 @@ pbuf_alloc(pbuf_layer l, u16_t length, pbuf_flag flag)
             /* caller must set this field properly, afterwards */
             p->payload = NULL;
             p->len = p->tot_len = length;
-            p->next = NULL;
-            p->flags = (flag == PBUF_ROM ? PBUF_FLAG_ROM : PBUF_FLAG_REF);
+            p->next             = NULL;
+            p->flags            = (flag == PBUF_ROM ? PBUF_FLAG_ROM : PBUF_FLAG_REF);
             break;
         default:
             LWIP_ASSERT("pbuf_alloc: erroneous flag", 0);
@@ -363,7 +363,7 @@ pbuf_alloc(pbuf_layer l, u16_t length, pbuf_flag flag)
 
 #define PBUF_POOL_FAST_FREE(p) \
     do {                       \
-        p->next = pbuf_pool;   \
+        p->next   = pbuf_pool; \
         pbuf_pool = p;         \
         DEC_PBUF_STATS;        \
     } while (0)
@@ -418,7 +418,7 @@ void pbuf_realloc(struct pbuf *p, u16_t new_len)
 
     /* first, step over any pbufs that should remain in the chain */
     rem_len = new_len;
-    q = p;
+    q       = p;
     /* should this pbuf be kept? */
     while (rem_len > q->len) {
         /* decrease remaining length by pbuf length */
@@ -438,7 +438,7 @@ void pbuf_realloc(struct pbuf *p, u16_t new_len)
         mem_realloc(q, (u8_t *)q->payload - (u8_t *)q + rem_len);
     }
     /* adjust length fields for new last pbuf */
-    q->len = rem_len;
+    q->len     = rem_len;
     q->tot_len = q->len;
 
     /* any remaining pbufs in chain? */
@@ -577,7 +577,7 @@ u8_t pbuf_free(struct pbuf *p)
             /* is this a pbuf from the pool? */
             if (p->flags == PBUF_FLAG_POOL) {
                 p->len = p->tot_len = PBUF_POOL_BUFSIZE;
-                p->payload = (void *)((u8_t *)p + sizeof(struct pbuf));
+                p->payload          = (void *)((u8_t *)p + sizeof(struct pbuf));
                 PBUF_POOL_FREE(p);
                 /* a ROM or RAM referencing pbuf */
             } else if (p->flags == PBUF_FLAG_ROM || p->flags == PBUF_FLAG_REF) {
@@ -769,7 +769,7 @@ pbuf_take(struct pbuf *p)
                 /* copy pbuf payload */
                 mips_memcpy(q->payload, p->payload, p->len);
                 q->tot_len = p->tot_len;
-                q->len = p->len;
+                q->len     = p->len;
                 /* in case p was the first pbuf, it is no longer refered to by
                  * our caller, as the caller MUST do p = pbuf_take(p);
                  * in case p was not the first pbuf, it is no longer refered to

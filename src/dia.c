@@ -52,7 +52,7 @@ int diaShowKeyb(char *text, int maxLen, int hide_text, const char *title)
 {
     int i, j, len = strlen(text), selkeyb = 0, x, w;
     int selchar = 0, selcommand = -1;
-    char c[2] = "\0\0", *mask_buffer;
+    char c[2]                           = "\0\0", *mask_buffer;
     static const char keyb0[KEYB_ITEMS] = {
         '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '=',
         'q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p', '[', ']',
@@ -140,10 +140,10 @@ int diaShowKeyb(char *text, int maxLen, int hide_text, const char *title)
                     selchar--;
                 else {
                     selcommand = selchar / KEYB_WIDTH;
-                    selchar = -1;
+                    selchar    = -1;
                 }
             } else {
-                selchar = (selcommand + 1) * KEYB_WIDTH - 1;
+                selchar    = (selcommand + 1) * KEYB_WIDTH - 1;
                 selcommand = -1;
             }
         } else if (getKey(KEY_RIGHT)) {
@@ -153,10 +153,10 @@ int diaShowKeyb(char *text, int maxLen, int hide_text, const char *title)
                     selchar++;
                 else {
                     selcommand = selchar / KEYB_WIDTH;
-                    selchar = -1;
+                    selchar    = -1;
                 }
             } else {
-                selchar = selcommand * KEYB_WIDTH;
+                selchar    = selcommand * KEYB_WIDTH;
                 selcommand = -1;
             }
         } else if (getKey(KEY_UP)) {
@@ -175,7 +175,7 @@ int diaShowKeyb(char *text, int maxLen, int hide_text, const char *title)
             if (len < (maxLen - 1) && selchar > -1) {
                 sfxPlay(SFX_CONFIRM);
                 if (mask_buffer != NULL) {
-                    mask_buffer[len] = '*';
+                    mask_buffer[len]     = '*';
                     mask_buffer[len + 1] = '\0';
                 }
 
@@ -194,7 +194,7 @@ int diaShowKeyb(char *text, int maxLen, int hide_text, const char *title)
                 sfxPlay(SFX_CONFIRM);
                 if (len < (maxLen - 1)) { // SPACE
                     if (mask_buffer != NULL) {
-                        mask_buffer[len] = '*';
+                        mask_buffer[len]     = '*';
                         mask_buffer[len + 1] = '\0';
                     }
 
@@ -227,7 +227,7 @@ int diaShowKeyb(char *text, int maxLen, int hide_text, const char *title)
             if (len < (maxLen - 1) && selchar > -1) { // SPACE
                 sfxPlay(SFX_CONFIRM);
                 if (mask_buffer != NULL) {
-                    mask_buffer[len] = '*';
+                    mask_buffer[len]     = '*';
                     mask_buffer[len + 1] = '\0';
                 }
 
@@ -267,7 +267,7 @@ static int colPadSettings[16];
 static int diaShowColSel(unsigned char *r, unsigned char *g, unsigned char *b)
 {
     int selc = 0;
-    int ret = 0;
+    int ret  = 0;
     unsigned char col[3];
 
     padStoreSettings(colPadSettings);
@@ -294,7 +294,7 @@ static int diaShowColSel(unsigned char *r, unsigned char *g, unsigned char *b)
 
         for (co = 0; co < 3; ++co) {
             unsigned char cc[3] = {0, 0, 0};
-            cc[co] = col[co];
+            cc[co]              = col[co];
 
             x = 75;
             y = 75 + co * 25;
@@ -345,9 +345,9 @@ static int diaShowColSel(unsigned char *r, unsigned char *g, unsigned char *b)
             }
         } else if (getKeyOn(gSelectButton)) {
             sfxPlay(SFX_CONFIRM);
-            *r = col[0];
-            *g = col[1];
-            *b = col[2];
+            *r  = col[0];
+            *g  = col[1];
+            *b  = col[2];
             ret = 1;
             break;
         } else if (getKeyOn(gSelectButton == KEY_CIRCLE ? KEY_CROSS : KEY_CIRCLE)) {
@@ -442,7 +442,7 @@ static void diaRenderItem(int x, int y, struct UIItem *item, int selected, int h
 
         case UI_SPLITTER: {
             // a line. Thanks to the font rendering, we need to shift up by one font line
-            *w = 0;                          // nothing to render at all
+            *w       = 0;                    // nothing to render at all
             int ypos = y - UI_SPACING_V / 2; //  gsFont->CharHeight +
 
             // to ODD lines
@@ -471,7 +471,7 @@ static void diaRenderItem(int x, int y, struct UIItem *item, int selected, int h
 
         case UI_OK: {
             const char *txt = _l(_STR_OK);
-            *w = fntRenderString(gTheme->fonts[0], x, y, ALIGN_NONE, 0, 0, txt, txtcol) - x;
+            *w              = fntRenderString(gTheme->fonts[0], x, y, ALIGN_NONE, 0, 0, txt, txtcol) - x;
             break;
         }
 
@@ -502,7 +502,7 @@ static void diaRenderItem(int x, int y, struct UIItem *item, int selected, int h
                     stars[i] = '*';
 
                 stars[i] = '\0';
-                *w = fntRenderString(gTheme->fonts[0], x, y, ALIGN_NONE, 0, 0, stars, txtcol) - x;
+                *w       = fntRenderString(gTheme->fonts[0], x, y, ALIGN_NONE, 0, 0, stars, txtcol) - x;
             } else
                 *w = fntRenderString(gTheme->fonts[0], x, y, ALIGN_NONE, 0, 0, _l(_STR_NOT_SET), txtcol) - x;
             break;
@@ -510,7 +510,7 @@ static void diaRenderItem(int x, int y, struct UIItem *item, int selected, int h
 
         case UI_BOOL: {
             const char *txtval = _l((item->intvalue.current) ? _STR_ON : _STR_OFF);
-            *w = fntRenderString(gTheme->fonts[0], x, y, ALIGN_NONE, 0, 0, txtval, txtcol) - x;
+            *w                 = fntRenderString(gTheme->fonts[0], x, y, ALIGN_NONE, 0, 0, txtval, txtcol) - x;
             break;
         }
 
@@ -612,8 +612,8 @@ void diaRenderUI(struct UIItem *ui, short inMenu, struct UIItem *cur, int haveFo
 
     int uiHints[2] = {_STR_SELECT, _STR_BACK};
     int uiIcons[2] = {CIRCLE_ICON, CROSS_ICON};
-    int uiY = gTheme->usedHeight - 32;
-    int uiX = guiAlignSubMenuHints(2, uiHints, uiIcons, gTheme->fonts[0], 12, 2);
+    int uiY        = gTheme->usedHeight - 32;
+    int uiX        = guiAlignSubMenuHints(2, uiHints, uiIcons, gTheme->fonts[0], 12, 2);
 
     uiX = guiDrawIconAndText(gSelectButton == KEY_CIRCLE ? uiIcons[0] : uiIcons[1], uiHints[0], gTheme->fonts[0], uiX, uiY, gTheme->textColor);
     uiX += 12;
@@ -743,7 +743,7 @@ static struct UIItem *diaGetFirstControl(struct UIItem *ui)
 static struct UIItem *diaGetLastControl(struct UIItem *ui)
 {
     struct UIItem *last = diaGetFirstControl(ui);
-    struct UIItem *cur = last;
+    struct UIItem *cur  = last;
 
     while (cur->type != UI_TERMINATOR) {
         cur++;
@@ -786,7 +786,7 @@ static struct UIItem *diaGetPrevLine(struct UIItem *cur, struct UIItem *ui)
 {
     struct UIItem *newf = cur;
 
-    int lb = 0;
+    int lb      = 0;
     int hadCtrl = 0; // had the scanned line any control?
 
     while (newf != ui) {
@@ -887,7 +887,7 @@ int diaExecuteDialog(struct UIItem *ui, int uiId, short inMenu, int (*updater)(i
         readPads();
 
         if (haveFocus) {
-            modified = 1;
+            modified  = 1;
             haveFocus = diaHandleInput(cur, &modified);
 
             if (!haveFocus) {
@@ -895,7 +895,7 @@ int diaExecuteDialog(struct UIItem *ui, int uiId, short inMenu, int (*updater)(i
                 setButtonDelay(KEY_DOWN, DIA_SCROLL_SPEED);
             }
         } else {
-            modified = 0;
+            modified            = 0;
             struct UIItem *newf = cur;
 
             if (getKey(KEY_LEFT)) {
@@ -1013,7 +1013,7 @@ int diaSetInt(struct UIItem *ui, int id, int value)
         return 0;
 
     if ((item->type == UI_INT) || (item->type == UI_BOOL) || (item->type == UI_ENUM)) {
-        item->intvalue.def = value;
+        item->intvalue.def     = value;
         item->intvalue.current = value;
         return 1;
     }

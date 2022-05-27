@@ -86,7 +86,7 @@ void PostInputMSG(sys_mbox_t pMBox, void *pvMSG)
 {
 
     pMBox->apvMSG[pMBox->u16Last] = pvMSG;
-    pMBox->u16Last = GenNextMBoxIndex(pMBox->u16Last);
+    pMBox->u16Last                = GenNextMBoxIndex(pMBox->u16Last);
 
     if (pMBox->iWaitFetch > 0)
         iSignalSema(pMBox->Mail);
@@ -107,17 +107,17 @@ int ps2ip_getconfig(char *pszName, t_ip_info *pInfo)
 
     strcpy(pInfo->netif_name, pszName);
 
-    pInfo->ipaddr.s_addr = pNetIF->ip_addr.addr;
+    pInfo->ipaddr.s_addr  = pNetIF->ip_addr.addr;
     pInfo->netmask.s_addr = pNetIF->netmask.addr;
-    pInfo->gw.s_addr = pNetIF->gw.addr;
+    pInfo->gw.s_addr      = pNetIF->gw.addr;
     mips_memcpy(pInfo->hw_addr, pNetIF->hwaddr, sizeof(pInfo->hw_addr));
 #if LWIP_DHCP
     if (pNetIF->dhcp) {
         pInfo->dhcp_enabled = 1;
-        pInfo->dhcp_status = pNetIF->dhcp->state;
+        pInfo->dhcp_status  = pNetIF->dhcp->state;
     } else {
         pInfo->dhcp_enabled = 0;
-        pInfo->dhcp_status = 0;
+        pInfo->dhcp_status  = 0;
     } /* end else */
 #else
     pInfo->dhcp_enabled = 0;
@@ -162,7 +162,7 @@ typedef struct InputMSG
 
 static InputMSG aMSGs[MSG_QUEUE_SIZE];
 static u8_t u8FirstMSG = 0;
-static u8_t u8LastMSG = 0;
+static u8_t u8LastMSG  = 0;
 
 static u8_t inline GetNextMSGQueueIndex(u8_t u8Index)
 {
@@ -177,8 +177,8 @@ static int inline IsMSGQueueFull(void)
 static void InputCB(void *pvArg)
 {
 
-    InputMSG *pMSG = (InputMSG *)pvArg;
-    struct pbuf *pInput = pMSG->pInput;
+    InputMSG *pMSG       = (InputMSG *)pvArg;
+    struct pbuf *pInput  = pMSG->pInput;
     struct netif *pNetIF = pMSG->pNetIF;
     int iFlags;
 
@@ -220,20 +220,20 @@ err_t ps2ip_input(struct pbuf *pInput, struct netif *pNetIF)
         return ERR_OK;
     } /* end if */
       // Allocate messagequeue entry.
-    pIMSG = &aMSGs[u8LastMSG];
+    pIMSG     = &aMSGs[u8LastMSG];
     u8LastMSG = GetNextMSGQueueIndex(u8LastMSG);
     // Initialize the InputMSG.
     pIMSG->pInput = pInput;
     pIMSG->pNetIF = pNetIF;
-    pMSG = (struct tcpip_msg *)memp_malloc(MEMP_TCPIP_MSG);
+    pMSG          = (struct tcpip_msg *)memp_malloc(MEMP_TCPIP_MSG);
 
     if (!pMSG) {
         pbuf_free(pInput);
         return ERR_MEM;
     } /* end if */
 
-    pMSG->type = TCPIP_MSG_CALLBACK;
-    pMSG->msg.cb.f = InputCB;
+    pMSG->type       = TCPIP_MSG_CALLBACK;
+    pMSG->msg.cb.f   = InputCB;
     pMSG->msg.cb.ctx = pIMSG;
     PostInputMSG(g_TCPIPMBox, pMSG);
 
@@ -349,8 +349,8 @@ sys_mbox_t sys_mbox_new(void)
         return NULL;
 
     pMBox->u16First = pMBox->u16Last = 0;
-    pMBox->Mail = sys_sem_new(0);
-    pMBox->Mutex = sys_sem_new(1);
+    pMBox->Mail                      = sys_sem_new(0);
+    pMBox->Mutex                     = sys_sem_new(1);
     pMBox->iWaitPost = pMBox->iWaitFetch = 0;
 
     return pMBox;
@@ -396,7 +396,7 @@ void sys_mbox_post(sys_mbox_t pMBox, void *pvMSG)
     } /* end while */
 
     pMBox->apvMSG[pMBox->u16Last] = pvMSG;
-    pMBox->u16Last = GenNextMBoxIndex(pMBox->u16Last);
+    pMBox->u16Last                = GenNextMBoxIndex(pMBox->u16Last);
 
     sem = (pMBox->iWaitFetch > 0) ? pMBox->Mail : SYS_SEM_NULL;
 

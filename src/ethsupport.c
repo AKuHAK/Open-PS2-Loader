@@ -24,9 +24,9 @@ static char *ethBase;
 static int ethULSizePrev = -2;
 static time_t ethModifiedCDPrev;
 static time_t ethModifiedDVDPrev;
-static int ethGameCount = 0;
+static int ethGameCount               = 0;
 static unsigned char ethModulesLoaded = 0;
-static base_game_info_t *ethGames = NULL;
+static base_game_info_t *ethGames     = NULL;
 
 static struct ip4_addr lastIP;
 static struct ip4_addr lastNM;
@@ -104,7 +104,7 @@ static void ethSMBConnect(void)
         }
     } else {
         strncpy(logon.User, gPCUserName, sizeof(logon.User));
-        logon.PasswordType = NO_PASSWORD;
+        logon.PasswordType     = NO_PASSWORD;
         openshare.PasswordType = NO_PASSWORD;
     }
 
@@ -170,8 +170,8 @@ static int WaitValidNetState(int (*checkingFunction)(void))
 
     // Wait for a valid network status;
     SemaData.option = SemaData.attr = 0;
-    SemaData.init_count = 0;
-    SemaData.max_count = 1;
+    SemaData.init_count             = 0;
+    SemaData.max_count              = 1;
     if ((SemaID = CreateSema(&SemaData)) < 0)
         return SemaID;
 
@@ -317,7 +317,7 @@ void ethDeinitModules(void)
         nbnsDeinit();
         NetManDeinit();
         ethModulesLoaded = 0;
-        gNetworkStartup = ERROR_ETH_NOT_STARTED;
+        gNetworkStartup  = ERROR_ETH_NOT_STARTED;
 
         if (ethInitSemaID >= 0) {
             DeleteSema(ethInitSemaID);
@@ -418,16 +418,16 @@ void ethInit(void)
         LOG("ETHSUPPORT Re-Init\n");
         thmReinit(ethBase);
         ethULSizePrev = -2;
-        ethGameCount = 0;
+        ethGameCount  = 0;
         ioPutRequest(IO_CUSTOM_SIMPLEACTION, &ethInitSMB);
     } else {
         LOG("ETHSUPPORT Init\n");
-        ethBase = "smb0:";
-        ethULSizePrev = -2;
-        ethModifiedCDPrev = 0;
+        ethBase            = "smb0:";
+        ethULSizePrev      = -2;
+        ethModifiedCDPrev  = 0;
         ethModifiedDVDPrev = 0;
-        ethGameCount = 0;
-        ethGames = NULL;
+        ethGameCount       = 0;
+        ethGames           = NULL;
         configGetInt(configGetByType(CONFIG_OPL), "eth_frames_delay", &ethGameList.delay);
         gNetworkStartup = ERROR_ETH_NOT_STARTED;
         ioPutRequest(IO_CUSTOM_SIMPLEACTION, &smbLoadModules);
@@ -460,7 +460,7 @@ static int ethNeedsUpdate(void)
             st.st_mtime = 0;
         if (ethModifiedCDPrev != st.st_mtime) {
             ethModifiedCDPrev = st.st_mtime;
-            result = 1;
+            result            = 1;
         }
 
         sprintf(path, "%sDVD", ethPrefix);
@@ -468,7 +468,7 @@ static int ethNeedsUpdate(void)
             st.st_mtime = 0;
         if (ethModifiedDVDPrev != st.st_mtime) {
             ethModifiedDVDPrev = st.st_mtime;
-            result = 1;
+            result             = 1;
         }
 
         if (!sbIsSameSize(ethPrefix, ethULSizePrev))
@@ -497,7 +497,7 @@ static int ethUpdateGameList(void)
             return 0;
 
         getsharelist.EE_addr = (void *)&sharelist[0];
-        getsharelist.maxent = 128;
+        getsharelist.maxent  = 128;
 
         count = fileXioDevctl(ethBase, SMB_DEVCTL_GETSHARELIST, (void *)&getsharelist, sizeof(getsharelist), NULL, 0);
         if (count > 0) {
@@ -510,10 +510,10 @@ static int ethUpdateGameList(void)
                 g->name[31] = '\0';
                 sprintf(g->startup, "SHARE");
                 g->extension[0] = '\0';
-                g->parts = 0x00;
-                g->media = 0x00;
-                g->format = GAME_FORMAT_USBLD;
-                g->sizeMB = 0;
+                g->parts        = 0x00;
+                g->media        = 0x00;
+                g->format       = GAME_FORMAT_USBLD;
+                g->sizeMB       = 0;
             }
             ethGameCount = count;
         } else if (count < 0) {
@@ -578,7 +578,7 @@ static void ethLaunchGame(int id, config_set_t *configSet)
     if (!gPCShareName[0]) {
         memcpy(gPCShareName, game->name, sizeof(gPCShareName));
         ethULSizePrev = -2;
-        ethGameCount = 0;
+        ethGameCount  = 0;
         ioPutRequest(IO_MENU_UPDATE_DEFFERED, &ethGameList.mode); // clear the share list
         ioPutRequest(IO_CUSTOM_SIMPLEACTION, &ethInitSMB);
         ioPutRequest(IO_MENU_UPDATE_DEFFERED, &ethGameList.mode); // reload the game list
@@ -597,11 +597,11 @@ static void ethLaunchGame(int id, config_set_t *configSet)
             if (sysCheckVMC(ethPrefix, "\\", vmc_name, 0, &vmc_superblock) > 0) {
                 smb_vmc_infos.flags = vmc_superblock.mc_flag & 0xFF;
                 smb_vmc_infos.flags |= 0x100;
-                smb_vmc_infos.specs.page_size = vmc_superblock.page_size;
+                smb_vmc_infos.specs.page_size  = vmc_superblock.page_size;
                 smb_vmc_infos.specs.block_size = vmc_superblock.pages_per_block;
-                smb_vmc_infos.specs.card_size = vmc_superblock.pages_per_cluster * vmc_superblock.clusters_per_card;
-                smb_vmc_infos.active = 1;
-                smb_vmc_infos.fid = 0xFFFF;
+                smb_vmc_infos.specs.card_size  = vmc_superblock.pages_per_cluster * vmc_superblock.clusters_per_card;
+                smb_vmc_infos.active           = 1;
+                smb_vmc_infos.fid              = 0xFFFF;
                 if (gETHPrefix[0])
                     snprintf(smb_vmc_infos.fname, sizeof(smb_vmc_infos.fname), "%s\\VMC\\%s.bin", gETHPrefix, vmc_name);
                 else
@@ -677,12 +677,12 @@ static void ethLaunchGame(int id, config_set_t *configSet)
 
     switch (game->format) {
         case GAME_FORMAT_USBLD:
-            layer1_part = layer1_start / 0x80000;
+            layer1_part   = layer1_start / 0x80000;
             layer1_offset = layer1_start % 0x80000;
             sbCreatePath(game, partname, ethPrefix, "\\", layer1_part);
             break;
         default: // Raw ISO9660 disc image; one part.
-            layer1_part = 0;
+            layer1_part   = 0;
             layer1_offset = layer1_start;
     }
 
@@ -802,7 +802,7 @@ int ethGetNetConfig(u8 *ip_address, u8 *netmask, u8 *gateway)
     int result;
 
     // Read a cached copy of the settings, if this is read after deinitialization.
-    result = ethModulesLoaded ? ethReadNetConfig() : -1;
+    result        = ethModulesLoaded ? ethReadNetConfig() : -1;
     ip_address[0] = ip4_addr1(&lastIP);
     ip_address[1] = ip4_addr2(&lastIP);
     ip_address[2] = ip4_addr3(&lastIP);

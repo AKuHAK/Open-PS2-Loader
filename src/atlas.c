@@ -87,19 +87,19 @@ atlas_t *atlasNew(size_t width, size_t height, u8 psm)
 
     atlas->allocation = allocNew(0, 0, width, height);
 
-    atlas->surface.Width = width;
+    atlas->surface.Width  = width;
     atlas->surface.Height = height;
 
     atlas->surface.Filter = GS_FILTER_NEAREST;
 
-    size_t txtsize = gsKit_texture_size(width, height, psm);
-    atlas->surface.PSM = psm;
-    atlas->surface.Mem = (u32 *)memalign(128, txtsize);
+    size_t txtsize      = gsKit_texture_size(width, height, psm);
+    atlas->surface.PSM  = psm;
+    atlas->surface.Mem  = (u32 *)memalign(128, txtsize);
     atlas->surface.Vram = 0;
 
     // defaults to no clut
-    atlas->surface.ClutPSM = 0;
-    atlas->surface.Clut = NULL;
+    atlas->surface.ClutPSM  = 0;
+    atlas->surface.Clut     = NULL;
     atlas->surface.VramClut = 0;
 
     // zero out the atlas surface
@@ -151,7 +151,7 @@ static void atlasCopyData(atlas_t *atlas, struct atlas_allocation_t *al, size_t 
         return;
 
     const char *src = surface;
-    char *data = (char *)atlas->surface.Mem;
+    char *data      = (char *)atlas->surface.Mem;
 
     // advance the pointer to the atlas position start (first pixel)
     data += ps * (al->y * atlas->allocation->w + al->x);

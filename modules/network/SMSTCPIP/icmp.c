@@ -62,7 +62,7 @@ void icmp_input(struct pbuf *p, struct netif *inp)
 
 
     iphdr = p->payload;
-    hlen = IPH_HL(iphdr) * 4;
+    hlen  = IPH_HL(iphdr) * 4;
     if (pbuf_header(p, -((s16_t)hlen)) || (p->tot_len < sizeof(u16_t) * 2)) {
         LWIP_DEBUGF(ICMP_DEBUG, ("icmp_input: short ICMP (%u bytes) received\n", p->tot_len));
         pbuf_free(p);
@@ -101,8 +101,8 @@ void icmp_input(struct pbuf *p, struct netif *inp)
                 return;
             }
 #endif
-            tmpaddr.addr = iphdr->src.addr;
-            iphdr->src.addr = iphdr->dest.addr;
+            tmpaddr.addr     = iphdr->src.addr;
+            iphdr->src.addr  = iphdr->dest.addr;
             iphdr->dest.addr = tmpaddr.addr;
             ICMPH_TYPE_SET(iecho, ICMP_ER);
             /* adjust the checksum */

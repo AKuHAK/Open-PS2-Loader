@@ -4,7 +4,7 @@
 #include <ioman.h>
 
 unsigned int ioprpimg = 0xDEC1DEC1;
-int ioprpsiz = 0xDEC2DEC2;
+int ioprpsiz          = 0xDEC2DEC2;
 
 int dummy_fs()
 {
@@ -68,7 +68,7 @@ iop_device_ops_t my_device_ops =
     dummy_fs,//chstat*/
 };
 
-const char name[] = "img";
+const char name[]      = "img";
 iop_device_t my_device = {
     name,
     IOP_DT_FS,

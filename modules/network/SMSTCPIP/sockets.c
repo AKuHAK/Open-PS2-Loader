@@ -72,7 +72,7 @@ struct lwip_select_cb
 static struct lwip_socket sockets[NUM_SOCKETS];
 static struct lwip_select_cb *select_cb_list = 0;
 
-static sys_sem_t socksem = 0;
+static sys_sem_t socksem   = 0;
 static sys_sem_t selectsem = 0;
 
 static void
@@ -146,13 +146,13 @@ alloc_socket(struct netconn *newconn)
     /* allocate a new socket identifier */
     for (i = 0; i < NUM_SOCKETS; ++i) {
         if (!sockets[i].conn) {
-            sockets[i].conn = newconn;
-            sockets[i].lastdata = NULL;
+            sockets[i].conn       = newconn;
+            sockets[i].lastdata   = NULL;
             sockets[i].lastoffset = 0;
-            sockets[i].rcvevent = 0;
-            sockets[i].sendevent = 1; /* TCP send buf is empty */
-            sockets[i].flags = 0;
-            sockets[i].err = 0;
+            sockets[i].rcvevent   = 0;
+            sockets[i].sendevent  = 1; /* TCP send buf is empty */
+            sockets[i].flags      = 0;
+            sockets[i].err        = 0;
             sys_sem_signal(socksem);
             return i;
         }
@@ -183,9 +183,9 @@ int lwip_accept(int s, struct sockaddr *addr, socklen_t *addrlen)
     netconn_peer(newconn, &naddr, &port);
 
     mips_memset(&sin, 0, sizeof(sin));
-    sin.sin_len = sizeof(sin);
-    sin.sin_family = AF_INET;
-    sin.sin_port = htons(port);
+    sin.sin_len         = sizeof(sin);
+    sin.sin_family      = AF_INET;
+    sin.sin_port        = htons(port);
     sin.sin_addr.s_addr = naddr.addr;
 
     if (*addrlen > sizeof(sin))
@@ -200,7 +200,7 @@ int lwip_accept(int s, struct sockaddr *addr, socklen_t *addrlen)
         return -1;
     }
     newconn->callback = event_callback;
-    sock = get_socket(newsock);
+    sock              = get_socket(newsock);
 
     sys_sem_wait(socksem);
     sock->rcvevent += -1 - newconn->socket;
@@ -229,7 +229,7 @@ int lwip_bind(int s, struct sockaddr *name, socklen_t namelen)
     }
 
     local_addr.addr = ((struct sockaddr_in *)name)->sin_addr.s_addr;
-    local_port = ((struct sockaddr_in *)name)->sin_port;
+    local_port      = ((struct sockaddr_in *)name)->sin_port;
 
     LWIP_DEBUGF(SOCKETS_DEBUG, ("lwip_bind(%d, addr=", s));
     ip_addr_debug_print(SOCKETS_DEBUG, &local_addr);
@@ -270,9 +270,9 @@ int lwip_close(int s)
     if (sock->lastdata) {
         netbuf_delete(sock->lastdata);
     }
-    sock->lastdata = NULL;
+    sock->lastdata   = NULL;
     sock->lastoffset = 0;
-    sock->conn = NULL;
+    sock->conn       = NULL;
     sys_sem_signal(socksem);
     sock_set_errno(sock, 0);
     return 0;
@@ -297,7 +297,7 @@ int lwip_connect(int s, struct sockaddr *name, socklen_t namelen)
         u16_t remote_port;
 
         remote_addr.addr = ((struct sockaddr_in *)name)->sin_addr.s_addr;
-        remote_port = ((struct sockaddr_in *)name)->sin_port;
+        remote_port      = ((struct sockaddr_in *)name)->sin_port;
 
         LWIP_DEBUGF(SOCKETS_DEBUG, ("lwip_connect(%d, addr=", s));
         ip_addr_debug_print(SOCKETS_DEBUG, &remote_addr);
@@ -391,12 +391,12 @@ int lwip_recvfrom(int s, void *header, int index, void *payload, int plen, unsig
     if (index) {
         if (avail_len >= 63) { // header of (SMB command) READ ANDX RESPONSE is 63 + padding bytes, which are "0x00" thus useless
             netbuf_copy_partial(buf, header, 63, sock->lastoffset);
-            index = ((u8_t *)header)[index] + 4; // The word at offset 0 is sessionHeader, which Microsoft doesn't consider as being part of the SMB header.
+            index   = ((u8_t *)header)[index] + 4; // The word at offset 0 is sessionHeader, which Microsoft doesn't consider as being part of the SMB header.
             copylen = index;
             avail_len -= index;
         } else {
             netbuf_copy_partial(buf, header, avail_len, sock->lastoffset);
-            copylen = avail_len;
+            copylen   = avail_len;
             avail_len = 0;
         }
     }
@@ -418,9 +418,9 @@ int lwip_recvfrom(int s, void *header, int index, void *payload, int plen, unsig
         port = netbuf_fromport(buf);
 
         mips_memset(&sin, 0, sizeof(sin));
-        sin.sin_len = sizeof(sin);
-        sin.sin_family = AF_INET;
-        sin.sin_port = htons(port);
+        sin.sin_len         = sizeof(sin);
+        sin.sin_family      = AF_INET;
+        sin.sin_port        = htons(port);
         sin.sin_addr.s_addr = addr->addr;
 
         if (*fromlen > sizeof(sin))
@@ -449,7 +449,7 @@ int lwip_recvfrom(int s, void *header, int index, void *payload, int plen, unsig
         sock->lastdata = buf;
         sock->lastoffset += copylen;
     } else {
-        sock->lastdata = NULL;
+        sock->lastdata   = NULL;
         sock->lastoffset = 0;
         netbuf_delete(buf);
     }
@@ -544,7 +544,7 @@ int lwip_sendto(int s, void *data, int size, unsigned int flags,
     connected = (netconn_peer(sock->conn, &addr, &port) == ERR_OK);
 
     remote_addr.addr = ((struct sockaddr_in *)to)->sin_addr.s_addr;
-    remote_port = ((struct sockaddr_in *)to)->sin_port;
+    remote_port      = ((struct sockaddr_in *)to)->sin_port;
 
     LWIP_DEBUGF(SOCKETS_DEBUG, ("lwip_sendto(%d, data=%p, size=%d, flags=0x%x to=", s, data, size, flags));
     ip_addr_debug_print(SOCKETS_DEBUG, &remote_addr);
@@ -648,7 +648,7 @@ lwip_selscan(int maxfdp1, fd_set *readset, fd_set *writeset, fd_set *exceptset)
             }
         }
     }
-    *readset = lreadset;
+    *readset  = lreadset;
     *writeset = lwriteset;
     FD_ZERO(exceptset);
 
@@ -667,10 +667,10 @@ int lwip_select(int maxfdp1, fd_set *readset, fd_set *writeset, fd_set *exceptse
 
     LWIP_DEBUGF(SOCKETS_DEBUG, ("lwip_select(%d, %p, %p, %p, tvsec=%ld tvusec=%ld)\n", maxfdp1, (void *)readset, (void *)writeset, (void *)exceptset, timeout ? timeout->tv_sec : -1L, timeout ? timeout->tv_usec : -1L));
 
-    select_cb.next = 0;
-    select_cb.readset = readset;
-    select_cb.writeset = writeset;
-    select_cb.exceptset = exceptset;
+    select_cb.next          = 0;
+    select_cb.readset       = readset;
+    select_cb.writeset      = writeset;
+    select_cb.exceptset     = exceptset;
     select_cb.sem_signalled = 0;
 
     /* Protect ourselves searching through the list */
@@ -897,7 +897,7 @@ int lwip_getpeername(int s, struct sockaddr *name, socklen_t *namelen)
     }
 
     mips_memset(&sin, 0, sizeof(sin));
-    sin.sin_len = sizeof(sin);
+    sin.sin_len    = sizeof(sin);
     sin.sin_family = AF_INET;
 
     /* get the IP address and port of the remote host */
@@ -907,7 +907,7 @@ int lwip_getpeername(int s, struct sockaddr *name, socklen_t *namelen)
     ip_addr_debug_print(SOCKETS_DEBUG, &naddr);
     LWIP_DEBUGF(SOCKETS_DEBUG, (" port=%d)\n", sin.sin_port));
 
-    sin.sin_port = htons(sin.sin_port);
+    sin.sin_port        = htons(sin.sin_port);
     sin.sin_addr.s_addr = naddr.addr;
 
     if (*namelen > sizeof(sin))
@@ -931,7 +931,7 @@ int lwip_getsockname(int s, struct sockaddr *name, socklen_t *namelen)
     }
 
     mips_memset(&sin, 0, sizeof(sin));
-    sin.sin_len = sizeof(sin);
+    sin.sin_len    = sizeof(sin);
     sin.sin_family = AF_INET;
 
     /* get the IP address and port of the remote host */
@@ -941,7 +941,7 @@ int lwip_getsockname(int s, struct sockaddr *name, socklen_t *namelen)
     ip_addr_debug_print(SOCKETS_DEBUG, naddr);
     LWIP_DEBUGF(SOCKETS_DEBUG, (" port=%d)\n", sin.sin_port));
 
-    sin.sin_port = htons(sin.sin_port);
+    sin.sin_port        = htons(sin.sin_port);
     sin.sin_addr.s_addr = naddr->addr;
 
     if (*namelen > sizeof(sin))
@@ -954,7 +954,7 @@ int lwip_getsockname(int s, struct sockaddr *name, socklen_t *namelen)
 
 int lwip_getsockopt(int s, int level, int optname, void *optval, socklen_t *optlen)
 {
-    int err = 0;
+    int err                  = 0;
     struct lwip_socket *sock = get_socket(s);
 
     if (!sock) {
@@ -1105,7 +1105,7 @@ int lwip_getsockopt(int s, int level, int optname, void *optval, socklen_t *optl
 
                 case SO_ERROR:
                     *(int *)optval = sock->err;
-                    sock->err = 0;
+                    sock->err      = 0;
                     LWIP_DEBUGF(SOCKETS_DEBUG, ("lwip_getsockopt(%d, SOL_SOCKET, SO_ERROR) = %d\n", s, *(int *)optval));
                     break;
             } /* switch */
@@ -1157,7 +1157,7 @@ int lwip_getsockopt(int s, int level, int optname, void *optval, socklen_t *optl
 int lwip_setsockopt(int s, int level, int optname, const void *optval, socklen_t optlen)
 {
     struct lwip_socket *sock = get_socket(s);
-    int err = 0;
+    int err                  = 0;
 
     if (!sock) {
         set_errno(EBADF);

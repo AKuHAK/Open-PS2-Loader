@@ -63,7 +63,7 @@ u32 crc32(const char *string)
 
     do {
         byte = string[count++];
-        crc = crctab[byte ^ ((crc >> 24) & 0xFF)] ^ ((crc << 8) & 0xFFFFFF00);
+        crc  = crctab[byte ^ ((crc >> 24) & 0xFF)] ^ ((crc << 8) & 0xFFFFFF00);
     } while (string[count - 1] != 0);
 
     return crc;
@@ -157,7 +157,7 @@ int write_cfg(const char *drive, const char *game_name, const char *game_id, con
 
     strncpy(cfg.name, game_name, 32);
     sprintf(cfg.image, "ul.%s", game_id);
-    cfg.parts = parts;
+    cfg.parts  = parts;
     cfg.pad[4] = 0x08; // To be like USBA
 
     if (!strcmp(media, "CD"))
@@ -208,7 +208,7 @@ int write_parts(const char *drive, const char *game_name, const char *game_id, s
 #endif
 
     iso_pos = 0;
-    buf = malloc(WR_SIZE + 2048);
+    buf     = malloc(WR_SIZE + 2048);
     if (!buf)
         return -1;
 
@@ -422,7 +422,7 @@ s64 GetGameID(char *isofile, int isBigEndian, short closeOnEnd, char *GameID)
 
     // get GameID
     strcpy(GameID, &ElfPath[8]);
-    p = strstr(GameID, ";1");
+    p  = strstr(GameID, ";1");
     *p = 0;
 
 #ifdef DEBUG

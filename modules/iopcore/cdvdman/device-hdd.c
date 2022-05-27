@@ -14,8 +14,8 @@ extern struct cdvdman_settings_hdd cdvdman_settings;
 
 extern struct irx_export_table _exp_atad;
 
-char lba_48bit = 0;
-char atad_inited = 0;
+char lba_48bit                   = 0;
+char atad_inited                 = 0;
 static unsigned char CurrentPart = 0;
 static unsigned char NumParts;
 
@@ -74,9 +74,9 @@ void DeviceInit(void)
 
     memcpy(cdvdman_partspecs, apaHeader.part_specs, sizeof(cdvdman_partspecs));
 
-    cdvdman_settings.common.media = apaHeader.discType;
+    cdvdman_settings.common.media        = apaHeader.discType;
     cdvdman_settings.common.layer1_start = apaHeader.layer1_start;
-    NumParts = apaHeader.num_partitions;
+    NumParts                             = apaHeader.num_partitions;
 }
 
 void DeviceSetupZSO(u8 *buffer)

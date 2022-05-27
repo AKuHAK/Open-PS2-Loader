@@ -11,7 +11,7 @@
 #include "sys_utils.h"
 #include "padmacro.h"
 
-//#define DPRINTF(x...) printf(x)
+// #define DPRINTF(x...) printf(x)
 #define DPRINTF(x...)
 
 #define REQ_USB_OUT (USB_DIR_OUT | USB_TYPE_CLASS | USB_RECIP_INTERFACE)
@@ -117,16 +117,16 @@ int usb_connect(int devId)
 
     ds34pad[pad].controlEndp = UsbOpenEndpoint(devId, NULL);
 
-    device = (UsbDeviceDescriptor *)UsbGetDeviceStaticDescriptor(devId, NULL, USB_DT_DEVICE);
-    config = (UsbConfigDescriptor *)UsbGetDeviceStaticDescriptor(devId, device, USB_DT_CONFIG);
+    device    = (UsbDeviceDescriptor *)UsbGetDeviceStaticDescriptor(devId, NULL, USB_DT_DEVICE);
+    config    = (UsbConfigDescriptor *)UsbGetDeviceStaticDescriptor(devId, device, USB_DT_CONFIG);
     interface = (UsbInterfaceDescriptor *)((char *)config + config->bLength);
 
     if (device->idProduct == DS3_PID) {
         ds34pad[pad].type = DS3;
-        epCount = interface->bNumEndpoints - 1;
+        epCount           = interface->bNumEndpoints - 1;
     } else {
         ds34pad[pad].type = DS4;
-        epCount = 20; // ds4 v2 returns interface->bNumEndpoints as 0
+        epCount           = 20; // ds4 v2 returns interface->bNumEndpoints as 0
     }
 
     endpoint = (UsbEndpointDescriptor *)UsbGetDeviceStaticDescriptor(devId, NULL, USB_DT_ENDPOINT);
@@ -187,11 +187,11 @@ static void usb_release(int pad)
     if (ds34pad[pad].outEndp >= 0)
         UsbCloseEndpoint(ds34pad[pad].outEndp);
 
-    ds34pad[pad].controlEndp = -1;
+    ds34pad[pad].controlEndp   = -1;
     ds34pad[pad].interruptEndp = -1;
-    ds34pad[pad].outEndp = -1;
-    ds34pad[pad].devId = -1;
-    ds34pad[pad].status = DS34USB_STATE_DISCONNECTED;
+    ds34pad[pad].outEndp       = -1;
+    ds34pad[pad].devId         = -1;
+    ds34pad[pad].status        = DS34USB_STATE_DISCONNECTED;
 
     SignalSema(ds34pad[pad].sema);
 }
@@ -386,7 +386,7 @@ static int LEDRumble(u8 *led, u8 lrum, u8 rrum, int pad)
 
         if (led[3]) // means charging, so blink
         {
-            usb_buf[9] = 0x80;  // Time to flash bright (255 = 2.5 seconds)
+            usb_buf[9]  = 0x80; // Time to flash bright (255 = 2.5 seconds)
             usb_buf[10] = 0x80; // Time to flash dark (255 = 2.5 seconds)
         }
 
@@ -426,8 +426,8 @@ void ds34usb_set_rumble(u8 lrum, u8 rrum, int port)
     WaitSema(ds34pad[port].sema);
 
     ds34pad[port].update_rum = 1;
-    ds34pad[port].lrum = lrum;
-    ds34pad[port].rrum = rrum;
+    ds34pad[port].lrum       = lrum;
+    ds34pad[port].rrum       = rrum;
 
     SignalSema(ds34pad[port].sema);
 }
@@ -502,30 +502,30 @@ int ds34usb_init(u8 pads, u8 options)
     int pad;
 
     for (pad = 0; pad < MAX_PADS; pad++) {
-        ds34pad[pad].status = 0;
-        ds34pad[pad].devId = -1;
-        ds34pad[pad].oldled[0] = 0;
-        ds34pad[pad].oldled[1] = 0;
-        ds34pad[pad].oldled[2] = 0;
-        ds34pad[pad].oldled[3] = 0;
-        ds34pad[pad].lrum = 0;
-        ds34pad[pad].rrum = 0;
-        ds34pad[pad].update_rum = 1;
-        ds34pad[pad].sema = -1;
-        ds34pad[pad].cmd_sema = -1;
-        ds34pad[pad].controlEndp = -1;
+        ds34pad[pad].status        = 0;
+        ds34pad[pad].devId         = -1;
+        ds34pad[pad].oldled[0]     = 0;
+        ds34pad[pad].oldled[1]     = 0;
+        ds34pad[pad].oldled[2]     = 0;
+        ds34pad[pad].oldled[3]     = 0;
+        ds34pad[pad].lrum          = 0;
+        ds34pad[pad].rrum          = 0;
+        ds34pad[pad].update_rum    = 1;
+        ds34pad[pad].sema          = -1;
+        ds34pad[pad].cmd_sema      = -1;
+        ds34pad[pad].controlEndp   = -1;
         ds34pad[pad].interruptEndp = -1;
-        ds34pad[pad].enabled = (pads >> pad) & 1;
-        ds34pad[pad].type = 0;
+        ds34pad[pad].enabled       = (pads >> pad) & 1;
+        ds34pad[pad].type          = 0;
 
-        ds34pad[pad].data[0] = 0xFF;
-        ds34pad[pad].data[1] = 0xFF;
+        ds34pad[pad].data[0]    = 0xFF;
+        ds34pad[pad].data[1]    = 0xFF;
         ds34pad[pad].analog_btn = 0;
 
         mips_memset(&ds34pad[pad].data[2], 0x7F, 4);
         mips_memset(&ds34pad[pad].data[6], 0x00, 12);
 
-        ds34pad[pad].sema = CreateMutex(IOP_MUTEX_UNLOCKED);
+        ds34pad[pad].sema     = CreateMutex(IOP_MUTEX_UNLOCKED);
         ds34pad[pad].cmd_sema = CreateMutex(IOP_MUTEX_UNLOCKED);
 
         if (ds34pad[pad].sema < 0 || ds34pad[pad].cmd_sema < 0) {

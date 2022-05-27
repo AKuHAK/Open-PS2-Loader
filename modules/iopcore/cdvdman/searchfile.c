@@ -40,11 +40,11 @@ static void cdvdman_trimspaces(char *str)
 static struct dirTocEntry *cdvdman_locatefile(char *name, u32 tocLBA, int tocLength, int layer)
 {
     char cdvdman_dirname[32]; /* Like below, but follow the original SCE limitation of 32-characters.
-						Some games specify filenames like "\\FILEFILE.EXT;1", which result in a length longer than just 14.
-						SCE does not perform bounds-checking on this buffer.	*/
+                        Some games specify filenames like "\\FILEFILE.EXT;1", which result in a length longer than just 14.
+                        SCE does not perform bounds-checking on this buffer.	*/
     char cdvdman_curdir[15];  /* Maximum 14 characters: the filename (8) + '.' + extension (3) + ';' + '1'.
-						Unlike the SCE original which used a 32-character buffer,
-						we'll assume that ISO9660 disc images are all _strictly_ compliant with ISO9660 level 1.	*/
+                        Unlike the SCE original which used a 32-character buffer,
+                        we'll assume that ISO9660 disc images are all _strictly_ compliant with ISO9660 level 1.	*/
     char *p = (char *)name;
     char *slash;
     int r, len, filename_len;
@@ -123,9 +123,9 @@ lbl_startlocate:
                     DPRINTF("cdvdman_locatefile found file! LBA=%d size=%d\n", (int)tocEntryPointer->fileLBA, (int)tocEntryPointer->fileSize);
                     return tocEntryPointer;
                 } else if ((!r) && (tocEntryPointer->fileProperties & 2)) { // we found it but it's a directory
-                    tocLBA = tocEntryPointer->fileLBA;
+                    tocLBA    = tocEntryPointer->fileLBA;
                     tocLength = tocEntryPointer->fileSize;
-                    p = &slash[1];
+                    p         = &slash[1];
 
                     if (!(cdvdman_settings.common.flags & IOPCORE_COMPAT_EMU_DVDDL)) {
                         int on_dual;
@@ -161,7 +161,7 @@ static int cdvdman_findfile(sceCdlFILE *pcdfile, const char *name, int layer)
 
     if (cdvdman_settings.common.flags & IOPCORE_COMPAT_EMU_DVDDL)
         layer = 0;
-    pLayerInfo = (layer != 0) ? &layer_info[1] : &layer_info[0]; //SCE CDVDMAN simply treats a non-zero value as a signal for the 2nd layer.
+    pLayerInfo = (layer != 0) ? &layer_info[1] : &layer_info[0]; // SCE CDVDMAN simply treats a non-zero value as a signal for the 2nd layer.
 
     WaitSema(cdvdman_searchfilesema);
 
@@ -231,8 +231,8 @@ void cdvdman_searchfile_init(void)
     sceCdSync(0);
 
     struct dirTocEntry *tocEntryPointer = (struct dirTocEntry *)&cdvdman_buf[0x9c];
-    layer_info[0].rootDirtocLBA = tocEntryPointer->fileLBA;
-    layer_info[0].rootDirtocLength = tocEntryPointer->length;
+    layer_info[0].rootDirtocLBA         = tocEntryPointer->fileLBA;
+    layer_info[0].rootDirtocLength      = tocEntryPointer->length;
 
     // DVD DL support
     if (!(cdvdman_settings.common.flags & IOPCORE_COMPAT_EMU_DVDDL)) {
@@ -242,8 +242,8 @@ void cdvdman_searchfile_init(void)
         if (on_dual) {
             sceCdRead(layer1_start + 16, 1, cdvdman_buf, NULL);
             sceCdSync(0);
-            tocEntryPointer = (struct dirTocEntry *)&cdvdman_buf[0x9c];
-            layer_info[1].rootDirtocLBA = layer1_start + tocEntryPointer->fileLBA;
+            tocEntryPointer                = (struct dirTocEntry *)&cdvdman_buf[0x9c];
+            layer_info[1].rootDirtocLBA    = layer1_start + tocEntryPointer->fileLBA;
             layer_info[1].rootDirtocLength = tocEntryPointer->length;
         }
     }

@@ -25,14 +25,14 @@ int mc_configure(MemoryCard *mcds)
 
         if (vmcSpec[i].active == 1) {
             // Set virtual memorycard informations
-            mcds->mcnum = i;
-            mcds->tcode = 0x5A; /* 'Z' */
-            mcds->cbufp = &mceccbuf[i][0];
-            mcds->dbufp = &mcdatabuf[0];
-            mcds->flags = vmcSpec[i].flags;
-            mcds->cspec.PageSize = vmcSpec[i].cspec.PageSize;
+            mcds->mcnum           = i;
+            mcds->tcode           = 0x5A; /* 'Z' */
+            mcds->cbufp           = &mceccbuf[i][0];
+            mcds->dbufp           = &mcdatabuf[0];
+            mcds->flags           = vmcSpec[i].flags;
+            mcds->cspec.PageSize  = vmcSpec[i].cspec.PageSize;
             mcds->cspec.BlockSize = vmcSpec[i].cspec.BlockSize;
-            mcds->cspec.CardSize = vmcSpec[i].cspec.CardSize;
+            mcds->cspec.CardSize  = vmcSpec[i].cspec.CardSize;
         } else
             mcds->mcnum = -1;
     }

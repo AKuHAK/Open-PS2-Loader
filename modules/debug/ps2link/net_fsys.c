@@ -67,11 +67,11 @@ static void fsysInit(iop_device_t *driver)
 
     // Start socket server thread
 
-    mythread.attr = 0x02000000;              // attr
-    mythread.option = 0;                     // option
-    mythread.thread = (void *)pko_file_serv; // entry
+    mythread.attr      = 0x02000000;            // attr
+    mythread.option    = 0;                     // option
+    mythread.thread    = (void *)pko_file_serv; // entry
     mythread.stacksize = 0x800;
-    mythread.priority = 9; // We really should choose prio w more effort
+    mythread.priority  = 9; // We really should choose prio w more effort
 
     pid = CreateThread(&mythread);
 
@@ -318,11 +318,11 @@ int fsysMount(void)
 {
     iop_sema_t sema_info;
 
-    sema_info.attr = 1;
-    sema_info.option = 0;
+    sema_info.attr    = 1;
+    sema_info.option  = 0;
     sema_info.initial = 1;
-    sema_info.max = 1;
-    fsys_sema = CreateSema(&sema_info);
+    sema_info.max     = 1;
+    fsys_sema         = CreateSema(&sema_info);
 
     DelDrv(fsname);
     AddDrv(&fsys_driver);

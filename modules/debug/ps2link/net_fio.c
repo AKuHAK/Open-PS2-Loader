@@ -27,7 +27,7 @@ unsigned int remote_pc_addr = 0xffffffff;
 static char send_packet[PACKET_MAXSIZE] __attribute__((aligned(16)));
 static char recv_packet[PACKET_MAXSIZE] __attribute__((aligned(16)));
 
-static int pko_fileio_sock = -1;
+static int pko_fileio_sock   = -1;
 static int pko_fileio_active = 0;
 
 #ifdef DEBUG
@@ -124,7 +124,7 @@ int pko_accept_pkt(int sock, char *buf, int len, int pkt_type)
                   length);
     }
 
-    hdr = (pko_pkt_hdr *)buf;
+    hdr  = (pko_pkt_hdr *)buf;
     hcmd = ntohl(hdr->cmd);
     hlen = ntohs(hdr->len);
 
@@ -175,8 +175,8 @@ int pko_open_file(char *path, int flags)
     openreq = (pko_pkt_open_req *)&send_packet[0];
 
     // Build packet
-    openreq->cmd = htonl(PKO_OPEN_CMD);
-    openreq->len = htons((unsigned short)sizeof(pko_pkt_open_req));
+    openreq->cmd   = htonl(PKO_OPEN_CMD);
+    openreq->len   = htons((unsigned short)sizeof(pko_pkt_open_req));
     openreq->flags = htonl(flags);
     strncpy(openreq->path, path, PKO_MAX_PATH);
     openreq->path[PKO_MAX_PATH - 1] = 0; // Make sure it's null-terminated
@@ -218,7 +218,7 @@ int pko_close_file(int fd)
 
     closereq->cmd = htonl(PKO_CLOSE_CMD);
     closereq->len = htons((unsigned short)sizeof(pko_pkt_close_req));
-    closereq->fd = htonl(fd);
+    closereq->fd  = htonl(fd);
 
     if (pko_lwip_send(pko_fileio_sock, closereq, sizeof(pko_pkt_close_req), 0) < 0) {
         return -1;
@@ -253,9 +253,9 @@ int pko_lseek_file(int fd, unsigned int offset, int whence)
     lseekreq = (pko_pkt_lseek_req *)&send_packet[0];
     lseekrly = (pko_pkt_file_rly *)&recv_packet[0];
 
-    lseekreq->cmd = htonl(PKO_LSEEK_CMD);
-    lseekreq->len = htons((unsigned short)sizeof(pko_pkt_lseek_req));
-    lseekreq->fd = htonl(fd);
+    lseekreq->cmd    = htonl(PKO_LSEEK_CMD);
+    lseekreq->len    = htons((unsigned short)sizeof(pko_pkt_lseek_req));
+    lseekreq->fd     = htonl(fd);
     lseekreq->offset = htonl(offset);
     lseekreq->whence = htonl(whence);
 
@@ -296,10 +296,10 @@ int pko_write_file(int fd, char *buf, int length)
     writecmd = (pko_pkt_write_req *)&send_packet[0];
     writerly = (pko_pkt_file_rly *)&recv_packet[0];
 
-    hlen = (unsigned short)sizeof(pko_pkt_write_req);
+    hlen          = (unsigned short)sizeof(pko_pkt_write_req);
     writecmd->cmd = htonl(PKO_WRITE_CMD);
     writecmd->len = htons(hlen);
-    writecmd->fd = htonl(fd);
+    writecmd->fd  = htonl(fd);
 
     // Divide the write request
     writtenbytes = 0;
@@ -377,7 +377,7 @@ int pko_read_file(int fd, char *buf, int length)
 
     readcmd->cmd = htonl(PKO_READ_CMD);
     readcmd->len = htons((unsigned short)sizeof(pko_pkt_read_req));
-    readcmd->fd = htonl(fd);
+    readcmd->fd  = htonl(fd);
 
     if (length < 0) {
         dbgprintf("pko_read_file: illegal req!! (whish to read < 0 bytes!)\n");
@@ -465,8 +465,8 @@ int pko_mkdir(char *name, int mode)
     mkdirreq = (pko_pkt_mkdir_req *)&send_packet[0];
 
     // Build packet
-    mkdirreq->cmd = htonl(PKO_MKDIR_CMD);
-    mkdirreq->len = htons((unsigned short)sizeof(pko_pkt_mkdir_req));
+    mkdirreq->cmd  = htonl(PKO_MKDIR_CMD);
+    mkdirreq->len  = htons((unsigned short)sizeof(pko_pkt_mkdir_req));
     mkdirreq->mode = mode;
     strncpy(mkdirreq->name, name, PKO_MAX_PATH);
     mkdirreq->name[PKO_MAX_PATH - 1] = 0; // Make sure it's null-terminated
@@ -538,8 +538,8 @@ int pko_open_dir(char *path)
     openreq = (pko_pkt_open_req *)&send_packet[0];
 
     // Build packet
-    openreq->cmd = htonl(PKO_OPENDIR_CMD);
-    openreq->len = htons((unsigned short)sizeof(pko_pkt_open_req));
+    openreq->cmd   = htonl(PKO_OPENDIR_CMD);
+    openreq->len   = htons((unsigned short)sizeof(pko_pkt_open_req));
     openreq->flags = htonl(0);
     strncpy(openreq->path, path, PKO_MAX_PATH);
     openreq->path[PKO_MAX_PATH - 1] = 0; // Make sure it's null-terminated
@@ -580,7 +580,7 @@ int pko_read_dir(int fd, void *buf)
     // Build packet
     dirreq->cmd = htonl(PKO_READDIR_CMD);
     dirreq->len = htons((unsigned short)sizeof(pko_pkt_dread_req));
-    dirreq->fd = htonl(fd);
+    dirreq->fd  = htonl(fd);
 
     if (pko_lwip_send(pko_fileio_sock, dirreq, sizeof(pko_pkt_dread_req), 0) < 0) {
         return -1;
@@ -598,9 +598,9 @@ int pko_read_dir(int fd, void *buf)
 
     dirent = (io_dirent_t *)buf;
     // now handle the return buffer translation, to build reply bit
-    dirent->stat.mode = ntohl(dirrly->mode);
-    dirent->stat.attr = ntohl(dirrly->attr);
-    dirent->stat.size = ntohl(dirrly->size);
+    dirent->stat.mode   = ntohl(dirrly->mode);
+    dirent->stat.attr   = ntohl(dirrly->attr);
+    dirent->stat.size   = ntohl(dirrly->size);
     dirent->stat.hisize = ntohl(dirrly->hisize);
     memcpy(dirent->stat.ctime, dirrly->ctime, 8);
     memcpy(dirent->stat.atime, dirrly->atime, 8);
@@ -631,7 +631,7 @@ int pko_close_dir(int fd)
 
     closereq->cmd = htonl(PKO_CLOSEDIR_CMD);
     closereq->len = htons((unsigned short)sizeof(pko_pkt_close_req));
-    closereq->fd = htonl(fd);
+    closereq->fd  = htonl(fd);
 
     if (pko_lwip_send(pko_fileio_sock, closereq, sizeof(pko_pkt_close_req), 0) < 0) {
         return -1;
@@ -664,9 +664,9 @@ int pko_file_serv(void *argv)
 
     memset((void *)&server_addr, 0, sizeof(server_addr));
     // Should perhaps specify PC side ip..
-    server_addr.sin_family = AF_INET;
+    server_addr.sin_family      = AF_INET;
     server_addr.sin_addr.s_addr = htonl(INADDR_ANY);
-    server_addr.sin_port = htons(PKO_PORT);
+    server_addr.sin_port        = htons(PKO_PORT);
 
     while ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
         dbgprintf("pko_file: socket creation error (%d)\n", sock);
@@ -697,7 +697,7 @@ int pko_file_serv(void *argv)
     while (pko_fileio_active) {
         dbgprintf("Waiting for connection\n");
 
-        client_len = sizeof(client_addr);
+        client_len  = sizeof(client_addr);
         client_sock = accept(sock, (struct sockaddr *)&client_addr,
                              &client_len);
         if (client_sock < 0) {

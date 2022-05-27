@@ -11,7 +11,7 @@
 #include "iso2opl.h"
 
 static int isofs_inited = 0;
-static int gIsBigEnd = 0;
+static int gIsBigEnd    = 0;
 
 #define MAX_DIR_CACHE_SECTORS 32
 
@@ -47,7 +47,7 @@ static u8 isofs_dircache[MAX_DIR_CACHE_SECTORS * 2048];
 
 enum Cache_getMode {
     CACHE_START = 0,
-    CACHE_NEXT = 1
+    CACHE_NEXT  = 1
 };
 
 enum PathMatch {
@@ -206,12 +206,12 @@ int isofs_ReadSect(u32 lsn, u32 nsectors, void *buf)
 int isofs_FlushCache(void)
 {
     strcpy(CachedDirInfo.pathname, ""); // The pathname of the cached directory
-    CachedDirInfo.valid = 0;            // Cache is not valid
-    CachedDirInfo.path_depth = 0;       // 0 = root)
+    CachedDirInfo.valid        = 0;     // Cache is not valid
+    CachedDirInfo.path_depth   = 0;     // 0 = root)
     CachedDirInfo.sector_start = 0;     // The start sector (LBA) of the cached directory
-    CachedDirInfo.sector_num = 0;       // The total size of the directory (in sectors)
+    CachedDirInfo.sector_num   = 0;     // The total size of the directory (in sectors)
     CachedDirInfo.cache_offset = 0;     // The offset from sector_start of the cached area
-    CachedDirInfo.cache_size = 0;       // The size of the cached directory area (in sectors)
+    CachedDirInfo.cache_size   = 0;     // The size of the cached directory area (in sectors)
 
     memset(CachedDirInfo.cache, 0, MAX_DIR_CACHE_SECTORS * 2048);
 
@@ -278,8 +278,8 @@ void TocEntryCopy(struct TocEntry *tocEntry, struct dirTocEntry *internalTocEntr
     register int i;
     register int filenamelen;
 
-    tocEntry->fileSize = (gIsBigEnd ? internalTocEntry->fileSize_bigend : internalTocEntry->fileSize);
-    tocEntry->fileLBA = (gIsBigEnd ? internalTocEntry->fileLBA_bigend : internalTocEntry->fileLBA);
+    tocEntry->fileSize       = (gIsBigEnd ? internalTocEntry->fileSize_bigend : internalTocEntry->fileSize);
+    tocEntry->fileLBA        = (gIsBigEnd ? internalTocEntry->fileLBA_bigend : internalTocEntry->fileLBA);
     tocEntry->fileProperties = internalTocEntry->fileProperties;
 
     if (CDVolDesc.filesystemType == 2) {
@@ -441,7 +441,7 @@ int FindPath(char *pathname)
         dirname = strtok(NULL, "\\/");
 
         CachedDirInfo.sector_start = localTocEntry.fileLBA;
-        CachedDirInfo.sector_num = localTocEntry.fileSize / 2048;
+        CachedDirInfo.sector_num   = localTocEntry.fileSize / 2048;
         if (localTocEntry.fileSize & 0x7ff)
             CachedDirInfo.sector_num++;
 
@@ -449,7 +449,7 @@ int FindPath(char *pathname)
         // (used in searching if this isn't the last dir,
         // or used by whatever requested the cache in the first place if it is the last dir)
         CachedDirInfo.cache_offset = 0;
-        CachedDirInfo.cache_size = CachedDirInfo.sector_num;
+        CachedDirInfo.cache_size   = CachedDirInfo.sector_num;
 
         if (CachedDirInfo.cache_size > MAX_DIR_CACHE_SECTORS)
             CachedDirInfo.cache_size = MAX_DIR_CACHE_SECTORS;
@@ -558,7 +558,7 @@ int isofs_Cache_Dir(const char *pathname, enum Cache_getMode getMode)
 
                     // reset cache data to start of existing directory
                     CachedDirInfo.cache_offset = 0;
-                    CachedDirInfo.cache_size = CachedDirInfo.sector_num;
+                    CachedDirInfo.cache_size   = CachedDirInfo.sector_num;
 
                     if (CachedDirInfo.cache_size > MAX_DIR_CACHE_SECTORS)
                         CachedDirInfo.cache_size = MAX_DIR_CACHE_SECTORS;
@@ -623,7 +623,7 @@ int isofs_Cache_Dir(const char *pathname, enum Cache_getMode getMode)
                 // then we will need to re-load it before starting search
                 if (CachedDirInfo.cache_offset != 0) {
                     CachedDirInfo.cache_offset = 0;
-                    CachedDirInfo.cache_size = CachedDirInfo.sector_num;
+                    CachedDirInfo.cache_size   = CachedDirInfo.sector_num;
                     if (CachedDirInfo.cache_size > MAX_DIR_CACHE_SECTORS)
                         CachedDirInfo.cache_size = MAX_DIR_CACHE_SECTORS;
 
@@ -681,7 +681,7 @@ int isofs_Cache_Dir(const char *pathname, enum Cache_getMode getMode)
     // Setup the lba and sector size, for retrieving the root toc
     CachedDirInfo.cache_offset = 0;
     CachedDirInfo.sector_start = (gIsBigEnd ? CDVolDesc.rootToc.tocLBA_bigend : CDVolDesc.rootToc.tocLBA);
-    CachedDirInfo.sector_num = (gIsBigEnd ? CDVolDesc.rootToc.tocSize_bigend : CDVolDesc.rootToc.tocSize) / 2048;
+    CachedDirInfo.sector_num   = (gIsBigEnd ? CDVolDesc.rootToc.tocSize_bigend : CDVolDesc.rootToc.tocSize) / 2048;
     if ((gIsBigEnd ? CDVolDesc.rootToc.tocSize_bigend : CDVolDesc.rootToc.tocSize) & 0x7ff)
         CachedDirInfo.sector_num++;
 
@@ -920,9 +920,9 @@ int isofs_Open(const char *filename)
 
     memset((void *)fh, 0, sizeof(FHANDLE));
 
-    fh->lsn = tocEntry.fileLBA;
+    fh->lsn      = tocEntry.fileLBA;
     fh->filesize = tocEntry.fileSize;
-    fh->status = 1;
+    fh->status   = 1;
 
     return fd;
 }
@@ -1044,7 +1044,7 @@ s64 isofs_Init(const char *iso_path, int isBigEndian)
 #endif
 
     if (!isofs_inited) {
-        gIsBigEnd = isBigEndian;
+        gIsBigEnd           = isBigEndian;
         CachedDirInfo.cache = (u8 *)isofs_dircache;
         isofs_FlushCache();
 
@@ -1082,7 +1082,7 @@ int isofs_Reset(void)
     }
 
     // g_fh_iso = -1;
-    g_fh_iso = NULL;
+    g_fh_iso     = NULL;
     isofs_inited = 0;
 
     return 1;

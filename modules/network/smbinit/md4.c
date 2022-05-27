@@ -166,9 +166,9 @@ unsigned char *MD4(unsigned char *message, int len, unsigned char *cipher)
         transform(&buffer[64]);
     }
 
-    *((unsigned int *)&cipher[0]) = context[0];
-    *((unsigned int *)&cipher[4]) = context[1];
-    *((unsigned int *)&cipher[8]) = context[2];
+    *((unsigned int *)&cipher[0])  = context[0];
+    *((unsigned int *)&cipher[4])  = context[1];
+    *((unsigned int *)&cipher[8])  = context[2];
     *((unsigned int *)&cipher[12]) = context[3];
 
     return (unsigned char *)cipher;

@@ -57,8 +57,8 @@ recv_raw(void *arg, struct raw_pcb *pcb, struct pbuf *p,
             return 0;
         }
         pbuf_ref(p);
-        buf->p = p;
-        buf->ptr = p;
+        buf->p        = p;
+        buf->ptr      = p;
         buf->fromaddr = addr;
         buf->fromport = pcb->protocol;
 
@@ -92,8 +92,8 @@ recv_udp(void *arg, struct udp_pcb *pcb, struct pbuf *p,
             pbuf_free(p);
             return;
         } else {
-            buf->p = p;
-            buf->ptr = p;
+            buf->p        = p;
+            buf->ptr      = p;
             buf->fromaddr = addr;
             buf->fromport = port;
         }
@@ -234,13 +234,13 @@ accept_function(void *arg, struct tcp_pcb *newpcb, err_t err)
     tcp_debug_print_state(newpcb->state);
 #endif /* TCP_DEBUG */
 #endif /* API_MSG_DEBUG */
-    conn = (struct netconn *)arg;
-    mbox = conn->acceptmbox;
+    conn    = (struct netconn *)arg;
+    mbox    = conn->acceptmbox;
     newconn = memp_malloc(MEMP_NETCONN);
     if (newconn == NULL) {
         return ERR_MEM;
     }
-    newconn->type = NETCONN_TCP;
+    newconn->type    = NETCONN_TCP;
     newconn->pcb.tcp = newpcb;
     setup_tcp(newconn);
     newconn->recvmbox = sys_mbox_new();
@@ -262,14 +262,14 @@ accept_function(void *arg, struct tcp_pcb *newpcb, err_t err)
         return ERR_MEM;
     }
     newconn->acceptmbox = SYS_MBOX_NULL;
-    newconn->err = err;
+    newconn->err        = err;
     /* Register event with callback */
     if (conn->callback) {
         (*conn->callback)(conn, NETCONN_EVT_RCVPLUS, 0);
         /* We have to set the callback here even though
          * the new socket is unknown. Mark the socket as -1. */
         newconn->callback = conn->callback;
-        newconn->socket = -1;
+        newconn->socket   = -1;
     }
 
     sys_mbox_post(mbox, newconn);

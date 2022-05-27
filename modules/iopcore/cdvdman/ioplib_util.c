@@ -49,9 +49,9 @@ struct FakeModule
 {
     const char *fname;
     const char *name;
-    int id; //ID to return to the game.
+    int id; // ID to return to the game.
     u16 version;
-    s16 returnValue; //Typical return value of module. RESIDENT END (0), NO RESIDENT END (1) or REMOVABLE END (2).
+    s16 returnValue; // Typical return value of module. RESIDENT END (0), NO RESIDENT END (1) or REMOVABLE END (2).
 };
 
 enum FAKE_MODULE_ID {
@@ -78,7 +78,7 @@ static struct FakeModule modulefake_list[] = {
     {"ATAD.IRX", "atad_driver", FAKE_MODULE_ID_ATAD, 0x0207, 0},
 #endif
     {"CDVDSTM.IRX", "cdvd_st_driver", FAKE_MODULE_ID_CDVDSTM, 0x0202, 2},
-    //Games cannot load CDVDFSV, but this exits to prevent games from trying to unload it. Some games like Jak X check if this module can be unloaded, ostensibly as an anti-HDLoader measure.
+    // Games cannot load CDVDFSV, but this exits to prevent games from trying to unload it. Some games like Jak X check if this module can be unloaded, ostensibly as an anti-HDLoader measure.
     {"CDVDFSV.IRX", "cdvd_ee_driver", FAKE_MODULE_ID_CDVDFSV, 0x0202, 2},
     {NULL, NULL, 0, 0}};
 
@@ -203,7 +203,7 @@ static int Hook_StopModule(int id, int arg_len, char *args, int *modres)
 
     mod = checkFakemodById(id, modulefake_list);
     if (mod != NULL) {
-        *modres = 1; //Module unloads and returns NO RESIDENT END
+        *modres = 1; // Module unloads and returns NO RESIDENT END
         return mod->id;
     }
 
@@ -250,7 +250,7 @@ static int Hook_ReferModuleStatus(int id, ModuleStatus_t *status)
         memset(status, 0, sizeof(ModuleStatus_t));
         strcpy(status->name, mod->name);
         status->version = mod->version;
-        status->id = mod->id;
+        status->id      = mod->id;
         return id;
     }
 
@@ -269,7 +269,7 @@ void hookMODLOAD(void)
     info.exports[7] = (void *)Hook_LoadStartModule;
 
     // hook modload's StartModule function
-    StartModule = (void *)info.exports[8];
+    StartModule     = (void *)info.exports[8];
     info.exports[8] = (void *)Hook_StartModule;
 
     // hook modload's LoadModuleBuffer
@@ -280,19 +280,19 @@ void hookMODLOAD(void)
     if (info.version > 0x102) {
         // hook modload's ReferModuleStatus
         ReferModuleStatus = (void *)info.exports[17];
-        info.exports[17] = (void *)Hook_ReferModuleStatus;
+        info.exports[17]  = (void *)Hook_ReferModuleStatus;
 
         // hook modload's StopModule
-        StopModule = (void *)info.exports[20];
+        StopModule       = (void *)info.exports[20];
         info.exports[20] = (void *)Hook_StopModule;
 
         // hook modload's UnloadModule
-        UnloadModule = (void *)info.exports[21];
+        UnloadModule     = (void *)info.exports[21];
         info.exports[21] = (void *)Hook_UnloadModule;
 
         // hook modload's SearchModuleByName
         SearchModuleByName = (void *)info.exports[22];
-        info.exports[22] = (void *)Hook_SearchModuleByName;
+        info.exports[22]   = (void *)Hook_SearchModuleByName;
     } else {
         // Change all REMOVABLE END values to RESIDENT END, if modload is old.
         struct FakeModule *modlist;

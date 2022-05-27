@@ -136,7 +136,7 @@ static void _menuLoadConfig()
     WaitSema(menuSemaId);
     if (!itemConfig) {
         item_list_t *list = selected_item->item->userdata;
-        itemConfig = list->itemGetConfig(itemConfigId);
+        itemConfig        = list->itemGetConfig(itemConfigId);
     }
     actionStatus = 0;
     SignalSema(menuSemaId);
@@ -147,7 +147,7 @@ static void _menuSaveConfig()
     int result;
 
     WaitSema(menuSemaId);
-    result = configWrite(itemConfig);
+    result       = configWrite(itemConfig);
     itemConfigId = -1; // to invalidate cache and force reload
     actionStatus = 0;
     SignalSema(menuSemaId);
@@ -268,22 +268,22 @@ void menuInitAppMenu(void)
 // -------------------------------------------------------------------------------------------
 void menuInit()
 {
-    menu = NULL;
-    selected_item = NULL;
-    itemConfigId = -1;
-    itemConfig = NULL;
-    mainMenu = NULL;
+    menu            = NULL;
+    selected_item   = NULL;
+    itemConfigId    = -1;
+    itemConfig      = NULL;
+    mainMenu        = NULL;
     mainMenuCurrent = NULL;
-    gameMenu = NULL;
+    gameMenu        = NULL;
     gameMenuCurrent = NULL;
-    appMenu = NULL;
-    appMenuCurrent = NULL;
+    appMenu         = NULL;
+    appMenuCurrent  = NULL;
     menuInitMainMenu();
 
     menuSema.init_count = 1;
-    menuSema.max_count = 1;
-    menuSema.option = 0;
-    menuSemaId = CreateSema(&menuSema);
+    menuSema.max_count  = 1;
+    menuSema.option     = 0;
+    menuSemaId          = CreateSema(&menuSema);
 }
 
 void menuEnd()
@@ -293,7 +293,7 @@ void menuEnd()
 
     while (cur) {
         menu_list_t *td = cur;
-        cur = cur->next;
+        cur             = cur->next;
 
         if (&td->item)
             submenuDestroy(&td->item->submenu);
@@ -333,7 +333,7 @@ void menuAppendItem(menu_item_t *item)
     assert(item);
 
     if (menu == NULL) {
-        menu = AllocMenuItem(item);
+        menu          = AllocMenuItem(item);
         selected_item = menu;
         return;
     }
@@ -348,7 +348,7 @@ void menuAppendItem(menu_item_t *item)
     menu_list_t *newitem = AllocMenuItem(item);
 
     // link
-    cur->next = newitem;
+    cur->next     = newitem;
     newitem->prev = cur;
 }
 
@@ -360,7 +360,7 @@ void submenuRebuildCache(submenu_list_t *submenu)
         if (submenu->item.cache_uid)
             free(submenu->item.cache_uid);
 
-        int size = gTheme->gameCacheCount * sizeof(int);
+        int size               = gTheme->gameCacheCount * sizeof(int);
         submenu->item.cache_id = malloc(size);
         memset(submenu->item.cache_id, -1, size);
         submenu->item.cache_uid = malloc(size);
@@ -374,13 +374,13 @@ static submenu_list_t *submenuAllocItem(int icon_id, char *text, int id, int tex
 {
     submenu_list_t *it = (submenu_list_t *)malloc(sizeof(submenu_list_t));
 
-    it->prev = NULL;
-    it->next = NULL;
-    it->item.icon_id = icon_id;
-    it->item.text = text;
-    it->item.text_id = text_id;
-    it->item.id = id;
-    it->item.cache_id = NULL;
+    it->prev           = NULL;
+    it->next           = NULL;
+    it->item.icon_id   = icon_id;
+    it->item.text      = text;
+    it->item.text_id   = text_id;
+    it->item.id        = id;
+    it->item.cache_id  = NULL;
     it->item.cache_uid = NULL;
     submenuRebuildCache(it);
 
@@ -404,7 +404,7 @@ submenu_list_t *submenuAppendItem(submenu_list_t **submenu, int icon_id, char *t
     submenu_list_t *newitem = submenuAllocItem(icon_id, text, id, text_id);
 
     // link
-    cur->next = newitem;
+    cur->next     = newitem;
     newitem->prev = cur;
 
     return newitem;
@@ -420,7 +420,7 @@ static void submenuDestroyItem(submenu_list_t *submenu)
 
 void submenuRemoveItem(submenu_list_t **submenu, int id)
 {
-    submenu_list_t *cur = *submenu;
+    submenu_list_t *cur  = *submenu;
     submenu_list_t *prev = NULL;
 
     while (cur) {
@@ -438,7 +438,7 @@ void submenuRemoveItem(submenu_list_t **submenu, int id)
             cur = next;
         } else {
             prev = cur;
-            cur = cur->next;
+            cur  = cur->next;
         }
     }
 }
@@ -450,7 +450,7 @@ void submenuDestroy(submenu_list_t **submenu)
 
     while (cur) {
         submenu_list_t *td = cur;
-        cur = cur->next;
+        cur                = cur->next;
 
         submenuDestroyItem(td);
     }
@@ -465,7 +465,7 @@ void menuAddHint(menu_item_t *menu, int text_id, int icon_id)
 
     hint->text_id = text_id;
     hint->icon_id = icon_id;
-    hint->next = NULL;
+    hint->next    = NULL;
 
     if (menu->hints) {
         menu_hint_item_t *top = menu->hints;
@@ -484,7 +484,7 @@ void menuRemoveHints(menu_item_t *menu)
 {
     while (menu->hints) {
         menu_hint_item_t *hint = menu->hints;
-        menu->hints = hint->next;
+        menu->hints            = hint->next;
         free(hint);
     }
 }
@@ -569,7 +569,7 @@ static void menuNextH()
 {
     if (selected_item->next != NULL) {
         selected_item = selected_item->next;
-        itemConfigId = -1;
+        itemConfigId  = -1;
         sfxPlay(SFX_CURSOR);
     }
 }
@@ -578,7 +578,7 @@ static void menuPrevH()
 {
     if (selected_item->prev != NULL) {
         selected_item = selected_item->prev;
-        itemConfigId = -1;
+        itemConfigId  = -1;
         sfxPlay(SFX_CURSOR);
     }
 }
@@ -591,7 +591,7 @@ static void menuFirstPage()
             sfxPlay(SFX_CURSOR);
         }
 
-        selected_item->item->current = selected_item->item->submenu;
+        selected_item->item->current   = selected_item->item->submenu;
         selected_item->item->pagestart = selected_item->item->current;
     }
 }
@@ -625,7 +625,7 @@ static void menuNextV()
         sfxPlay(SFX_CURSOR);
 
         // if the current item is beyond the page start, move the page start one page down
-        cur = selected_item->item->pagestart;
+        cur      = selected_item->item->pagestart;
         int itms = ((items_list_t *)gTheme->itemsList->extended)->displayedItems + 1;
         while (--itms && cur)
             if (selected_item->item->current == cur)
@@ -669,7 +669,7 @@ static void menuNextPage()
         while (--itms && cur->next)
             cur = cur->next;
 
-        selected_item->item->current = cur;
+        selected_item->item->current   = cur;
         selected_item->item->pagestart = selected_item->item->current;
     } else { // wrap to start
         menuFirstPage();
@@ -687,7 +687,7 @@ static void menuPrevPage()
         while (--itms && cur->prev)
             cur = cur->prev;
 
-        selected_item->item->current = cur;
+        selected_item->item->current   = cur;
         selected_item->item->pagestart = selected_item->item->current;
     } else { // wrap to end
         menuLastPage();
@@ -730,8 +730,8 @@ void menuRenderMenu()
     }
 
     int spacing = 25;
-    int y = (gTheme->usedHeight >> 1) - (spacing * (count >> 1));
-    int cp = 0; // current position
+    int y       = (gTheme->usedHeight >> 1) - (spacing * (count >> 1));
+    int cp      = 0; // current position
     for (it = mainMenu; it; it = it->next, cp++) {
         // render, advance
         fntRenderString(gTheme->fonts[0], 320, y, ALIGN_CENTER, 0, 0, submenuItemGetText(&it->item), (cp == sitem) ? gTheme->selTextColor : gTheme->textColor);
@@ -753,7 +753,7 @@ int menuSetParentalLockCheckState(int enabled)
 {
     int wasEnabled;
 
-    wasEnabled = parentalLockCheckEnabled;
+    wasEnabled               = parentalLockCheckEnabled;
     parentalLockCheckEnabled = enabled ? 1 : 0;
 
     return wasEnabled;
@@ -774,7 +774,7 @@ int menuCheckParentalLock(void)
             password[0] = '\0';
             if (diaShowKeyb(password, CONFIG_KEY_VALUE_LEN, 1, _l(_STR_PARENLOCK_ENTER_PASSWORD_TITLE))) {
                 if (strncmp(parentalLockPassword, password, CONFIG_KEY_VALUE_LEN) == 0) {
-                    result = 0;
+                    result                   = 0;
                     parentalLockCheckEnabled = 0; // Stop asking for the password.
                 } else if (strncmp(OPL_PARENTAL_LOCK_MASTER_PASS, password, CONFIG_KEY_VALUE_LEN) == 0) {
                     guiMsgBox(_l(_STR_PARENLOCK_DISABLE_WARNING), 0, NULL);
@@ -782,7 +782,7 @@ int menuCheckParentalLock(void)
                     configRemoveKey(configOPL, CONFIG_OPL_PARENTAL_LOCK_PWD);
                     saveConfig(CONFIG_OPL, 1);
 
-                    result = 0;
+                    result                   = 0;
                     parentalLockCheckEnabled = 0; // Stop asking for the password.
                 } else {
                     guiMsgBox(_l(_STR_PARENLOCK_PASSWORD_INCORRECT), 0, NULL);
@@ -1008,8 +1008,8 @@ void menuRenderGameMenu()
     }
 
     int spacing = 25;
-    int y = (gTheme->usedHeight >> 1) - (spacing * (count >> 1));
-    int cp = 0; // current position
+    int y       = (gTheme->usedHeight >> 1) - (spacing * (count >> 1));
+    int cp      = 0; // current position
 
     // game title
     fntRenderString(gTheme->fonts[0], 320, 20, ALIGN_CENTER, 0, 0, selected_item->item->current->item.text, gTheme->selTextColor);
@@ -1130,8 +1130,8 @@ void menuRenderAppMenu()
     }
 
     int spacing = 25;
-    int y = (gTheme->usedHeight >> 1) - (spacing * (count >> 1));
-    int cp = 0; // current position
+    int y       = (gTheme->usedHeight >> 1) - (spacing * (count >> 1));
+    int cp      = 0; // current position
     for (it = appMenu; it; it = it->next, cp++) {
         // render, advance
         fntRenderString(gTheme->fonts[0], 320, y, ALIGN_CENTER, 0, 0, submenuItemGetText(&it->item), (cp == sitem) ? gTheme->selTextColor : gTheme->textColor);

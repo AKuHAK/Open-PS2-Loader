@@ -170,7 +170,7 @@ plug_holes(struct mem *mem)
         if (lfree == nmem) {
             lfree = mem;
         }
-        mem->next = nmem->next;
+        mem->next                              = nmem->next;
         ((struct mem *)&ram[nmem->next])->prev = (u8_t *)mem - ram;
     }
 
@@ -180,7 +180,7 @@ plug_holes(struct mem *mem)
         if (lfree == mem) {
             lfree = pmem;
         }
-        pmem->next = mem->next;
+        pmem->next                            = mem->next;
         ((struct mem *)&ram[mem->next])->prev = (u8_t *)pmem - ram;
     }
 }
@@ -192,16 +192,16 @@ void mem_init(void)
     // aligned, causing a crash.
     ram = MEM_ALIGN(ramblock + MEM_ALIGNMENT - 1);
     mips_memset(ram, 0, MEM_SIZE);
-    mem = (struct mem *)ram;
-    mem->next = MEM_SIZE;
-    mem->prev = 0;
-    mem->used = 0;
-    ram_end = (struct mem *)&ram[MEM_SIZE];
+    mem           = (struct mem *)ram;
+    mem->next     = MEM_SIZE;
+    mem->prev     = 0;
+    mem->used     = 0;
+    ram_end       = (struct mem *)&ram[MEM_SIZE];
     ram_end->used = 1;
     ram_end->next = MEM_SIZE;
     ram_end->prev = MEM_SIZE;
 
-    lfree = (struct mem *)ram;
+    lfree                = (struct mem *)ram;
 
 #if MEM_STATS
     lwip_stats.mem.avail = MEM_SIZE;
@@ -284,12 +284,12 @@ mem_realloc(void *rmem, mem_size_t newsize)
 #endif /* MEM_STATS */
 
     if (newsize + SIZEOF_STRUCT_MEM + MIN_SIZE < size) {
-        ptr2 = ptr + SIZEOF_STRUCT_MEM + newsize;
-        mem2 = (struct mem *)&ram[ptr2];
+        ptr2       = ptr + SIZEOF_STRUCT_MEM + newsize;
+        mem2       = (struct mem *)&ram[ptr2];
         mem2->used = 0;
         mem2->next = mem->next;
         mem2->prev = ptr;
-        mem->next = ptr2;
+        mem->next  = ptr2;
         if (mem2->next != MEM_SIZE) {
             ((struct mem *)&ram[mem2->next])->prev = ptr2;
         }
@@ -333,13 +333,13 @@ mem_malloc(mem_size_t size)
 
             mem2->prev = ptr;
             mem2->next = mem->next;
-            mem->next = ptr2;
+            mem->next  = ptr2;
             if (mem2->next != MEM_SIZE) {
                 ((struct mem *)&ram[mem2->next])->prev = ptr2;
             }
 
             mem2->used = 0;
-            mem->used = 1;
+            mem->used  = 1;
 #if MEM_STATS
             lwip_stats.mem.used += (size + SIZEOF_STRUCT_MEM);
             /*      if (lwip_stats.mem.max < lwip_stats.mem.used) {

@@ -117,8 +117,8 @@ err_t tcpip_input(struct pbuf *p, struct netif *inp)
 
     if (msg) {
 
-        msg->type = TCPIP_MSG_INPUT;
-        msg->msg.inp.p = p;
+        msg->type          = TCPIP_MSG_INPUT;
+        msg->msg.inp.p     = p;
         msg->msg.inp.netif = inp;
         sys_mbox_post(g_TCPIPMBox, msg);
 
@@ -146,7 +146,7 @@ void tcpip_apimsg(struct api_msg *apimsg)
 
     if (msg) {
 
-        msg->type = TCPIP_MSG_API;
+        msg->type       = TCPIP_MSG_API;
         msg->msg.apimsg = apimsg;
         sys_mbox_post(g_TCPIPMBox, msg);
         sys_mbox_fetch(apimsg->msg.conn->mbox, NULL);
@@ -158,7 +158,7 @@ void tcpip_apimsg(struct api_msg *apimsg)
 void tcpip_init(void (*initfunc)(void *), void *arg)
 {
 
-    tcpip_init_done = initfunc;
+    tcpip_init_done     = initfunc;
     tcpip_init_done_arg = arg;
 
     g_TCPIPMBox = sys_mbox_new();

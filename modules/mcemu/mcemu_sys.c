@@ -39,7 +39,7 @@ u32 GetExportTableSize(void *table)
     register void **exp;
     register u32 size;
 
-    exp = (void **)table;
+    exp  = (void **)table;
     size = 0;
 
     if (exp != NULL)
@@ -156,7 +156,7 @@ void CalculateECC(u8 *buf, void *chk)
     register int i, c1, c2, b, c3;
 
     ptr = buf;
-    i = 0;
+    i   = 0;
     c1 = c2 = c3 = 0;
 
     /* calculating ECC for a 0x80-bytes buffer */
@@ -170,7 +170,7 @@ void CalculateECC(u8 *buf, void *chk)
     } while (++i < 0x80);
 
     /* storing ECC */
-    ptr = (u8 *)chk;
+    ptr    = (u8 *)chk;
     ptr[0] = ~c1 & 0x77;
     ptr[1] = ~c2 & 0x7F;
     ptr[2] = ~c3 & 0x7F;

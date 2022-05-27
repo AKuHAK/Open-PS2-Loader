@@ -53,7 +53,7 @@ static void spuReset(void)
 
     for (core = 0; core < 2; core++) {
         *U16_REGISTER(0x1B0) = 0;
-        *SD_CORE_ATTR(core) = 0;
+        *SD_CORE_ATTR(core)  = 0;
         nopdelay();
         *SD_CORE_ATTR(core) = SD_SPU2_ON;
 
@@ -74,8 +74,8 @@ static void spuReset(void)
 
     *SD_S_PMON_HI(1) = 0;
     *SD_S_PMON_LO(1) = 0;
-    *SD_S_NON_HI(1) = 0;
-    *SD_S_NON_LO(1) = 0;
+    *SD_S_NON_HI(1)  = 0;
+    *SD_S_NON_LO(1)  = 0;
 }
 
 int _start(int argc, char **argv)

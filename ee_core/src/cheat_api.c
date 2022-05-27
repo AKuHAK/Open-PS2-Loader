@@ -34,15 +34,15 @@ void SetupCheats()
     code_t code;
 
     int i, j, k, nextCodeCanBeHook;
-    i = 0;
-    j = 0;
-    k = 0;
+    i                 = 0;
+    j                 = 0;
+    k                 = 0;
     nextCodeCanBeHook = 1;
 
     while (i < MAX_CHEATLIST) {
 
         code.addr = gCheatList[i];
-        code.val = gCheatList[i + 1];
+        code.val  = gCheatList[i + 1];
         i += 2;
 
         if ((code.addr == 0) && (code.val == 0))

@@ -34,10 +34,10 @@ unsigned int patch_IOPRP_image(void *ioprp_image, void *cdvdman_module, unsigned
     unsigned int offset_in, offset_out; /* For processing purposes */
     struct romdir_entry *romdir_in, *romdir_out;
 
-    offset_in = 0;
+    offset_in  = 0;
     offset_out = 0;
 
-    romdir_in = (struct romdir_entry *)IOPRP_img;
+    romdir_in  = (struct romdir_entry *)IOPRP_img;
     romdir_out = (struct romdir_entry *)ioprp_image;
 
     while (romdir_in->fileName[0] != '\0') {

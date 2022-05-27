@@ -1,6 +1,6 @@
 #include "../modules/isofs/zso.c"
 
-int probed_fd = 0;
+int probed_fd  = 0;
 u32 probed_lba = 0;
 
 static void ReadHDDSectors(u32 lba, u8 *buffer, u32 nsectors)

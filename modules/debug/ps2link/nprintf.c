@@ -59,11 +59,11 @@ int naplinkRpcInit(void)
     int ret;
     int pid;
 
-    th_attr.attr = 0x02000000;
-    th_attr.option = 0;
-    th_attr.thread = napThread;
+    th_attr.attr      = 0x02000000;
+    th_attr.option    = 0;
+    th_attr.thread    = napThread;
     th_attr.stacksize = 0x800;
-    th_attr.priority = 79;
+    th_attr.priority  = 79;
 
     pid = CreateThread(&th_attr);
     if (pid < 0) {
