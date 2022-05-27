@@ -6,8 +6,6 @@
 # Copyright 2001-2004, ps2dev - http://www.ps2dev.org
 # Licenced under Academic Free License version 2.0
 # Review ps2sdk README & LICENSE files for further details.
-#
-# $Id: handler.S 595 2004-09-21 13:35:48Z pixel $
 */
 
 
@@ -16,13 +14,13 @@
 #define GENERAL_ATSAVE        0x400
 #define GENERAL_SRSAVE
 
-.global def_exc_handler
-.ent def_exc_handler
+    .global def_exc_handler
+    .ent    def_exc_handler
 def_exc_handler:
-.set noreorder
-.set noat
-.word 0
-.word 0
+    .set    noreorder
+    .set    noat
+    .word   0
+    .word   0
     la      $k0, __trap_frame
     sw      $0, 0x10($k0)
 
@@ -70,12 +68,12 @@ def_exc_handler:
 
 
     # lw      $a0, 0x404($0)      # saved EPC
-    mfc0    $a0, $14 #EPC
+    mfc0    $a0, $14            # EPC
     nop
     sw      $a0, 0($k0)
 
     # lw      $a0, 0x408($0)      # saved SR
-    mfc0    $a0, $12 #SR
+    mfc0    $a0, $12            # SR
     nop
     sw      $a0, 0xc($k0)
 
@@ -87,14 +85,14 @@ def_exc_handler:
 
 
     # lw      $a0, 0x40c($0)      # saved Cause
-    mfc0    $a0, $13 #Cause
+    mfc0    $a0, $13            # Cause
     nop
     sw      $a0, 4($k0)
 
     sll     $a0, 25
     srl     $a0, 27
-    jal     trap
-    or      $a1, $k0, $0
+    jal trap
+    or $a1, $k0, $0
 
     la      $k0, __trap_frame
 
@@ -150,15 +148,15 @@ def_exc_handler:
     jr      $k1
     cop0    0x10
     nop
-.end def_exc_handler
+    .end def_exc_handler
 
-.global bp_exc_handler
-.ent bp_exc_handler
+    .global bp_exc_handler
+    .ent bp_exc_handler
 bp_exc_handler:
-.set noreorder
-.set noat
-.word 0
-.word 0
+    .set noreorder
+    .set noat
+    .word 0
+    .word 0
     la      $k0, __trap_frame
     sw      $0, 0x10($k0)
     sw      $1, 0x14($k0)
@@ -202,12 +200,12 @@ bp_exc_handler:
 
 
     # lw      $a0, 0x424($0)      # saved EPC
-    mfc0    $a0, $14 #EPC
+    mfc0    $a0, $14            # EPC
     nop
     sw      $a0, 0($k0)
 
     # lw      $a0, 0x42c($0)      # saved SR
-    mfc0    $a0, $12 #SR
+    mfc0    $a0, $12            # SR
     nop
     sw      $a0, 0xc($k0)
 
@@ -289,4 +287,5 @@ bp_exc_handler:
     jr      $k1
     cop0    0x10
     nop
-.end bp_exc_handler
+    .end    bp_exc_handler
+
