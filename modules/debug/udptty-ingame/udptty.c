@@ -91,10 +91,9 @@ static KprArg g_kprarg;
 #define KPR_BUFFER_SIZE 0x1000
 static char kprbuffer[KPR_BUFFER_SIZE];
 
-
-static void PrntFunc(void *common, int chr)
+static void PrntFunc(void *context, int chr)
 {
-    KprArg *kpa = (KprArg *)common;
+    KprArg *kpa = (KprArg *)context;
 
     switch (chr) {
         case 0:
@@ -105,7 +104,7 @@ static void PrntFunc(void *common, int chr)
         case PRNT_IO_END:
             break;
         case '\n':
-            PrntFunc(common, '\r');
+            PrntFunc(context, '\r');
         default:
             if (kpa->prpos < kpa->bsize)
                 kpa->kpbuf[kpa->prpos++] = chr;
@@ -113,20 +112,20 @@ static void PrntFunc(void *common, int chr)
     }
 }
 
-void *Kprnt(void *common, const char *format, void *arg)
+static int Kprnt(void *context, const char *format, void *arg)
 {
     if (format)
-        prnt((print_callback_t)PrntFunc, common, format, arg);
+        prnt(PrntFunc, context, format, arg);
 
     return 0;
 }
 
-static void *Kprintf_Handler(void *common, const char *format, va_list ap)
+static int Kprintf_Handler(void *context, const char *format, va_list ap)
 {
-    KprArg *kpa = (KprArg *)common;
-    void *res;
+    KprArg *kpa = (KprArg *)context;
+    int res;
 
-    res = (void *)CpuInvokeInKmode(Kprnt, kpa, format, ap);
+    res = CpuInvokeInKmode(Kprnt, kpa, format, ap);
 
     if (QueryIntrContext())
         iSetEventFlag(kpa->eflag, 1);
@@ -166,7 +165,7 @@ static void kprtty_init(void)
 
     thp.attr      = TH_C;
     thp.option    = 0;
-    thp.thread    = (void *)KPRTTY_Thread;
+    thp.thread    = &KPRTTY_Thread;
     thp.stacksize = 0x800;
     thp.priority  = 8;
 
@@ -179,12 +178,15 @@ static void kprtty_init(void)
     thid = CreateThread(&thp);
     StartThread(thid, (void *)kpa);
 
-    KprintfSet((KprintfHandler_t *)Kprintf_Handler, (u32 *)kpa);
+    KprintfSet(&Kprintf_Handler, kpa);
 }
 #endif
 
 int _start(int argc, char **argv)
 {
+    (void)argc;
+    (void)argv;
+
     // register exports
     RegisterLibraryEntries(&_exp_udptty);
 
@@ -239,6 +241,8 @@ static int udp_send(void *buf, size_t size)
 
 static int tty_init(iop_device_t *device)
 {
+    (void)device;
+
     if ((tty_sema = CreateMutex(IOP_MUTEX_UNLOCKED)) < 0)
         return -1;
 
@@ -247,6 +251,8 @@ static int tty_init(iop_device_t *device)
 
 static int tty_deinit(iop_device_t *device)
 {
+    (void)device;
+
     DeleteSema(tty_sema);
     return 0;
 }
@@ -259,6 +265,8 @@ static int tty_stdout_fd(void)
 static int tty_write(iop_file_t *file, void *buf, size_t size)
 {
     int res = 0;
+
+    (void)file;
 
     WaitSema(tty_sema);
     res = udp_send(buf, size);
