@@ -12,7 +12,7 @@
 #include "modmgr.h"
 #include "util.h"
 
-static SifRpcClientData_t _lf_cd;
+static SifRpcClientData_t _lf_cd __attribute__((aligned(64)));
 static int _lf_init = 0;
 extern void *ModStorageStart;
 
