@@ -217,29 +217,29 @@ jobs:
           OPNPS2LD-VARIANTS.7z
           OPNPS2LD-LANGS.7z
 
-    - name: Create release
-      if: startsWith(github.ref, 'refs/tags/v')
-      uses: marvinpinto/action-automatic-releases@latest
-      with:
-        repo_token: "${{ secrets.GITHUB_TOKEN }}"
-        prerelease: "${{ contains(github.ref, '-rc') }}"
-        title: "${{ env.OPL_VERSION }}"
-        files: |
-          OPNPS2LD-${{ env.OPL_VERSION }}.7z
-          OPNPS2LD-VARIANTS-${{ env.OPL_VERSION }}.7z
-          OPNPS2LD-LANGS-${{ env.OPL_VERSION }}.7z
-          OPNPS2LD.7z
-          OPNPS2LD-VARIANTS.7z
-          OPNPS2LD-LANGS.7z
+#     - name: Create release
+#       if: startsWith(github.ref, 'refs/tags/v')
+#       uses: marvinpinto/action-automatic-releases@latest
+#       with:
+#         repo_token: "${{ secrets.GITHUB_TOKEN }}"
+#         prerelease: "${{ contains(github.ref, '-rc') }}"
+#         title: "${{ env.OPL_VERSION }}"
+#         files: |
+#           OPNPS2LD-${{ env.OPL_VERSION }}.7z
+#           OPNPS2LD-VARIANTS-${{ env.OPL_VERSION }}.7z
+#           OPNPS2LD-LANGS-${{ env.OPL_VERSION }}.7z
+#           OPNPS2LD.7z
+#           OPNPS2LD-VARIANTS.7z
+#           OPNPS2LD-LANGS.7z
 
-    - name: Upload pre-release to Mega
-      if: github.ref == 'refs/heads/master' && env.USERNAME != null
-      uses: Difegue/action-megacmd@master
-      with:
-        args: put -c OPNPS2LD.7z /OPL/Pre-Release/${{ env.OPL_VERSION }}/run_${{ github.run_number }}/
+#     - name: Upload pre-release to Mega
+#       if: github.ref == 'refs/heads/master' && env.USERNAME != null
+#       uses: Difegue/action-megacmd@master
+#       with:
+#         args: put -c OPNPS2LD.7z /OPL/Pre-Release/${{ env.OPL_VERSION }}/run_${{ github.run_number }}/
 
-    - name: Upload release to Mega
-      if: startsWith(github.ref, 'refs/tags/v') && env.USERNAME != null
-      uses: Difegue/action-megacmd@master
-      with:
-        args: put -c OPNPS2LD.7z /OPL/Release/${{ env.OPL_VERSION }}/
+#     - name: Upload release to Mega
+#       if: startsWith(github.ref, 'refs/tags/v') && env.USERNAME != null
+#       uses: Difegue/action-megacmd@master
+#       with:
+#         args: put -c OPNPS2LD.7z /OPL/Release/${{ env.OPL_VERSION }}/
