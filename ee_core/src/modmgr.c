@@ -15,6 +15,7 @@
 static SifRpcClientData_t _lf_cd;
 static int _lf_init = 0;
 extern void *ModStorageStart;
+extern int _iop_reboot_count;
 
 /*----------------------------------------------------------------------------------------*/
 /* Init LOADFILE RPC.                                                                     */
