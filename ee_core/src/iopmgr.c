@@ -82,6 +82,7 @@ static void ResetIopSpecial(const char *args, unsigned int arglen)
 
     SifExitIopHeap();
     asm volatile("nop");
+    asm volatile("nop");
     LoadFileExit(); // OPL's integrated LOADFILE RPC does not automatically unbind itself after IOP resets.
 
     _iop_reboot_count++; // increment reboot counter to allow RPC clients to detect unbinding!
