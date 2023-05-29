@@ -51,7 +51,7 @@ int LoadFileInit()
 void LoadFileExit()
 {
     _lf_init = 0;
-    memset(&_lf_cd, 0, sizeof(_lf_cd));
+    memset(&_lf_cd, 0, sizeof _lf_cd);
 }
 
 
