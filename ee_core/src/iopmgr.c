@@ -80,6 +80,7 @@ static void ResetIopSpecial(const char *args, unsigned int arglen)
     ee_kmode_exit();
     EIntr();
 
+    SifExitIopHeap();
     LoadFileExit(); // OPL's integrated LOADFILE RPC does not automatically unbind itself after IOP resets.
 
     _iop_reboot_count++; // increment reboot counter to allow RPC clients to detect unbinding!
