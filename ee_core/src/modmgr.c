@@ -21,19 +21,26 @@ extern void *ModStorageStart;
 /*----------------------------------------------------------------------------------------*/
 int LoadFileInit()
 {
-    int r;
+    int res;
+    static int _rb_count = 0;
+    if (_rb_count != _iop_reboot_count) {
+        _rb_count = _iop_reboot_count;
+        memset(&_lf_cd, 0, sizeof _lf_cd);
+        _lf_init = 0;
+    }
 
     if (_lf_init)
         return 0;
 
-    while ((r = SifBindRpc(&_lf_cd, 0x80000006, 0)) >= 0 && (!_lf_cd.server))
+    SifInitRpc(0);
+
+    while ((res = SifBindRpc(&_lf_cd, 0x80000006, 0)) >= 0 && !_lf_cd.server)
         nopdelay();
 
-    if (r < 0)
+    if (res < 0)
         return -E_SIF_RPC_BIND;
 
     _lf_init = 1;
-
     return 0;
 }
 
