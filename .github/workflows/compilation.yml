@@ -59,47 +59,47 @@ jobs:
           LICENSE
           README.md
 
-  build-variants:
-    strategy:
-      fail-fast: false
-      matrix:
-        rtl: [RTL=0, RTL=1]
-        pademu: [PADEMU=0, PADEMU=1]
-        igs: [IGS=0, IGS=1]
-        t10k: [DTL_T10000=0, DTL_T10000=1]
-    runs-on: ubuntu-latest
-    container: ps2dev/ps2dev:latest
-    steps:
-    - name: Install dependencies
-      run: apk add build-base git zip gawk python3 py3-pip bash
+#   build-variants:
+#     strategy:
+#       fail-fast: false
+#       matrix:
+#         rtl: [RTL=0, RTL=1]
+#         pademu: [PADEMU=0, PADEMU=1]
+#         igs: [IGS=0, IGS=1]
+#         t10k: [DTL_T10000=0, DTL_T10000=1]
+#     runs-on: ubuntu-latest
+#     container: ps2dev/ps2dev:latest
+#     steps:
+#     - name: Install dependencies
+#       run: apk add build-base git zip gawk python3 py3-pip bash
 
-    - name: git checkout
-      uses: actions/checkout@v3
+#     - name: git checkout
+#       uses: actions/checkout@v3
 
-    - run: |
-        git config --global --add safe.directory "$GITHUB_WORKSPACE"
-        git fetch --prune --unshallow
+#     - run: |
+#         git config --global --add safe.directory "$GITHUB_WORKSPACE"
+#         git fetch --prune --unshallow
 
-    - name: Install Python packages
-      run: pip3 install -r requirements.txt
+#     - name: Install Python packages
+#       run: pip3 install -r requirements.txt
 
-    - name: Get version
-      run: |
-        echo "OPL_VERSION=$(make oplversion)" >> $GITHUB_ENV
+#     - name: Get version
+#       run: |
+#         echo "OPL_VERSION=$(make oplversion)" >> $GITHUB_ENV
 
-    - name: Compile -> make ${{ matrix.t10k }} ${{ matrix.igs }} ${{ matrix.pademu }} ${{ matrix.rtl }} NOT_PACKED=1
-      run: |
-        make --trace ${{ matrix.t10k }} ${{ matrix.igs }} ${{ matrix.pademu }} ${{ matrix.rtl }} NOT_PACKED=1
-        mv opl.elf OPNPS2LD-${{ env.OPL_VERSION }}-${{ matrix.t10k }}-${{ matrix.igs }}-${{ matrix.pademu }}-${{ matrix.rtl }}.ELF
+#     - name: Compile -> make ${{ matrix.t10k }} ${{ matrix.igs }} ${{ matrix.pademu }} ${{ matrix.rtl }} NOT_PACKED=1
+#       run: |
+#         make --trace ${{ matrix.t10k }} ${{ matrix.igs }} ${{ matrix.pademu }} ${{ matrix.rtl }} NOT_PACKED=1
+#         mv opl.elf OPNPS2LD-${{ env.OPL_VERSION }}-${{ matrix.t10k }}-${{ matrix.igs }}-${{ matrix.pademu }}-${{ matrix.rtl }}.ELF
 
-    - name: Create detailed changelog
-      run: sh ./make_changelog.sh
+#     - name: Create detailed changelog
+#       run: sh ./make_changelog.sh
 
-    - name: Upload variants artifact ELF
-      uses: actions/upload-artifact@v3
-      with:
-        name: OPNPS2LD-VARIANTS
-        path: OPNPS2LD*.ELF
+#     - name: Upload variants artifact ELF
+#       uses: actions/upload-artifact@v3
+#       with:
+#         name: OPNPS2LD-VARIANTS
+#         path: OPNPS2LD*.ELF
 
   build-lang:
     runs-on: ubuntu-latest
@@ -154,6 +154,14 @@ jobs:
     - name: Install Python packages
       run: pip3 install -r requirements.txt
 
+    - name: PS2SDK -> make
+      run: |
+        rm -rf $PS2SDK/iop
+        mkdir -p $PS2SDK/iop
+        git clone https://github.com/AKuHAK/ps2sdk -b opl-test
+        cd ps2sdk
+        make -j 1 install
+
     - name: Get version
       run: |
         echo "OPL_VERSION=$(make oplversion)" >> $GITHUB_ENV
@@ -169,53 +177,53 @@ jobs:
         name: opl-debug-${{ env.OPL_VERSION }}-${{ matrix.docker }}
         path: opl-*.elf
 
-  release:
-    needs: [build, build-variants, build-lang]
-    runs-on: ubuntu-latest
-    if: startsWith(github.ref, 'refs/tags/v') || github.ref == 'refs/heads/master'
-    env:
-      USERNAME: ${{ secrets.USERNAME }}
-      PASSWORD: ${{ secrets.PASSWORD }}
-    steps:
-    - name: git checkout
-      uses: actions/checkout@v3
+#   release:
+#     needs: [build, build-variants, build-lang]
+#     runs-on: ubuntu-latest
+#     if: startsWith(github.ref, 'refs/tags/v') || github.ref == 'refs/heads/master'
+#     env:
+#       USERNAME: ${{ secrets.USERNAME }}
+#       PASSWORD: ${{ secrets.PASSWORD }}
+#     steps:
+#     - name: git checkout
+#       uses: actions/checkout@v3
 
-    - run: git fetch --prune --unshallow
+#     - run: git fetch --prune --unshallow
 
-    - name: Get version
-      run: |
-        echo "OPL_VERSION=$(make oplversion)" >> $GITHUB_ENV
+#     - name: Get version
+#       run: |
+#         echo "OPL_VERSION=$(make oplversion)" >> $GITHUB_ENV
 
-    - name: Download all artifacts
-      uses: actions/download-artifact@v3
+#     - name: Download all artifacts
+#       uses: actions/download-artifact@v3
 
-    - name: Prepare artifacts for release
-      run: |
-        echo packing release of OPL ${{ env.OPL_VERSION }}
-        cp INFO/* OPNPS2LD/
-        cp INFO/* OPNPS2LD-VARIANTS/
-        7z a -t7z OPNPS2LD-${{ env.OPL_VERSION }}.7z OPNPS2LD/*
-        7z a -t7z OPNPS2LD-VARIANTS-${{ env.OPL_VERSION }}.7z OPNPS2LD-VARIANTS/*
-        7z a -t7z OPNPS2LD-LANGS-${{ env.OPL_VERSION }}.7z OPNPS2LD-LANGS/*
-        cp -f OPNPS2LD-${{ env.OPL_VERSION }}.7z OPNPS2LD.7z
-        cp -f OPNPS2LD-VARIANTS-${{ env.OPL_VERSION }}.7z OPNPS2LD-VARIANTS.7z
-        cp -f OPNPS2LD-LANGS-${{ env.OPL_VERSION }}.7z OPNPS2LD-LANGS.7z
+#     - name: Prepare artifacts for release
+#       run: |
+#         echo packing release of OPL ${{ env.OPL_VERSION }}
+#         cp INFO/* OPNPS2LD/
+#         cp INFO/* OPNPS2LD-VARIANTS/
+#         7z a -t7z OPNPS2LD-${{ env.OPL_VERSION }}.7z OPNPS2LD/*
+#         7z a -t7z OPNPS2LD-VARIANTS-${{ env.OPL_VERSION }}.7z OPNPS2LD-VARIANTS/*
+#         7z a -t7z OPNPS2LD-LANGS-${{ env.OPL_VERSION }}.7z OPNPS2LD-LANGS/*
+#         cp -f OPNPS2LD-${{ env.OPL_VERSION }}.7z OPNPS2LD.7z
+#         cp -f OPNPS2LD-VARIANTS-${{ env.OPL_VERSION }}.7z OPNPS2LD-VARIANTS.7z
+#         cp -f OPNPS2LD-LANGS-${{ env.OPL_VERSION }}.7z OPNPS2LD-LANGS.7z
 
-    - name: Create prerelease
-      if: github.ref == 'refs/heads/master'
-      uses: marvinpinto/action-automatic-releases@latest
-      with:
-        repo_token: "${{ secrets.GITHUB_TOKEN }}"
-        prerelease: true
-        automatic_release_tag: "latest"
-        title: "${{ steps.version.outputs.version }}"
-        files: |
-          OPNPS2LD-${{ env.OPL_VERSION }}.7z
-          OPNPS2LD-VARIANTS-${{ env.OPL_VERSION }}.7z
-          OPNPS2LD-LANGS-${{ env.OPL_VERSION }}.7z
-          OPNPS2LD.7z
-          OPNPS2LD-VARIANTS.7z
-          OPNPS2LD-LANGS.7z
+#     - name: Create prerelease
+#       if: github.ref == 'refs/heads/master'
+#       uses: marvinpinto/action-automatic-releases@latest
+#       with:
+#         repo_token: "${{ secrets.GITHUB_TOKEN }}"
+#         prerelease: true
+#         automatic_release_tag: "latest"
+#         title: "${{ steps.version.outputs.version }}"
+#         files: |
+#           OPNPS2LD-${{ env.OPL_VERSION }}.7z
+#           OPNPS2LD-VARIANTS-${{ env.OPL_VERSION }}.7z
+#           OPNPS2LD-LANGS-${{ env.OPL_VERSION }}.7z
+#           OPNPS2LD.7z
+#           OPNPS2LD-VARIANTS.7z
+#           OPNPS2LD-LANGS.7z
 
 #     - name: Create release
 #       if: startsWith(github.ref, 'refs/tags/v')
