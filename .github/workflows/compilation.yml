@@ -26,6 +26,14 @@ jobs:
     - name: Install Python packages
       run: pip3 install -r requirements.txt
 
+    - name: PS2SDK -> make
+      run: |
+        rm -rf $PS2SDK/iop
+        mkdir -p $PS2SDK/iop
+        git clone https://github.com/AKuHAK/ps2sdk -b opl-test
+        cd ps2sdk
+        make -j 1 install
+ 
     - name: Compile -> make clean release
       run: make --trace clean release
 
