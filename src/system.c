@@ -886,6 +886,11 @@ void sysLaunchLoaderElf(const char *filename, const char *mode_str, int size_cdv
     fileXioExit();
     SifExitRpc();
 
+    
+    
+SifLoadFileExit();
+SifExitIopHeap();
+
     FlushCache(0);
     FlushCache(2);
 
