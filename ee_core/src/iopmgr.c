@@ -8,6 +8,7 @@
 */
 
 #include <iopcontrol.h>
+#include <ee_regs.h>
 
 #include "ee_core.h"
 #include "iopmgr.h"
@@ -217,6 +218,18 @@ int Reset_Iop(const char *arg, int mode)
     static SifCmdResetData_t reset_pkt __attribute__((aligned(64)));
     struct t_SifDmaTransfer dmat;
     int arglen;
+
+    SifInitRpc(0);
+    SifExitRpc();
+
+    // Wait for any transfers to finish before stopping them.
+    int wait = 0xE0000000;
+    while (wait--) {
+        if ((*R_EE_D5_CHCR & 0x100) == 0)
+            break;
+    }
+
+    SifStopDma();
 
     _iop_reboot_count++; // increment reboot counter to allow RPC clients to detect unbinding!
 
