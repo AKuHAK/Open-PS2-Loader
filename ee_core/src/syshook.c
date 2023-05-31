@@ -22,7 +22,7 @@
 
 ConfigParam CustomOSDConfigParam;
 
-int set_reg_hook;
+int set_reg_hook = 0;
 int set_reg_disabled;
 int iop_reboot_count = 0;
 
