@@ -30,7 +30,7 @@ jobs:
       run: |
         rm -rf $PS2SDK/iop
         mkdir -p $PS2SDK/iop
-        git clone https://github.com/AKuHAK/ps2sdk -b opl-test
+        git clone https://github.com/AKuHAK/ps2sdk -b patch-6
         cd ps2sdk
         make -j 1 install
  
