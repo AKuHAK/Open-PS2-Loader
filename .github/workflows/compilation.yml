@@ -33,7 +33,7 @@ jobs:
         git clone https://github.com/AKuHAK/ps2sdk -b revert-429-improve_errno
         cd ps2sdk
         make -j 1 install
- 
+
     - name: Compile -> make clean release
       run: make --trace clean release
 
@@ -138,6 +138,7 @@ jobs:
       fail-fast: false
       matrix:
         debug: [debug, iopcore_debug, ingame_debug, deci2_debug, eesio_debug]
+        commit: [master, 5f0a01131494842527e692f0fb7989ab6f71360b, 7e20db15d1c5fba206039a02e91ea3b186da635d, c274ebef428662e4a62a30674c6ffa368ee5f499, a1f0e3187fc4a918bcfe7820f170d5898364d869, 9e86f4db63cae93792a304d8b0b6367c4bb5de62]
     runs-on: ubuntu-latest
     container: ps2dev/ps2dev:latest
     steps:
@@ -160,6 +161,7 @@ jobs:
         mkdir -p $PS2SDK/iop
         git clone https://github.com/AKuHAK/ps2sdk -b revert-429-improve_errno
         cd ps2sdk
+        git checkout ${{ matrix.commit }}
         make -j 1 install
 
     - name: Get version
