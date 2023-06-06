@@ -27,6 +27,7 @@ static void ResetIopSpecial(const char *args, unsigned int arglen)
     unsigned int length_rounded, CommandLen, size_IOPRP_img, size_imgdrv_irx;
     char command[RESET_ARG_MAX + 1];
 
+    DPRINTF("ResetIopSpecial: (0x%08x) %s\n", args, args != NULL ? args : "(null)");
     if (arglen > 0) {
         strncpy(command, args, arglen);
         command[arglen] = '\0'; /* In a normal IOP reset process, the IOP reset command line will be NULL-terminated properly somewhere.
@@ -144,10 +145,10 @@ static void ResetIopSpecial(const char *args, unsigned int arglen)
 /*----------------------------------------------------------------*/
 int New_Reset_Iop(const char *arg, int arglen)
 {
-    DPRINTF("New_Reset_Iop start!\n");
     if (EnableDebug)
         GS_BGCOLOUR = 0xFF00FF; // Purple
 
+    DPRINTF("New_Reset_Iop start!\n");
     SifInitRpc(0);
 
     iop_reboot_count++;

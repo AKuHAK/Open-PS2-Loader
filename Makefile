@@ -9,7 +9,7 @@ EXTRAVERSION = Beta
 #	debug		-	UI-side debug mode (UDPTTY)
 #	iopcore_debug	-	UI-side + iopcore debug mode (UDPTTY).
 #	ingame_debug	-	UI-side + in-game debug mode. IOP core modules will not be built as debug versions (UDPTTY).
-#	eesio_debug	-	UI-side + eecore debug mode (EE SIO)
+#	eesio_debug	-	UI-side + in-game + eecore debug mode (EE SIO)
 #	deci2_debug	-	UI-side + in-game DECI2 debug mode (EE-side only).
 
 # I want to put my name in my custom build! How can I do it?
@@ -170,10 +170,12 @@ ifeq ($(DEBUG),1)
     MCEMU_DEBUG_FLAGS = IOPCORE_DEBUG=1
     SMSTCPIP_INGAME_CFLAGS =
     IOP_OBJS += udptty-ingame.o
-  else ifeq ($(EESIO_DEBUG),1)
+  endif
+  ifeq ($(EESIO_DEBUG),1)
     EE_CFLAGS += -D__EESIO_DEBUG
     EE_LIBS += -lsiocookie
-  else ifeq ($(INGAME_DEBUG),1)
+  endif
+  ifeq ($(INGAME_DEBUG),1)
     EE_CFLAGS += -D__INGAME_DEBUG
     EECORE_EXTRA_FLAGS = LOAD_DEBUG_MODULES=1
     CDVDMAN_DEBUG_FLAGS = IOPCORE_DEBUG=1
@@ -227,7 +229,7 @@ iopcore_debug:
 	$(MAKE) DEBUG=1 IOPCORE_DEBUG=1 all
 
 eesio_debug:
-	$(MAKE) DEBUG=1 EESIO_DEBUG=1 all
+	$(MAKE) DEBUG=1 INGAME_DEBUG=1 EESIO_DEBUG=1 all
 
 ingame_debug:
 	$(MAKE) DEBUG=1 INGAME_DEBUG=1 all

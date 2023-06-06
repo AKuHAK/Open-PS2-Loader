@@ -21,30 +21,30 @@ int debugSetActive(void)
         return -1;
 
 #ifdef __DECI2_DEBUG
-    LOG("[DRVTIF]:\n");
     ret = sysLoadModuleBuffer(&drvtif_irx, size_drvtif_irx, 0, NULL);
     if (ret < 0)
         return -8;
+    LOG("[DRVTIF]: debugSetActive ret=%d\n", ret);
 
-    LOG("[TIFNET]:\n");
     ret = sysLoadModuleBuffer(&tifinet_irx, size_tifinet_irx, 0, NULL);
     if (ret < 0)
         return -9;
+    LOG("[TIFNET]: debugSetActive ret=%d\n", ret);
 #else
-    LOG("[UDPTTY]:\n");
     ret = sysLoadModuleBuffer(&udptty_irx, size_udptty_irx, 0, NULL);
     if (ret < 0)
         return -8;
+    LOG("[UDPTTY]: debugSetActive ret=%d\n", ret);
 
-    LOG("[IOPTRAP]:\n");
     ret = sysLoadModuleBuffer(&ioptrap_irx, size_ioptrap_irx, 0, NULL);
     if (ret < 0)
         return -9;
+    LOG("[IOPTRAP]: debugSetActive ret=%d\n", ret);
 
-    LOG("[PS2LINK]:\n");
     ret = sysLoadModuleBuffer(&ps2link_irx, size_ps2link_irx, 0, NULL);
     if (ret < 0)
         return -10;
+    LOG("[PS2LINK]: debugSetActive ret=%d\n", ret);
 #endif
 #endif
 

@@ -390,6 +390,12 @@ static void initSupport(item_list_t *itemList, int startMode, int mode, int forc
 
 static void initAllSupport(int force_reinit)
 {
+#ifdef __INGAME_DEBUG
+#ifndef _DTL_T10000
+    // Load network modules before initializing device support so we have IOP debugging info if enabled.
+    ethLoadInitModules();
+#endif
+#endif
     initSupport(bdmGetObject(0), gBDMStartMode, BDM_MODE, force_reinit);
     initSupport(ethGetObject(0), gETHStartMode, ETH_MODE, force_reinit || (gNetworkStartup >= ERROR_ETH_SMB_CONN));
     initSupport(hddGetObject(0), gHDDStartMode, HDD_MODE, force_reinit);

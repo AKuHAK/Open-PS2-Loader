@@ -83,8 +83,8 @@ typedef struct
     short inMenu;
 } gui_screen_handler_t;
 
-static gui_screen_handler_t screenHandlers[] = {{&menuHandleInputMain, &menuRenderMain, 0},
-                                                {&menuHandleInputMenu, &menuRenderMenu, 1},
+static gui_screen_handler_t screenHandlers[] = {{&menuHandleInputMain, &menuRenderMain, 0}, // GUI_SCREEN_MAIN - Game selection menu
+                                                {&menuHandleInputMenu, &menuRenderMenu, 1}, // GUI_SCREEN_MENU - Settings menu
                                                 {&menuHandleInputInfo, &menuRenderInfo, 1},
                                                 {&menuHandleInputGameMenu, &menuRenderGameMenu, 1},
                                                 {&menuHandleInputAppMenu, &menuRenderAppMenu, 1}};

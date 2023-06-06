@@ -22,8 +22,12 @@
 #include <smod.h>
 
 #ifdef __EESIO_DEBUG
-#define DPRINTF(args...) ;
-#define DINIT()          ;
+extern void print(const char *format, ...);
+
+void eecoreDebugInit();
+
+#define DPRINTF(...) print(__VA_ARGS__)
+#define DINIT()      eecoreDebugInit()
 #else
 #define DPRINTF(args...) \
     do {                 \
