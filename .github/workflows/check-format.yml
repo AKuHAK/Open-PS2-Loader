@@ -25,5 +25,5 @@ jobs:
       with:
         source: '.'
         extensions: 'h,c'
-        clangFormatVersion: 15
+        clangFormatVersion: 16
         inplace: False
