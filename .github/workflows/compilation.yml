@@ -32,7 +32,7 @@ jobs:
         mkdir -p $PS2SDK/iop
         rm -rf $PS2SDK/ee
         mkdir -p $PS2SDK/ee
-        git clone https://github.com/grimdoomer/ps2sdk -b 64bit_lba_support
+        git clone https://github.com/AKuHAK/ps2sdk -b 64bit_lba_support
         cd ps2sdk
         make -j 1 install
 
@@ -91,7 +91,7 @@ jobs:
         mkdir -p $PS2SDK/iop
         rm -rf $PS2SDK/ee
         mkdir -p $PS2SDK/ee
-        git clone https://github.com/grimdoomer/ps2sdk -b 64bit_lba_support
+        git clone https://github.com/AKuHAK/ps2sdk -b 64bit_lba_support
         cd ps2sdk
         make -j 1 install
 
@@ -137,7 +137,7 @@ jobs:
         mkdir -p $PS2SDK/iop
         rm -rf $PS2SDK/ee
         mkdir -p $PS2SDK/ee
-        git clone https://github.com/grimdoomer/ps2sdk -b 64bit_lba_support
+        git clone https://github.com/AKuHAK/ps2sdk -b 64bit_lba_support
         cd ps2sdk
         make -j 1 install
 
@@ -182,7 +182,7 @@ jobs:
         mkdir -p $PS2SDK/iop
         rm -rf $PS2SDK/ee
         mkdir -p $PS2SDK/ee
-        git clone https://github.com/grimdoomer/ps2sdk -b 64bit_lba_support
+        git clone https://github.com/AKuHAK/ps2sdk -b 64bit_lba_support
         cd ps2sdk
         make -j 1 install
 
