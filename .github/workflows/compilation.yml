@@ -26,6 +26,16 @@ jobs:
     - name: Install Python packages
       run: pip3 install -r requirements.txt
 
+    - name: PS2SDK -> make
+      run: |
+        rm -rf $PS2SDK/iop
+        mkdir -p $PS2SDK/iop
+        rm -rf $PS2SDK/ee
+        mkdir -p $PS2SDK/ee
+        git clone https://github.com/grimdoomer/ps2sdk -b 64bit_lba_support
+        cd ps2sdk
+        make -j 1 install
+
     - name: Compile -> make clean release
       run: make --trace clean release
 
@@ -75,6 +85,16 @@ jobs:
     - name: Install Python packages
       run: pip3 install -r requirements.txt
 
+    - name: PS2SDK -> make
+      run: |
+        rm -rf $PS2SDK/iop
+        mkdir -p $PS2SDK/iop
+        rm -rf $PS2SDK/ee
+        mkdir -p $PS2SDK/ee
+        git clone https://github.com/grimdoomer/ps2sdk -b 64bit_lba_support
+        cd ps2sdk
+        make -j 1 install
+
     - name: Get version
       run: |
         echo "OPL_VERSION=$(make oplversion)" >> $GITHUB_ENV
@@ -111,6 +131,16 @@ jobs:
     - name: Install Python packages
       run: pip3 install -r requirements.txt
 
+    - name: PS2SDK -> make
+      run: |
+        rm -rf $PS2SDK/iop
+        mkdir -p $PS2SDK/iop
+        rm -rf $PS2SDK/ee
+        mkdir -p $PS2SDK/ee
+        git clone https://github.com/grimdoomer/ps2sdk -b 64bit_lba_support
+        cd ps2sdk
+        make -j 1 install
+
     - name: Compile -> make download_lng languages
       run: make --trace download_lng languages
 
@@ -145,6 +175,16 @@ jobs:
 
     - name: Install Python packages
       run: pip3 install -r requirements.txt
+
+    - name: PS2SDK -> make
+      run: |
+        rm -rf $PS2SDK/iop
+        mkdir -p $PS2SDK/iop
+        rm -rf $PS2SDK/ee
+        mkdir -p $PS2SDK/ee
+        git clone https://github.com/grimdoomer/ps2sdk -b 64bit_lba_support
+        cd ps2sdk
+        make -j 1 install
 
     - name: Get version
       run: |
