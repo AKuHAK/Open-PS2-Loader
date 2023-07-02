@@ -348,7 +348,7 @@ void bdmLaunchGame(item_list_t* pItemList, int id, config_set_t *configSet)
                 if (fd >= 0)
                 {
                     // Get the absolute LBA of the VMC file and starting cluster number.
-                    if (fileXioIoctl2(fd, USBMASS_IOCTL_GET_LBA, NULL, 0, &startingLBA, sizeof(startingLBA)) == 0 && 
+                    if (fileXioIoctl2(fd, USBMASS_IOCTL_GET_LBA, NULL, 0, &startingLBA, sizeof(startingLBA)) == 0 &&
                         (startCluster = fileXioIoctl2(fd, USBMASS_IOCTL_GET_CLUSTER, NULL, 0, NULL, 0)) != 0)
                     {
                         // Check VMC cluster chain for fragmentation (write operation can cause damage to the filesystem).
@@ -801,7 +801,7 @@ int bdmUpdateDeviceData(item_list_t* pItemList)
         if (pDeviceData->bdmDeviceType == BDM_TYPE_ATA)
         {
             // If atad is loaded then xhdd is also loaded, query the hdd to see if it supports LBA48 or not.
-            pDeviceData->bdmHddIsLBA48 = fileXioDevctl("xhdd0:", ATA_DEVCTL_IS_48BIT, NULL, 0, NULL, 0);
+            pDeviceData->bdmHddIsLBA48 = fileXioDevctl("xhdd1:", ATA_DEVCTL_IS_48BIT, NULL, 0, NULL, 0);
             if (pDeviceData->bdmHddIsLBA48 < 0)
             {
                 // Failed to query the LBA limit of the device, fail safe to LBA28.
@@ -810,7 +810,7 @@ int bdmUpdateDeviceData(item_list_t* pItemList)
             }
 
             // Query the drive for the highest UDMA mode.
-            pDeviceData->ataHighestUDMAMode = fileXioDevctl("xhdd0:", ATA_DEVCTL_GET_HIGHEST_UDMA_MODE, NULL, 0, NULL, 0);
+            pDeviceData->ataHighestUDMAMode = fileXioDevctl("xhdd1:", ATA_DEVCTL_GET_HIGHEST_UDMA_MODE, NULL, 0, NULL, 0);
             if (pDeviceData->ataHighestUDMAMode < 0 || pDeviceData->ataHighestUDMAMode > 7)
             {
                 // Failed to query highest UDMA mode supported.
