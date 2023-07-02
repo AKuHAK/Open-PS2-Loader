@@ -37,7 +37,7 @@ int hddCheck(void)
 {
     int ret;
 
-    ret = fileXioDevctl("hdd0:", HDIOC_STATUS, NULL, 0, NULL, 0);
+    ret = fileXioDevctl("hdd1:", HDIOC_STATUS, NULL, 0, NULL, 0);
 
     // 0 = HDD connected and formatted, 1 = not formatted, 2 = HDD not usable, 3 = HDD not connected.
     if ((ret >= 3) || (ret < 0))
@@ -49,13 +49,13 @@ int hddCheck(void)
 //-------------------------------------------------------------------------
 u32 hddGetTotalSectors(void)
 {
-    return fileXioDevctl("hdd0:", HDIOC_TOTALSECTOR, NULL, 0, NULL, 0);
+    return fileXioDevctl("hdd1:", HDIOC_TOTALSECTOR, NULL, 0, NULL, 0);
 }
 
 //-------------------------------------------------------------------------
 int hddIs48bit(void)
 {
-    return fileXioDevctl("xhdd0:", ATA_DEVCTL_IS_48BIT, NULL, 0, NULL, 0);
+    return fileXioDevctl("xhdd1:", ATA_DEVCTL_IS_48BIT, NULL, 0, NULL, 0);
 }
 
 //-------------------------------------------------------------------------
@@ -66,7 +66,7 @@ int hddSetTransferMode(int type, int mode)
     args->type = type;
     args->mode = mode;
 
-    return fileXioDevctl("xhdd0:", ATA_DEVCTL_SET_TRANSFER_MODE, args, sizeof(hddAtaSetMode_t), NULL, 0);
+    return fileXioDevctl("xhdd1:", ATA_DEVCTL_SET_TRANSFER_MODE, args, sizeof(hddAtaSetMode_t), NULL, 0);
 }
 
 //-------------------------------------------------------------------------
@@ -104,7 +104,7 @@ int hddReadSectors(u32 lba, u32 nsectors, void *buf)
     args->lba = lba;
     args->size = nsectors;
 
-    if (fileXioDevctl("hdd0:", HDIOC_READSECTOR, args, sizeof(hddAtaTransfer_t), buf, nsectors * 512) != 0)
+    if (fileXioDevctl("hdd1:", HDIOC_READSECTOR, args, sizeof(hddAtaTransfer_t), buf, nsectors * 512) != 0)
         return -1;
 
     return 0;
@@ -126,7 +126,7 @@ static int hddWriteSectors(u32 lba, u32 nsectors, const void *buf)
 
     argsz = sizeof(hddAtaTransfer_t) + (nsectors * 512);
 
-    if (fileXioDevctl("hdd0:", HDIOC_WRITESECTOR, args, argsz, NULL, 0) != 0)
+    if (fileXioDevctl("hdd1:", HDIOC_WRITESECTOR, args, argsz, NULL, 0) != 0)
         return -1;
 
     return 0;
@@ -193,7 +193,7 @@ int hddGetHDLGamelist(hdl_games_list_t *game_list)
     hddFreeHDLGamelist(game_list);
 
     ret = 0;
-    if ((fd = fileXioDopen("hdd0:")) >= 0) {
+    if ((fd = fileXioDopen("hdd1:")) >= 0) {
         head = current = NULL;
         count = 0;
         while (fileXioDread(fd, &dirent) > 0) {
@@ -298,7 +298,7 @@ int hddDeleteHDLGame(hdl_game_info_t *ginfo)
 
     LOG("HDD Delete game: '%s'\n", ginfo->name);
 
-    sprintf(path, "hdd0:%s", ginfo->partition_name);
+    sprintf(path, "hdd1:%s", ginfo->partition_name);
 
     return unlink(path);
 }
