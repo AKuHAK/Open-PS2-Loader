@@ -123,7 +123,7 @@ static void hddFindOPLPartition(void)
 
     fileXioUmount(hddPrefix);
 
-    ret = fileXioMount("pfs0:", "hdd1:__common", FIO_MT_RDWR);
+    ret = fileXioMount("pfs0:", "hdd0:__common", FIO_MT_RDWR);
     if (ret == 0) {
         fd = open("pfs0:OPL/conf_hdd.cfg", O_RDONLY);
         if (fd >= 0) {
@@ -131,7 +131,7 @@ static void hddFindOPLPartition(void)
             configRead(config);
 
             configGetStrCopy(config, "hdd_partition", name, sizeof(name));
-            snprintf(gOPLPart, sizeof(gOPLPart), "hdd1:%s", name);
+            snprintf(gOPLPart, sizeof(gOPLPart), "hdd0:%s", name);
 
             configFree(config);
             close(fd);
@@ -154,7 +154,7 @@ static void hddFindOPLPartition(void)
         }
     }
 
-    snprintf(gOPLPart, sizeof(gOPLPart), "1:+OPL");
+    snprintf(gOPLPart, sizeof(gOPLPart), "hdd0:+OPL");
 
     return;
 }
@@ -229,7 +229,7 @@ int hddDetectNonSonyFileSystem()
     // Trying to load the APA/PFS irx modules when a non-sony formatted HDD is connected (ie: MBR/GPT  w/ exFAT) runs
     // the risk of corrupting the HDD. To avoid that get the first two sectors and perform some sanity checks. If
     // we reasonably suspect the disk is not APA formatted bail out from loading the sony fs irx modules.
-    result = fileXioDevctl("xhdd1:", ATA_DEVCTL_READ_PARTITION_SECTOR, NULL, 0, pSectorData, 512 * 2);
+    result = fileXioDevctl("xhdd0:", ATA_DEVCTL_READ_PARTITION_SECTOR, NULL, 0, pSectorData, 512 * 2);
     if (result < 0)
     {
         LOG("hddDetectNonSonyFileSystem: failed to read data from hdd %d\n", result);
@@ -263,7 +263,7 @@ int hddDetectNonSonyFileSystem()
         LOG("hddDetectNonSonyFileSystem: partition data not recognized\n");
         result = -1;
     }
-
+    
     // Cleanup and return.
     free(pSectorData);
     return result;

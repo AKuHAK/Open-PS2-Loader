@@ -489,7 +489,7 @@ static void deinitAllSupport(int exception, int modeSelected)
                 if (strncmp(pDeviceData->bdmDriver, "ata", 3) == 0)
                     continue;
             }
-
+            
             moduleCleanup(&list_support[i], exception, modeSelected);
         }
     }
@@ -1911,7 +1911,7 @@ static void autoLaunchHDDGame(char *argv[])
 
     snprintf(gAutoLaunchGame->startup, sizeof(gAutoLaunchGame->startup), argv[1]);
     gAutoLaunchGame->start_sector = strtoul(argv[2], NULL, 0);
-    snprintf(gOPLPart, sizeof(gOPLPart), "hdd1:%s", argv[3]);
+    snprintf(gOPLPart, sizeof(gOPLPart), "hdd0:%s", argv[3]);
 
     snprintf(path, sizeof(path), "%sCFG/%s.cfg", gHDDPrefix, gAutoLaunchGame->startup);
     configSet = configAlloc(0, NULL, path);
@@ -1998,7 +1998,7 @@ int main(int argc, char *argv[])
         /* argv[0] boot path
            argv[1] file name (including extention)
            argv[2] game->startup
-           argv[3] game->media ("CD" / "DVD")
+           argv[3] game->media ("CD" / "DVD") 
            argv[4] "bdm" */
         if (!strcmp(argv[4], "bdm"))
             autoLaunchBDMGame(argv);
