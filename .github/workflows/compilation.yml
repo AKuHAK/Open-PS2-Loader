@@ -10,21 +10,14 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    container: ps2dev/ps2dev:latest
+    container: ghcr.io/ps2homebrew/ps2homebrew:main
     steps:
-    - name: Install dependencies
-      run: |
-        apk add build-base git zip gawk python3 py3-pip bash
-
     - name: git checkout
       uses: actions/checkout@v3
 
     - run: |
         git config --global --add safe.directory "$GITHUB_WORKSPACE"
         git fetch --prune --unshallow
-
-    - name: Install Python packages
-      run: pip3 install -r requirements.txt
 
     - name: Compile -> make clean release
       run: make --trace clean release
