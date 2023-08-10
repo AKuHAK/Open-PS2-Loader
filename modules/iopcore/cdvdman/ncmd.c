@@ -29,6 +29,7 @@ int sceCdRead(u32 lsn, u32 sectors, void *buf, sceCdRMode *mode)
     int result;
 
     u16 sector_size = 2048;
+    cdvdman_stat.spindlctrl = 0;
 
     // Is is NULL in our emulated cdvdman routines so check if valid.
     if (mode) {
@@ -38,6 +39,8 @@ int sceCdRead(u32 lsn, u32 sectors, void *buf, sceCdRMode *mode)
 
         if (mode->datapattern == SCECdSecS2340)
             sector_size = 2340;
+
+        cdvdman_stat.spindlctrl = mode->spindlctrl;
     }
 
     DPRINTF("sceCdRead lsn=%d sectors=%d sector_size=%d buf=%08x\n", (int)lsn, (int)sectors, (int)sector_size, (int)buf);

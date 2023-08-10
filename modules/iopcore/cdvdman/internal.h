@@ -75,6 +75,7 @@ typedef struct
     struct SteamingData StreamingData;
     int intr_ef;
     int disc_type_reg; // SCECdvdMediaType
+    u8 spindlctrl; // SCECdvdSpinValue
     u32 cdread_lba;
     u32 cdread_sectors;
     u16 sector_size;

@@ -293,15 +293,28 @@ static int cdvdman_read_sectors(u32 lsn, unsigned int sectors, void *buf)
         if (cdvdman_settings.common.flags & IOPCORE_COMPAT_ACCU_READS) {
             // Limit transfers to a maximum length of 8, with a restricted transfer rate.
             iop_sys_clock_t TargetTime;
+            int temp_lo = 0;
 
             if (SectorsToRead > 8)
                 SectorsToRead = 8;
 
             TargetTime.hi = 0;
-            TargetTime.lo = (cdvdman_settings.common.media == 0x12 ? 81920 : 33512) * SectorsToRead;
+            TargetTime.lo = 0;
+            if (cdvdman_stat.spindlctrl == SCECdSpinMax)                                           // CD: 6x, DVD: 1.6X
+                temp_lo = cdvdman_stat.disc_type_reg == SCECdPS2DVD ? 33512 : 94080 - 0.192 * lsn; // CD 1x - 564480/1
+            else                                                                                   // SCECdSpinNom only, CD 10x, DVD: 1.6x
+                temp_lo = cdvdman_stat.disc_type_reg == SCECdPS2DVD ? 33512 + 0.73 * lsn : 56448 - 2.186 * lsn;
+
+            if (temp_lo > 0)
+                TargetTime.lo = (u32)temp_lo * SectorsToRead;
+
             // SP193: approximately 2KB/3600KB/s = 555us required per 2048-byte data sector at 3600KB/s, so 555 * 36.864 = 20460 ticks per sector with a 36.864MHz clock.
             /* AKuHAK: 3600KB/s is too fast, it is CD 24x - theoretical maximum on CD
-               However, when setting SCECdSpinMax we will get 900KB/s (81920) for CD, and 2200KB/s (33512) for DVD */
+               However, when setting SCECdSpinMax we will get CD 6x: 900KB/s for CD, and 2200KB/s for DVD
+               the formula will be (36864000 / speed in KB/s)*(physical sector size/1024). As all PS2 CD are 2352 bytes per sector, for CD we will get 94131 ticks
+               as all DVDs are 2048 bytes per sector, we will get 33512 ticks.
+               Also, for CD it will be different at different lsn. At 0 Mb it will be 900 Kb/s, at 540 Mb - it will be 1800 Kb/s.
+               So it will give speed raise 0.39 ticks per lsn. */
             ClearEventFlag(cdvdman_stat.intr_ef, ~0x1000);
             SetAlarm(&TargetTime, &cdvdemu_read_end_cb, NULL);
         }
