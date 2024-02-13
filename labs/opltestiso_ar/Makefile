@@ -12,7 +12,7 @@ clean:
 # CD = 650MB = 620MiB
 # 10x 10MiB + 9x 57MiB = 613
 cd_files:
-	dd if=/dev/zero of=iso/FILE0A.BIN bs=1M count=10
+	dd if=/dev/random of=iso/FILE0A.BIN bs=1M count=10
 	dd if=/dev/zero of=iso/FILE0B.BIN bs=1M count=57
 	dd if=/dev/zero of=iso/FILE1A.BIN bs=1M count=10
 	dd if=/dev/zero of=iso/FILE1B.BIN bs=1M count=57
