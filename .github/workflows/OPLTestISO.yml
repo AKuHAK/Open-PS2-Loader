@@ -10,13 +10,13 @@ on:
 jobs:
   build-opltestiso:
     runs-on: ubuntu-latest
-    container: ps2dev/ps2dev:latest
+    container: ghcr.io/ps2homebrew/ps2homebrew:main
     steps:
     - name: Install dependencies
-      run:  apk add build-base git zip cdrkit
+      run:  apk add cdrkit
 
     - name: git checkout
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
 
     - run: |
         git config --global --add safe.directory "$GITHUB_WORKSPACE"
@@ -24,12 +24,12 @@ jobs:
 
     - name: make ISO
       run: |
-          cd labs/opltestiso/
+          cd labs/opltestiso_ar/
           make iso
 
     - name: Upload release artifact ISO
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
-        name: OPLTESTISO
+        name: OPLTESTISO_AR
         path: |
-           labs/opltestiso/*.iso
+           labs/opltestiso_ar/*.iso
