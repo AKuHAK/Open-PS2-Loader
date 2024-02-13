@@ -36,9 +36,6 @@ DISABLE_PATCHED_FUNCTIONS(); // Disable the patched functionalities
 #define STREAM_BUFMAX         80 // 80 sectors = 160KiB
 #define STREAM_BANKMAX        5  // max 5 ringbuffers inside buffer ?
 
-#define FILE_RANDOM "cdrom:\\RANDOM.BIN"
-#define FILE_ZERO   "cdrom:\\ZERO.BIN"
-
 //--------------------------------------------------------------
 void print_speed(clock_t clk_start, clock_t clk_end, u32 fd_size, u32 buf_size)
 {

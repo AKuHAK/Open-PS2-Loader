@@ -32,4 +32,4 @@ jobs:
       with:
         name: OPLTESTISO_AR
         path: |
-           labs/opltestiso_ar/*.iso
+           labs/opltestiso_ar/*.zip
