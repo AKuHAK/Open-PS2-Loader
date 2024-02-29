@@ -15,6 +15,7 @@
 static SifRpcClientData_t _lf_cd;
 static int _lf_init = 0;
 extern void *ModStorageStart;
+extern void *lastIOPModMemPtr;
 
 /*----------------------------------------------------------------------------------------*/
 /* Init LOADFILE RPC.                                                                     */
@@ -122,6 +123,8 @@ int LoadMemModule(int mode, void *modptr, unsigned int modsize, int arg_len, con
 
     if (SifCallRpc(&_lf_cd, LF_F_MOD_BUF_LOAD, mode, &arg, sizeof(arg), &arg, 8, NULL, NULL) < 0)
         return -SCE_ECALLMISS;
+
+    lastIOPModMemPtr = iopmem;
 
     if (!(mode & SIF_RPC_M_NOWAIT))
         SifFreeIopHeap(iopmem);

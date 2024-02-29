@@ -19,6 +19,7 @@
 extern int _iop_reboot_count;
 static int imgdrv_offset_ioprpimg = 0;
 static int imgdrv_offset_ioprpsiz = 0;
+extern void *lastIOPModMemPtr;
 
 static void ResetIopSpecial(const char *args, unsigned int arglen)
 {
@@ -145,6 +146,7 @@ static void ResetIopSpecial(const char *args, unsigned int arglen)
 int New_Reset_Iop(const char *arg, int arglen)
 {
     DPRINTF("New_Reset_Iop start!\n");
+    lastIOPModMemPtr = NULL;
     if (EnableDebug)
         GS_BGCOLOUR = 0xFF00FF; // Purple
 
@@ -201,6 +203,22 @@ int New_Reset_Iop(const char *arg, int arglen)
     // we have 4 SifSetReg calls to skip in ELF's SifResetIop, not when we use it ourselves
     if (set_reg_disabled)
         set_reg_hook = 4;
+
+    if (lastIOPModMemPtr) {
+        while (1) {
+
+            void *iopmem = SifAllocIopHeap(256);
+
+            if (iopmem == NULL) {
+                break;
+            }
+
+            if (iopmem >= lastIOPModMemPtr) {
+                SifFreeIopHeap(iopmem);
+                break;
+            }
+        }
+    }
 
     if (EnableDebug)
         GS_BGCOLOUR = 0x000000; // Black

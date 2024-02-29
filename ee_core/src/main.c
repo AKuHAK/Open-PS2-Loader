@@ -16,6 +16,7 @@
 
 void *ModStorageStart, *ModStorageEnd;
 void *eeloadCopy, *initUserMemory;
+void *lastIOPModMemPtr = NULL;
 
 int isInit = 0;
 
