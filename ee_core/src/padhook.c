@@ -131,7 +131,7 @@ static void IGR_Task()
 {
     u32 Cop0_Perf;
 
-    EI();
+    // EI();
 
     DPRINTF("IGR thread woken up!\n");
 
