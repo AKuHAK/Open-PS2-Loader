@@ -46,12 +46,7 @@ static paddata_t Pad_Data;
 static powerbuttondata_t Power_Button;
 
 /* IGR Thread ID and interrupt handler */
-static int IGR_Thread_ID = -1;
 static int IGR_Intc_ID = -1;
-
-/* IGR thread stack & stack size */
-#define IGR_STACK_SIZE (4 * 1024)
-static u8 IGR_Stack[IGR_STACK_SIZE] __attribute__((aligned(16)));
 
 /* Extern symbol */
 extern void *_gp;
@@ -132,13 +127,11 @@ static void t_loadElf(void)
 }
 
 // In Game Reset Thread
-static void IGR_Thread(void *arg)
+static void IGR_Task()
 {
     u32 Cop0_Perf;
 
-    // Place our IGR thread in WAIT state
-    // It will be woken up by our IGR interrupt handler
-    SleepThread();
+    EI();
 
     DPRINTF("IGR thread woken up!\n");
 
@@ -369,16 +362,11 @@ static int IGR_Intc_Handler(int cause)
 
         // Loop for each threads, skipping the idle & IGR threads.
         for (i = 1; i < 256; i++) {
-            if (i != IGR_Thread_ID) {
-                // Suspend all threads
-                iSuspendThread(i);
-            }
+            // Suspend all threads
+            iSuspendThread(i);
         }
 
-        DPRINTF("IGR: trying to wake IGR thread...\n");
-        iChangeThreadPriority(IGR_Thread_ID, 0);
-        // WakeUp IGR thread
-        iWakeupThread(IGR_Thread_ID);
+        IGR_Task();
     }
 
     ExitHandler();
@@ -419,8 +407,6 @@ static void Set_libpad_Params(void *addr)
 // Install IGR thread, and Pad interrupt handler
 void Install_IGR(void)
 {
-    ee_thread_t thread_param;
-
     // Reset power button data
     Power_Button.press = 0;
     Pad_Data.pad_buf = NULL;
@@ -430,19 +416,6 @@ void Install_IGR(void)
     Pad_Data.vb_count = 0;
     Pad_Data.combo_type = 0x00;
     Pad_Data.prev_frame = 0x00;
-
-    // Do not install the IGR thread or interrupt handler more than once.
-    if (IGR_Thread_ID < 0) {
-        // Create and start IGR thread
-        thread_param.gp_reg = &_gp;
-        thread_param.func = IGR_Thread;
-        thread_param.stack = (void *)IGR_Stack;
-        thread_param.stack_size = IGR_STACK_SIZE;
-        thread_param.initial_priority = 127;
-        IGR_Thread_ID = CreateThread(&thread_param);
-
-        StartThread(IGR_Thread_ID, NULL);
-    }
 
     if (IGR_Intc_ID < 0) {
         // Create IGR interrupt handler
@@ -454,7 +427,6 @@ void Install_IGR(void)
 void Reset_Padhook(void)
 {
     IGR_Intc_ID = -1;
-    IGR_Thread_ID = -1;
 }
 
 // Hook function for libpad scePadPortOpen
