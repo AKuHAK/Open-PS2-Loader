@@ -24,7 +24,7 @@ void _ps2sdk_timezone_update() {}
 DISABLE_PATCHED_FUNCTIONS(); // Disable the patched functionalities
 // DISABLE_EXTRA_TIMERS_FUNCTIONS(); // Disable the extra functionalities for timers
 
-//#define PRINTF printf
+// #define PRINTF printf
 #define PRINTF scr_printf
 
 // Blocks sizes to test
@@ -40,54 +40,14 @@ DISABLE_PATCHED_FUNCTIONS(); // Disable the patched functionalities
 #define FILE_ZERO   "cdrom:\\ZERO.BIN"
 
 //--------------------------------------------------------------
-void print_speed(clock_t clk_start, clock_t clk_end, u32 fd_size, u32 buf_size)
+void print_speed(clock_t clk_start, clock_t clk_end, u32 fd_size, u32 lsn)
 {
     unsigned int msec = (int)((clk_end - clk_start) / (CLOCKS_PER_SEC / 1000));
-    PRINTF("\t\t- Read %04dKiB in %04dms, blocksize=%06d, speed=%04dKB/s\n", fd_size / 1024, msec, buf_size, fd_size / msec);
+    PRINTF("\t\t- Read %04dKiB in %04dms, lsn=%08d, speed=%04dKB/s\n", fd_size / 1024, msec, lsn, fd_size / msec);
 }
 
 //--------------------------------------------------------------
-void test_read_file_1(const char *filename, unsigned int block_size, unsigned int total_size)
-{
-    int size_left;
-    int fd;
-    char *buffer = NULL;
-    clock_t clk_start, clk_end;
-
-    if ((fd = open(filename, O_RDONLY /*, 0644*/)) <= 0) {
-        PRINTF("\t\t- Could not find '%s'\n", filename);
-        return;
-    }
-
-    buffer = malloc(block_size);
-
-    clk_start = clock();
-    size_left = total_size;
-    while (size_left > 0) {
-        int read_size = (size_left > block_size) ? block_size : size_left;
-        if (read(fd, buffer, read_size) != read_size) {
-            PRINTF("\t\t- Failed to read file.\n");
-            return;
-        }
-        size_left -= read_size;
-    }
-    clk_end = clock();
-
-    print_speed(clk_start, clk_end, total_size - size_left, block_size);
-
-    free(buffer);
-
-    close(fd);
-}
-
-//--------------------------------------------------------------
-void test_read_file(const char *filename)
-{
-    test_read_file_1(filename, 16*1024, FILE_SIZE);
-}
-
-//--------------------------------------------------------------
-void test_read_stream_1(uint32_t lsn, unsigned int block_size, unsigned int total_size)
+void test_read_file_1(uint32_t lsn, unsigned int block_size, unsigned int total_size, u8 spindlctrl)
 {
     void *iopbuffer = SifAllocIopHeap(STREAM_BUFMAX * 2048);
     void *eebuffer = malloc(block_size);
@@ -95,33 +55,74 @@ void test_read_stream_1(uint32_t lsn, unsigned int block_size, unsigned int tota
     unsigned int size_left = total_size;
 
     clock_t clk_start, clk_end;
-    sceCdRMode mode = {1, 1, SCECdSecS2048, 0};
+    sceCdRMode mode = {1, spindlctrl, SCECdSecS2048, 0};
+    u32 error;
+
+    int rv = sceCdDiskReady(0);
+    if (rv < 0) {
+        PRINTF("ERROR: sceCdDiskReady, rv=%d\n", rv);
+    }
+
+    clk_start = clock();
+    sceCdSync(0);
+    while (size_left) {
+        rv = sceCdRead(lsn, sectors, eebuffer, &mode);
+        if (rv == 0) {
+            sceCdSync(0);
+            error = sceCdGetError();
+        }
+        if (error != SCECdErNO) {
+            PRINTF("\t\t- ERROR %d\n", error);
+            break;
+        }
+        size_left -= sectors * 2048;
+    }
+    sceCdSync(0);
+    clk_end = clock();
+
+    if (error == SCECdErNO)
+        print_speed(clk_start, clk_end, total_size - size_left, lsn);
+
+    free(eebuffer);
+    SifFreeIopHeap(iopbuffer);
+}
+
+//--------------------------------------------------------------
+void test_read_stream_1(uint32_t lsn, unsigned int block_size, unsigned int total_size, u8 spindlctrl)
+{
+    void *iopbuffer = SifAllocIopHeap(STREAM_BUFMAX * 2048);
+    void *eebuffer = malloc(block_size);
+    unsigned int sectors = block_size / 2048;
+    unsigned int size_left = total_size;
+
+    clock_t clk_start, clk_end;
+    sceCdRMode mode = {1, spindlctrl, SCECdSecS2048, 0};
     u32 error;
 
     int rv = sceCdStInit(STREAM_BUFMAX, STREAM_BANKMAX, iopbuffer);
     if (rv == 0) {
         PRINTF("ERROR: sceCdStInit, rv=%d\n", rv);
-        return;
     }
 
     clk_start = clock();
     sceCdStStart(lsn, &mode);
     while (size_left) {
-        int rv = sceCdStRead(sectors, eebuffer, STMBLK, &error);
-        if (rv != sectors) {
-            PRINTF("\t\t- sceCdStRead = %d error = %d\n", rv, error);
-            //    break;
-        }
+        rv = sceCdStRead(sectors, eebuffer, STMBLK, &error);
         if (error != SCECdErNO) {
             PRINTF("\t\t- ERROR %d\n", error);
             break;
+        }
+        if (rv != sectors) {
+            PRINTF("\t\t- sceCdStRead = %d error = %d\n", rv, error);
+            //    break;
         }
         size_left -= rv * 2048;
     }
     sceCdStStop();
     clk_end = clock();
 
-    print_speed(clk_start, clk_end, total_size - size_left, block_size);
+    if (error == SCECdErNO)
+        print_speed(clk_start, clk_end, total_size - size_left, lsn);
 
     free(eebuffer);
     SifFreeIopHeap(iopbuffer);
@@ -140,7 +141,7 @@ void print_done()
     int i;
 
     PRINTF("\t\tDone. Next test in ");
-    for (i = 3; i > 0; i--) {
+    for (i = 6; i > 0; i--) {
         PRINTF("%d ", i);
         sleep(1);
     }
@@ -149,8 +150,6 @@ void print_done()
 //--------------------------------------------------------------
 int main()
 {
-    int rv;
-
     init_scr();
     scr_clear();
     print_header();
@@ -160,8 +159,8 @@ int main()
     SifExitRpc();
 
     SifInitRpc(0);
-    while (!SifIopReset("rom0:UDNL cdrom0:\\MODULES\\IOPRP271.IMG;1", 0))
-    //while (!SifIopReset("", 0))
+    // while (!SifIopReset("rom0:UDNL cdrom0:\\MODULES\\IOPRP271.IMG;1", 0))
+    while (!SifIopReset("rom0:UDNL", 0))
         ;
     while (!SifIopSync())
         ;
@@ -172,25 +171,42 @@ int main()
 
     // Load cdvdstm
     // NOTE: on OPL this module will not be loaded
-    rv = SifLoadModule("cdrom:MODULES\\CDVDSTM.IRX", 0, NULL);
-    if (rv < 0)
-        PRINTF("\t\tcould not load %s, rv=%d\n", "cdrom:MODULES\\CDVDSTM.IRX", rv);
 
     sceCdInit(SCECdINIT);
-    sceCdMmode(SCECdPS2DVD);
+    int disktype = sceCdGetDiskType();
+    int sector_step = 32768;
+    if ((disktype == SCECdPS2DVD) || (disktype == SCECdDVDV)) {
+        PRINTF("\t\tDVD detected\n");
+        sector_step = 262144;
+    } else
+        PRINTF("\t\tCD detected\n");
 
-    // speed test random file
-    PRINTF("\t\tStreaming from 10 files located at 0 to 100%% of DVD:\n");
-    test_read_stream_1(0*262144, 16*1024, FILE_SIZE);
-    test_read_stream_1(1*262144, 16*1024, FILE_SIZE); // 0.5GiB
-    test_read_stream_1(2*262144, 16*1024, FILE_SIZE);
-    test_read_stream_1(3*262144, 16*1024, FILE_SIZE);
-    test_read_stream_1(4*262144, 16*1024, FILE_SIZE);
-    test_read_stream_1(5*262144, 16*1024, FILE_SIZE);
-    test_read_stream_1(6*262144, 16*1024, FILE_SIZE);
-    test_read_stream_1(7*262144, 16*1024, FILE_SIZE);
-    test_read_stream_1(8*262144, 16*1024, FILE_SIZE);
-    //test_read_stream_1(9*262144, 16*1024, FILE_SIZE); // 4.5GiB
+    // speed test sectors
+    // PRINTF("\t\tStreaming from 10 places located at 0 to 100%% of DVD:\n");
+    u8 spindlctrl = 0;
+    PRINTF("\t\tspindlctrl = 0\n");
+    test_read(0 * sector_step, 16 * 1024, FILE_SIZE, spindlctrl);
+    test_read(1 * sector_step, 16 * 1024, FILE_SIZE, spindlctrl); // 512MiB or 64MiB
+    test_read(2 * sector_step, 16 * 1024, FILE_SIZE, spindlctrl);
+    test_read(3 * sector_step, 16 * 1024, FILE_SIZE, spindlctrl);
+    test_read(4 * sector_step, 16 * 1024, FILE_SIZE, spindlctrl);
+    test_read(5 * sector_step, 16 * 1024, FILE_SIZE, spindlctrl);
+    test_read(6 * sector_step, 16 * 1024, FILE_SIZE, spindlctrl);
+    test_read(7 * sector_step, 16 * 1024, FILE_SIZE, spindlctrl);
+    test_read(8 * sector_step, 16 * 1024, FILE_SIZE, spindlctrl);
+    // test_read_stream_1(9*262144, 16*1024, FILE_SIZE, spindlctrl); // 4.5GiB
+    PRINTF("\t\tspindlctrl = 1\n");
+    spindlctrl = 1;
+    test_read(0 * sector_step, 16 * 1024, FILE_SIZE, spindlctrl);
+    test_read(1 * sector_step, 16 * 1024, FILE_SIZE, spindlctrl); // 512MiB or 64MiB
+    test_read(2 * sector_step, 16 * 1024, FILE_SIZE, spindlctrl);
+    test_read(3 * sector_step, 16 * 1024, FILE_SIZE, spindlctrl);
+    test_read(4 * sector_step, 16 * 1024, FILE_SIZE, spindlctrl);
+    test_read(5 * sector_step, 16 * 1024, FILE_SIZE, spindlctrl);
+    test_read(6 * sector_step, 16 * 1024, FILE_SIZE, spindlctrl);
+    test_read(7 * sector_step, 16 * 1024, FILE_SIZE, spindlctrl);
+    test_read(8 * sector_step, 16 * 1024, FILE_SIZE, spindlctrl);
+    // test_read_stream_1(9*262144, 16*1024, FILE_SIZE, spindlctrl); // 4.5GiB
     print_done();
 
     while (1) {}

@@ -1,7 +1,7 @@
 EE_BIN = opltester.elf
 EE_OBJS = main.o
 EE_LIBS = -ldebug -lpatches -lxcdvd
-EE_CFLAGS += -Wall -Werror
+EE_CFLAGS += -Wall
 
 all: $(EE_BIN)
 
