@@ -4,11 +4,11 @@ on:
   push:
     paths:
       - '.github/workflows/OPLTestISO.yml'
-      - 'labs/opltestiso/**'
+      - 'labs/opltestiso_ar/**'
   workflow_dispatch:
 
 jobs:
-  build-opltestiso:
+  build-opltestiso_ar:
     runs-on: ubuntu-latest
     container: ps2dev/ps2dev:latest
     steps:
@@ -16,7 +16,7 @@ jobs:
       run:  apk add build-base git zip cdrkit
 
     - name: git checkout
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
 
     - run: |
         git config --global --add safe.directory "$GITHUB_WORKSPACE"
@@ -24,12 +24,12 @@ jobs:
 
     - name: make ISO
       run: |
-          cd labs/opltestiso/
-          make iso
+          cd labs/opltestiso_ar/ee
+          make
 
     - name: Upload release artifact ISO
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
-        name: OPLTESTISO
+        name: Acc test
         path: |
-           labs/opltestiso/*.iso
+           labs/opltestiso_ar/*.elf

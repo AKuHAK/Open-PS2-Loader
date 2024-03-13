@@ -24,7 +24,7 @@ void _ps2sdk_timezone_update() {}
 DISABLE_PATCHED_FUNCTIONS(); // Disable the patched functionalities
 // DISABLE_EXTRA_TIMERS_FUNCTIONS(); // Disable the extra functionalities for timers
 
-//#define PRINTF printf
+// #define PRINTF printf
 #define PRINTF scr_printf
 
 // Blocks sizes to test
@@ -83,7 +83,7 @@ void test_read_file_1(const char *filename, unsigned int block_size, unsigned in
 //--------------------------------------------------------------
 void test_read_file(const char *filename)
 {
-    test_read_file_1(filename, 16*1024, FILE_SIZE);
+    test_read_file_1(filename, 16 * 1024, FILE_SIZE);
 }
 
 //--------------------------------------------------------------
@@ -101,7 +101,6 @@ void test_read_stream_1(uint32_t lsn, unsigned int block_size, unsigned int tota
     int rv = sceCdStInit(STREAM_BUFMAX, STREAM_BANKMAX, iopbuffer);
     if (rv == 0) {
         PRINTF("ERROR: sceCdStInit, rv=%d\n", rv);
-        return;
     }
 
     clk_start = clock();
@@ -160,8 +159,8 @@ int main()
     SifExitRpc();
 
     SifInitRpc(0);
-    while (!SifIopReset("rom0:UDNL cdrom0:\\MODULES\\IOPRP271.IMG;1", 0))
-    //while (!SifIopReset("", 0))
+    // while (!SifIopReset("rom0:UDNL cdrom0:\\MODULES\\IOPRP271.IMG;1", 0))
+    while (!SifIopReset("rom0:UDNL", 0))
         ;
     while (!SifIopSync())
         ;
@@ -172,25 +171,31 @@ int main()
 
     // Load cdvdstm
     // NOTE: on OPL this module will not be loaded
-    rv = SifLoadModule("cdrom:MODULES\\CDVDSTM.IRX", 0, NULL);
-    if (rv < 0)
-        PRINTF("\t\tcould not load %s, rv=%d\n", "cdrom:MODULES\\CDVDSTM.IRX", rv);
+    // rv = SifLoadModule("cdrom:MODULES\\CDVDSTM.IRX", 0, NULL);
+    // if (rv < 0)
+    //     PRINTF("\t\tcould not load %s, rv=%d\n", "cdrom:MODULES\\CDVDSTM.IRX", rv);
 
     sceCdInit(SCECdINIT);
-    sceCdMmode(SCECdPS2DVD);
+    // sceCdMmode(SCECdPS2DVD);
+    int disktype = sceCdGetDiskType();
+    int sector_step = 32768;
+    if ((disktype == SCECdPS2DVD) || (disktype == SCECdDVDV)){
+        sector_step = 262144;
+        sceCdMmode(SCECdPS2DVD);
+    }
 
-    // speed test random file
-    PRINTF("\t\tStreaming from 10 files located at 0 to 100%% of DVD:\n");
-    test_read_stream_1(0*262144, 16*1024, FILE_SIZE);
-    test_read_stream_1(1*262144, 16*1024, FILE_SIZE); // 0.5GiB
-    test_read_stream_1(2*262144, 16*1024, FILE_SIZE);
-    test_read_stream_1(3*262144, 16*1024, FILE_SIZE);
-    test_read_stream_1(4*262144, 16*1024, FILE_SIZE);
-    test_read_stream_1(5*262144, 16*1024, FILE_SIZE);
-    test_read_stream_1(6*262144, 16*1024, FILE_SIZE);
-    test_read_stream_1(7*262144, 16*1024, FILE_SIZE);
-    test_read_stream_1(8*262144, 16*1024, FILE_SIZE);
-    //test_read_stream_1(9*262144, 16*1024, FILE_SIZE); // 4.5GiB
+    // speed test sectors
+    PRINTF("\t\tStreaming from 10 places located at 0 to 100%% of DVD:\n");
+    test_read_stream_1(0 * sector_step, 16 * 1024, FILE_SIZE);
+    test_read_stream_1(1 * sector_step, 16 * 1024, FILE_SIZE); // 512MiB or 64MiB
+    test_read_stream_1(2 * sector_step, 16 * 1024, FILE_SIZE);
+    test_read_stream_1(3 * sector_step, 16 * 1024, FILE_SIZE);
+    test_read_stream_1(4 * sector_step, 16 * 1024, FILE_SIZE);
+    test_read_stream_1(5 * sector_step, 16 * 1024, FILE_SIZE);
+    test_read_stream_1(6 * sector_step, 16 * 1024, FILE_SIZE);
+    test_read_stream_1(7 * sector_step, 16 * 1024, FILE_SIZE);
+    test_read_stream_1(8 * sector_step, 16 * 1024, FILE_SIZE);
+    // test_read_stream_1(9*262144, 16*1024, FILE_SIZE); // 4.5GiB
     print_done();
 
     while (1) {}
