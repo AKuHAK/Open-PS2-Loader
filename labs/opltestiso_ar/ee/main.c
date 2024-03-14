@@ -53,6 +53,7 @@ void test_read_file_1(uint32_t lsn, unsigned int block_size, unsigned int total_
     void *eebuffer = malloc(block_size);
     unsigned int sectors = block_size / 2048;
     unsigned int size_left = total_size;
+    uint32_t cur_lsn = lsn;
 
     clock_t clk_start, clk_end;
     sceCdRMode mode = {1, spindlctrl, SCECdSecS2048, 0};
@@ -66,7 +67,7 @@ void test_read_file_1(uint32_t lsn, unsigned int block_size, unsigned int total_
     clk_start = clock();
     sceCdSync(0);
     while (size_left) {
-        rv = sceCdRead(lsn, sectors, eebuffer, &mode);
+        rv = sceCdRead(cur_lsn, sectors, eebuffer, &mode);
         if (rv == 0) {
             sceCdSync(0);
             error = sceCdGetError();
@@ -76,8 +77,8 @@ void test_read_file_1(uint32_t lsn, unsigned int block_size, unsigned int total_
             break;
         }
         size_left -= sectors * 2048;
+        cur_lsn += sectors;
     }
-    sceCdSync(0);
     clk_end = clock();
 
     if (error == SCECdErNO)
@@ -169,9 +170,6 @@ int main()
     SifLoadFileInit();
     SifInitIopHeap();
 
-    // Load cdvdstm
-    // NOTE: on OPL this module will not be loaded
-
     sceCdInit(SCECdINIT);
     int disktype = sceCdGetDiskType();
     int sector_step = 32768;
@@ -183,30 +181,13 @@ int main()
 
     // speed test sectors
     // PRINTF("\t\tStreaming from 10 places located at 0 to 100%% of DVD:\n");
-    u8 spindlctrl = 0;
-    PRINTF("\t\tspindlctrl = 0\n");
-    test_read(0 * sector_step, 16 * 1024, FILE_SIZE, spindlctrl);
-    test_read(1 * sector_step, 16 * 1024, FILE_SIZE, spindlctrl); // 512MiB or 64MiB
-    test_read(2 * sector_step, 16 * 1024, FILE_SIZE, spindlctrl);
-    test_read(3 * sector_step, 16 * 1024, FILE_SIZE, spindlctrl);
-    test_read(4 * sector_step, 16 * 1024, FILE_SIZE, spindlctrl);
-    test_read(5 * sector_step, 16 * 1024, FILE_SIZE, spindlctrl);
-    test_read(6 * sector_step, 16 * 1024, FILE_SIZE, spindlctrl);
-    test_read(7 * sector_step, 16 * 1024, FILE_SIZE, spindlctrl);
-    test_read(8 * sector_step, 16 * 1024, FILE_SIZE, spindlctrl);
-    // test_read_stream_1(9*262144, 16*1024, FILE_SIZE, spindlctrl); // 4.5GiB
-    PRINTF("\t\tspindlctrl = 1\n");
-    spindlctrl = 1;
-    test_read(0 * sector_step, 16 * 1024, FILE_SIZE, spindlctrl);
-    test_read(1 * sector_step, 16 * 1024, FILE_SIZE, spindlctrl); // 512MiB or 64MiB
-    test_read(2 * sector_step, 16 * 1024, FILE_SIZE, spindlctrl);
-    test_read(3 * sector_step, 16 * 1024, FILE_SIZE, spindlctrl);
-    test_read(4 * sector_step, 16 * 1024, FILE_SIZE, spindlctrl);
-    test_read(5 * sector_step, 16 * 1024, FILE_SIZE, spindlctrl);
-    test_read(6 * sector_step, 16 * 1024, FILE_SIZE, spindlctrl);
-    test_read(7 * sector_step, 16 * 1024, FILE_SIZE, spindlctrl);
-    test_read(8 * sector_step, 16 * 1024, FILE_SIZE, spindlctrl);
-    // test_read_stream_1(9*262144, 16*1024, FILE_SIZE, spindlctrl); // 4.5GiB
+    u8 spindlctrl;
+    for (spindlctrl = 0; spindlctrl < 2; spindlctrl++) {
+        PRINTF("\t\tspindlctrl = %d\n", spindlctrl);
+        for (int i = 0; i < 10; i++) {
+            test_read_file_1(i * sector_step, 16 * 1024, FILE_SIZE, spindlctrl);
+        }
+    }
     print_done();
 
     while (1) {}
