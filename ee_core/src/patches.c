@@ -44,8 +44,6 @@ typedef struct
 #define PATCH_DOT_HACK           0x0D074A37
 #define PATCH_SOS                0x30303030
 #define PATCH_ULT_PRO_PINBALL    0xBA11BA11
-#define PATCH_EUTECHNYX_WU_TID   0x0012FCC8
-#define PATCH_PRO_SNOWBOARDER    0x01020199
 #define PATCH_SHADOW_MAN_2       0x01020413
 #define PATCH_HARVEST_MOON_AWL   0xFF025421
 #define PATCH_MTV_PMR_V200_ADDR  0x001F3AB8 // MTV Pimp My Ride v2.00 patch address
@@ -116,32 +114,6 @@ static const patchlist_t patch_list[] = {
     {"SLES_535.08", ALL_MODE, {PATCH_ULT_PRO_PINBALL, 0x00000000, 0x00000000}},    // Ultimate Pro Pinball
     {"SLUS_200.02", BDM_MODE, {0x002c7758, 0x0000182d, 0x8c436d18}},               // Ridge Racer V (NTSC-U/C) - workaround disabling (bugged?) streaming code in favour of processing all data at once, for USB devices.
     {"SCES_500.00", BDM_MODE, {0x002c9760, 0x0000182d, 0x8c43a2f8}},               // Ridge Racer V (PAL) - workaround by disabling (bugged?) streaming code in favour of processing all data at once, for USB devices.
-    {"SLES_552.94", ALL_MODE, {PATCH_EUTECHNYX_WU_TID, 0x0012fcc8, 0x00000000}},   // Ferrari Challenge: Trofeo Pirelli (PAL)
-    {"SLUS_217.80", ALL_MODE, {PATCH_EUTECHNYX_WU_TID, 0x0012fcb0, 0x00000000}},   // Ferrari Challenge: Trofeo Pirelli (NTSC-U/C)
-    {"SLUS_205.82", ALL_MODE, {PATCH_EUTECHNYX_WU_TID, 0x0033b534, 0x00000000}},   // SRS: Street Racing Syndicate (NTSC-U/C)
-    {"SLES_530.45", ALL_MODE, {PATCH_EUTECHNYX_WU_TID, 0x0033fbfc, 0x00000000}},   // SRS: Street Racing Syndicate (PAL)
-    {"SLUS_214.49", ALL_MODE, {PATCH_EUTECHNYX_WU_TID, 0x00361dfc, 0x00000000}},   // The Fast and the Furious (NTSC-U/C)
-    {"SLES_544.83", ALL_MODE, {PATCH_EUTECHNYX_WU_TID, 0x00363c4c, 0x00000000}},   // The Fast and the Furious (PAL)
-    {"SLUS_214.38", ALL_MODE, {PATCH_EUTECHNYX_WU_TID, 0x0034c944, 0x00000000}},   // Cartoon Network Racing (NTSC-U/C)
-    {"SLES_543.06", ALL_MODE, {PATCH_EUTECHNYX_WU_TID, 0x0034c8A4, 0x00000000}},   // Cartoon Network Racing (PAL)
-    {"SLUS_216.28", ALL_MODE, {PATCH_EUTECHNYX_WU_TID, 0x0023cbc8, 0x00000000}},   // Hot Wheels - Beat That! (NTSC-U/C)
-    {"SLES_549.71", ALL_MODE, {PATCH_EUTECHNYX_WU_TID, 0x0023d7b8, 0x00000000}},   // Hot Wheels - Beat That! (PAL)
-    {"SLUS_213.57", ALL_MODE, {PATCH_EUTECHNYX_WU_TID, 0x00386b14, 0x00000000}},   // Hummer Badlands (NTSC-U/C)
-    {"SLES_541.58", ALL_MODE, {PATCH_EUTECHNYX_WU_TID, 0x00388a84, 0x00000000}},   // Hummer Badlands (PAL)
-    {"SLUS_211.62", ALL_MODE, {PATCH_EUTECHNYX_WU_TID, 0x00144bcc, 0x00000000}},   // Ford Mustang - The Legend Lives (NTSC-U/C)
-    {"SLES_532.96", ALL_MODE, {PATCH_EUTECHNYX_WU_TID, 0x00144cc4, 0x00000000}},   // Ford Mustang - The Legend Lives (PAL)
-    {"SLUS_212.76", ALL_MODE, {PATCH_EUTECHNYX_WU_TID, 0x00332814, 0x00000000}},   // Ford vs. Chevy (NTSC-U/C)
-    {"SLES_536.98", ALL_MODE, {PATCH_EUTECHNYX_WU_TID, 0x00335674, 0x00000000}},   // Ford vs. Chevy  (PAL)
-    {"SLUS_210.86", ALL_MODE, {PATCH_EUTECHNYX_WU_TID, 0x001462fc, 0x00000000}},   // Big Mutha Truckers 2 (NTSC-U/C)
-    {"SLES_529.80", ALL_MODE, {PATCH_EUTECHNYX_WU_TID, 0x00146124, 0x00000000}},   // Big Mutha Truckers 2 - Truck Me Harder (PAL)
-    {"SLES_546.32", ALL_MODE, {PATCH_EUTECHNYX_WU_TID, 0x001f60f8, 0x00000000}},   // MTV Pimp My Ride (PAL)
-    {"SLES_546.07", ALL_MODE, {PATCH_EUTECHNYX_WU_TID, 0x001f37d0, 0x00000000}},   // MTV Pimp My Ride (PAL-Australia)
-    {"SLUS_215.80", ALL_MODE, {PATCH_EUTECHNYX_WU_TID, 0x01f52d8, 0x00000000}},    // MTV Pimp My Ride (v1.00/default) (NTSC-U/C)
-    {"SLUS_201.99", ALL_MODE, {PATCH_PRO_SNOWBOARDER, 0x00000000, 0x00000000}},    // Shaun Palmer's Pro Snowboarder (NTSC-U/C)
-    {"SLES_504.00", ALL_MODE, {PATCH_PRO_SNOWBOARDER, 0x00000000, 0x00000000}},    // Shaun Palmer's Pro Snowboarder (PAL)
-    {"SLES_504.01", ALL_MODE, {PATCH_PRO_SNOWBOARDER, 0x00000000, 0x00000000}},    // Shaun Palmer's Pro Snowboarder (PAL French)
-    {"SLES_504.02", ALL_MODE, {PATCH_PRO_SNOWBOARDER, 0x00000000, 0x00000000}},    // Shaun Palmer's Pro Snowboarder (PAL German)
-    {"SLPM_651.98", ALL_MODE, {PATCH_PRO_SNOWBOARDER, 0x00000000, 0x00000000}},    // Shaun Palmer's Pro Snowboarder (NTSC-J) - Untested
     {"SLUS_204.13", ALL_MODE, {PATCH_SHADOW_MAN_2, 0x00000001, 0x00000000}},       // Shadow Man: 2econd Coming (NTSC-U/C)
     {"SLES_504.46", ALL_MODE, {PATCH_SHADOW_MAN_2, 0x00000002, 0x00000000}},       // Shadow Man: 2econd Coming (PAL)
     {"SLES_506.08", ALL_MODE, {PATCH_SHADOW_MAN_2, 0x00000003, 0x00000000}},       // Shadow Man: 2econd Coming (PAL German)
@@ -708,85 +680,6 @@ static void UltProPinballPatch(const char *path)
     }
 }
 
-static void EutechnyxWakeupTIDPatch(u32 addr)
-{
-    USE_LOCAL_EECORE_CONFIG;
-    // Eutechnyx games have the main thread ID hardcoded for a call to WakeupThread().
-    // addiu $a0, $zero, 1
-    // This breaks when the thread IDs change after IGR is used.
-
-    /*
-    MTV Pimp My Ride uses same serial for v1.00 and v2.00 of USA release.
-    We need to tell which offsets to use.
-    */
-    if (_strcmp(config->GameID, "SLUS_215.80") == 0) {
-        // Check version v1.00 by default.
-        if (*(vu16 *)addr == 1) {
-            *(vu16 *)addr = (u16)GetThreadId();
-            return;
-        }
-
-        // Now check if v2.00.
-        if (*(vu16 *)(PATCH_MTV_PMR_V200_ADDR) == 1) {
-            *(vu16 *)(PATCH_MTV_PMR_V200_ADDR) = (u16)GetThreadId();
-        }
-        return;
-    }
-
-    /*
-    Same problem with SRS: Street Racing Syndicate
-    The patch already exists but it was for v1.03 of the game so if it was trying to boot v2.00 then it would be wrong patched. This handles both cases correctly.
-    */
-    if (_strcmp(config->GameID, "SLUS_205.82") == 0) {
-        // Check version v1.03 by default.
-        if (*(vu16 *)addr == 1) {
-            *(vu16 *)addr = (u16)GetThreadId();
-            return;
-        }
-
-        // Now check if v2.00.
-        if (*(vu16 *)(PATCH_SRS_V200_ADDR) == 1) {
-            *(vu16 *)(PATCH_SRS_V200_ADDR) = (u16)GetThreadId();
-        }
-        return;
-    }
-
-    *(vu16 *)addr = (u16)GetThreadId();
-}
-
-static void ProSnowboarderPatch(void)
-{ // Shaun Palmer's Pro Snowboarder incorrectly uses the main thread ID as the priority, causing a deadlock when the main thread ID changes (ID != priority)
-    // Replace all jal GetThreadId() with a li $v0, 1, whereby 1 is the main thread's priority (never changed by game).
-    static const unsigned int pattern[] = {
-        0x240300ff, // addiu $v1, $zero, 0xff
-        0x3c038080, // li $v0, 0x8080
-        0x34638081, // ori $v1, $v1, 0x8181
-        0x00650018, // mult $v1, $a1
-    };
-    static const unsigned int pattern_mask[] = {
-        0xffffffff,
-        0xffffffff,
-        0xffffffff,
-        0xffffffff};
-    u32 *ptr, *ptr2, *ptr3;
-
-    // Locate the calls to GetThreadId().
-    ptr = find_pattern_with_mask((u32 *)0x00180000, 0x00280000, pattern, pattern_mask, sizeof(pattern));
-    if (ptr) {
-        ptr2 = find_pattern_with_mask(ptr + 4, 0x00280000, pattern, pattern_mask, sizeof(pattern));
-
-        if (ptr2) {
-            ptr3 = find_pattern_with_mask(ptr2 + 4, 0x00280000, pattern, pattern_mask, sizeof(pattern));
-
-            if (ptr3) {
-                *(vu32 *)&ptr[-12] = 0x24020001; // addiu $v0, $zero, 1
-                *(vu32 *)&ptr2[-9] = 0x24020001; // addiu $v0, $zero, 1
-                *(vu32 *)&ptr3[-9] = 0x24020001; // addiu $v0, $zero, 1
-            }
-        }
-    }
-}
-
 static int ShadowMan2_SifLoadModuleHook(const char *path, int arg_len, const char *args)
 {
     // int (*pSifLoadModule)(const char *path, int arg_len, const char *args);
@@ -961,13 +854,6 @@ void apply_patches(const char *path)
                     break;
                 case PATCH_ULT_PRO_PINBALL:
                     UltProPinballPatch(path);
-                    break;
-                case PATCH_EUTECHNYX_WU_TID:
-                    if (file_eq_gameid)
-                        EutechnyxWakeupTIDPatch(p->patch.val);
-                    break;
-                case PATCH_PRO_SNOWBOARDER:
-                    ProSnowboarderPatch();
                     break;
                 case PATCH_SHADOW_MAN_2:
                     ShadowMan2Patch(p->patch.val);

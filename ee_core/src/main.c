@@ -107,10 +107,47 @@ static int eecoreInit(int argc, char **argv)
     }
 
     set_ipconfig();
+    int i;
+    int tid;
+
+    ee_thread_t thread_param;
+
+    thread_param.gp_reg = &_gp;
+    thread_param.func = NULL;
+    thread_param.stack = NULL;
+    thread_param.stack_size = 1024;
+    thread_param.initial_priority = 127;
+
+    // Allocate all threads.
+    for (i = 1; i < 256; i++) {
+        CreateThread(&thread_param);
+    }
+
+    if (!(g_compat_mask & COMPAT_MODE_6)) {
+        // IGR enabled. Delete only thread 255 so IGR thread get's final ID.
+        DeleteThread(255);
+    } else {
+        // Delete all the threads to create normal order.
+        for (i = 1; i < 256; i++) {
+            DeleteThread(i);
+        }
+    }
 
     /* installing kernel hooks */
     DPRINTF("Installing Kernel Hooks...\n");
     Install_Kernel_Hooks();
+
+    if (!(g_compat_mask & COMPAT_MODE_6)) {
+        for (i = 1; i < 255; i++) { // Ignore IGR thread ID
+            DeleteThread(i);
+        }
+    }
+
+    // OSDSYS + PS2Logo thread create/delete simulation.
+    for (i = 0; i < 9; i++) {
+        tid = CreateThread(&thread_param);
+        DeleteThread(tid);
+    }
 
     if (config->EnableDebug)
         GS_BGCOLOUR = 0xff0000; // Blue
