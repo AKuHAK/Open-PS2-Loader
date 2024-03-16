@@ -144,9 +144,16 @@ static int eecoreInit(int argc, char **argv)
     }
 
     // OSDSYS + PS2Logo thread create/delete simulation.
-    for (i = 0; i < 9; i++) {
-        tid = CreateThread(&thread_param);
-        DeleteThread(tid);
+    if (!(g_compat_mask & COMPAT_MODE_6)) {
+        for (i = 0; i < 9; i++) {
+            tid = Old_CreateThread(&thread_param);
+            DeleteThread(tid);
+        }
+    } else {
+        for (i = 0; i < 9; i++) {
+            tid = CreateThread(&thread_param);
+            DeleteThread(tid);
+        }
     }
 
     if (config->EnableDebug)
