@@ -47,7 +47,7 @@ void print_speed(clock_t clk_start, clock_t clk_end, u32 fd_size, u32 lsn)
 }
 
 //--------------------------------------------------------------
-void test_read_file_1(uint32_t lsn, unsigned int block_size, unsigned int total_size, u8 spindlctrl)
+void test_sceCdRead(uint32_t lsn, unsigned int block_size, unsigned int total_size, u8 spindlctrl)
 {
     void *iopbuffer = SifAllocIopHeap(STREAM_BUFMAX * 2048);
     void *eebuffer = malloc(block_size);
@@ -55,7 +55,7 @@ void test_read_file_1(uint32_t lsn, unsigned int block_size, unsigned int total_
     unsigned int size_left = total_size;
     uint32_t cur_lsn = lsn;
 
-    clock_t clk_start, clk_end;
+    clock_t clk_start, clk_end, clk_diff, clk_1;
     sceCdRMode mode = {1, spindlctrl, SCECdSecS2048, 0};
     u32 error;
 
@@ -64,10 +64,12 @@ void test_read_file_1(uint32_t lsn, unsigned int block_size, unsigned int total_
         PRINTF("ERROR: sceCdDiskReady, rv=%d\n", rv);
     }
 
-    clk_start = clock();
     sceCdSync(0);
+    clk_diff = 0;
+    clk_start = clock();
     while (size_left) {
         rv = sceCdRead(cur_lsn, sectors, eebuffer, &mode);
+        // clk_1 = clock();
         if (rv == 0) {
             sceCdSync(0);
             error = sceCdGetError();
@@ -78,8 +80,9 @@ void test_read_file_1(uint32_t lsn, unsigned int block_size, unsigned int total_
         }
         size_left -= sectors * 2048;
         cur_lsn += sectors;
+        // clk_diff += clock() - clk_1;
     }
-    clk_end = clock();
+    clk_end = clock() - clk_diff;
 
     if (error == SCECdErNO)
         print_speed(clk_start, clk_end, total_size - size_left, lsn);
@@ -89,14 +92,14 @@ void test_read_file_1(uint32_t lsn, unsigned int block_size, unsigned int total_
 }
 
 //--------------------------------------------------------------
-void test_read_stream_1(uint32_t lsn, unsigned int block_size, unsigned int total_size, u8 spindlctrl)
+void test_sceCdStRead(uint32_t lsn, unsigned int block_size, unsigned int total_size, u8 spindlctrl)
 {
     void *iopbuffer = SifAllocIopHeap(STREAM_BUFMAX * 2048);
     void *eebuffer = malloc(block_size);
     unsigned int sectors = block_size / 2048;
     unsigned int size_left = total_size;
 
-    clock_t clk_start, clk_end;
+    clock_t clk_start, clk_end, clk_diff, clk_1;
     sceCdRMode mode = {1, spindlctrl, SCECdSecS2048, 0};
     u32 error;
 
@@ -105,10 +108,12 @@ void test_read_stream_1(uint32_t lsn, unsigned int block_size, unsigned int tota
         PRINTF("ERROR: sceCdStInit, rv=%d\n", rv);
     }
 
-    clk_start = clock();
     sceCdStStart(lsn, &mode);
+    clk_diff = 0;
+    clk_start = clock();
     while (size_left) {
         rv = sceCdStRead(sectors, eebuffer, STMBLK, &error);
+        // clk_1 = clock();
         if (error != SCECdErNO) {
             PRINTF("\t\t- ERROR %d\n", error);
             break;
@@ -118,9 +123,10 @@ void test_read_stream_1(uint32_t lsn, unsigned int block_size, unsigned int tota
             //    break;
         }
         size_left -= rv * 2048;
+        // clk_diff += clock() - clk_1;
     }
+    clk_end = clock() - clk_diff;
     sceCdStStop();
-    clk_end = clock();
 
     if (error == SCECdErNO)
         print_speed(clk_start, clk_end, total_size - size_left, lsn);
@@ -182,12 +188,23 @@ int main()
     // speed test sectors
     // PRINTF("\t\tStreaming from 10 places located at 0 to 100%% of DVD:\n");
     u8 spindlctrl;
-    for (spindlctrl = 0; spindlctrl < 2; spindlctrl++) {
-        PRINTF("\t\tspindlctrl = %d\n", spindlctrl);
-        for (int i = 0; i < 10; i++) {
-            test_read_file_1(i * sector_step, 16 * 1024, FILE_SIZE, spindlctrl);
-        }
+    spindlctrl = 0;
+    PRINTF("\t\test sceCdRead\n");
+    for (int i = 0; i < 10; i++) {
+        test_sceCdRead(i * sector_step, 16 * 1024, FILE_SIZE, spindlctrl);
     }
+
+    PRINTF("\t\test sceCdStRead\n");
+    for (int i = 0; i < 10; i++) {
+        test_sceCdStRead(i * sector_step, 16 * 1024, FILE_SIZE, spindlctrl);
+    }
+
+    // for (spindlctrl = 0; spindlctrl < 2; spindlctrl++) {
+    //     PRINTF("\t\tspindlctrl = %d\n", spindlctrl);
+    //     for (int i = 0; i < 10; i++) {
+    //         test_sceCdRead(i * sector_step, 16 * 1024, FILE_SIZE, spindlctrl);
+    //     }
+    // }
     print_done();
 
     while (1) {}
