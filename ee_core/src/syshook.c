@@ -39,6 +39,48 @@ void (*Old_Exit)(s32 exit_code);
 void (*Old_SetOsdConfigParam)(ConfigParam *osdconfig);
 void (*Old_GetOsdConfigParam)(ConfigParam *osdconfig);
 
+int threadsReset = 0;
+
+void ResetThreadsIds()
+{
+
+    int i;
+    int tid;
+    ee_thread_t thread_param;
+    extern void *_gp;
+
+    thread_param.gp_reg = &_gp;
+    thread_param.func = NULL;
+    thread_param.stack = NULL;
+    thread_param.stack_size = 1024;
+    thread_param.initial_priority = 127;
+
+    // Only on the first time of elf reset the threads order or else every multiple ELF game would reset them.
+    if (threadsReset) {
+        return;
+    }
+
+    threadsReset = 1;
+
+    // Allocate all threads.
+    for (i = 1; i < 256; i++) {
+        CreateThread(&thread_param);
+    }
+
+    // Delete all the threads to create normal order.
+    for (i = 1; i < 256; i++) {
+        DeleteThread(i);
+    }
+
+    // Simulate OSDSYS/PS2LOGO order
+    for (i = 0; i < 9; i++) {
+        tid = CreateThread(&thread_param);
+        DeleteThread(tid);
+    }
+}
+
+
+
 /*----------------------------------------------------------------------------------------*/
 /* This function is called when SifSetDma catches a reboot request.                       */
 /*----------------------------------------------------------------------------------------*/
@@ -120,6 +162,7 @@ void sysLoadElf(char *filename, int argc, char **argv)
         SifExitRpc();
 
         disable_padOpen_hook = 0;
+        ResetThreadsIds();
 
         DPRINTF("t_loadElf: executing...\n");
         CleanExecPS2((void *)elf.epc, (void *)elf.gp, argc, argv);
