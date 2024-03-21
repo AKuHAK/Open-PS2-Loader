@@ -32,6 +32,46 @@ DISABLE_EXTRA_TIMERS_FUNCTIONS(); // Disable the extra functionalities for timer
 
 struct EECoreConfig_t g_ee_core_config = {.magic[0] = EE_CORE_MAGIC_0, .magic[1] = EE_CORE_MAGIC_1};
 
+int threadsReset = 0;
+
+void ResetThreadsIds()
+{
+
+    int i;
+    int tid;
+    ee_thread_t thread_param;
+    extern void *_gp;
+
+    thread_param.gp_reg = &_gp;
+    thread_param.func = NULL;
+    thread_param.stack = NULL;
+    thread_param.stack_size = 1024;
+    thread_param.initial_priority = 127;
+
+    // Only on the first time of elf reset the threads order or else every multiple ELF game would reset them.
+    if (threadsReset) {
+        return;
+    }
+
+    threadsReset = 1;
+
+    // Allocate all threads.
+    for (i = 1; i < 256; i++) {
+        CreateThread(&thread_param);
+    }
+
+    // Delete all the threads to create normal order.
+    for (i = 1; i < 256; i++) {
+        DeleteThread(i);
+    }
+
+    // Simulate OSDSYS/PS2LOGO order
+    for (i = 0; i < 9; i++) {
+        tid = Old_CreateThread(&thread_param);
+        DeleteThread(tid);
+    }
+}
+
 static int eecoreInit(int argc, char **argv)
 {
     USE_LOCAL_EECORE_CONFIG;
@@ -105,6 +145,8 @@ static int eecoreInit(int argc, char **argv)
             config->GsmConfig.FIELD_fix);
         EnableGSM();
     }
+
+    ResetThreadsIds();
 
     set_ipconfig();
 
