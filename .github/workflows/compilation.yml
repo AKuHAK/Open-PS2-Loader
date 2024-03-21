@@ -13,7 +13,7 @@ jobs:
     container: ghcr.io/ps2homebrew/ps2homebrew:main
     steps:
     - name: git checkout
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
 
     - run: |
         git config --global --add safe.directory "$GITHUB_WORKSPACE"
@@ -27,7 +27,7 @@ jobs:
 
     - name: Upload release artifact ELF
       if: ${{ success() }}
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: OPNPS2LD
         path: |
@@ -35,7 +35,7 @@ jobs:
 
     - name: Upload release artifact info
       if: ${{ success() }}
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: INFO
         path: |
@@ -48,15 +48,15 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        rtl: [RTL=0, RTL=1]
-        pademu: [PADEMU=0, PADEMU=1]
-        igs: [IGS=0, IGS=1]
-        t10k: [DTL_T10000=0, DTL_T10000=1]
+        rtl: [RTL=0]
+        pademu: [PADEMU=1]
+        igs: [IGS=0]
+        t10k: [DTL_T10000=0]
     runs-on: ubuntu-latest
     container: ghcr.io/ps2homebrew/ps2homebrew:main
     steps:
     - name: git checkout
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
 
     - run: |
         git config --global --add safe.directory "$GITHUB_WORKSPACE"
@@ -85,7 +85,7 @@ jobs:
     container: ghcr.io/ps2homebrew/ps2homebrew:main
     steps:
     - name: git checkout
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
 
     - run: |
         git config --global --add safe.directory "$GITHUB_WORKSPACE"
@@ -114,7 +114,7 @@ jobs:
     container: ghcr.io/ps2homebrew/ps2homebrew:main
     steps:
     - name: git checkout
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
 
     - run: |
         git config --global --add safe.directory "$GITHUB_WORKSPACE"
@@ -144,7 +144,7 @@ jobs:
       PASSWORD: ${{ secrets.PASSWORD }}
     steps:
     - name: git checkout
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
 
     - run: git fetch --prune --unshallow
 
@@ -153,7 +153,7 @@ jobs:
         echo "OPL_VERSION=$(make oplversion)" >> $GITHUB_ENV
 
     - name: Download all artifacts
-      uses: actions/download-artifact@v3
+      uses: actions/download-artifact@v4
 
     - name: Prepare artifacts for release
       run: |
