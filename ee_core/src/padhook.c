@@ -368,7 +368,7 @@ static int IGR_Intc_Handler(int cause)
             iSuspendThread(i);
         }
 
-        IGR_Task();
+        ExecPS2(IGR_Task, &_gp, 0, NULL);
     }
 
     ExitHandler();
