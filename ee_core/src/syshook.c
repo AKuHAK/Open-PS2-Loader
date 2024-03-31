@@ -43,11 +43,15 @@ int threadsReset = 0;
 
 void ResetThreadsIds()
 {
-
     int i;
     int tid;
     ee_thread_t thread_param;
     extern void *_gp;
+
+    // Only on the first time of elf reset the threads order or else every multiple ELF game would reset them.
+    if (threadsReset) {
+        return;
+    }
 
     thread_param.gp_reg = &_gp;
     thread_param.func = NULL;
@@ -55,16 +59,17 @@ void ResetThreadsIds()
     thread_param.stack_size = 1024;
     thread_param.initial_priority = 127;
 
-    // Only on the first time of elf reset the threads order or else every multiple ELF game would reset them.
-    if (threadsReset) {
-        return;
-    }
-
     threadsReset = 1;
+
+    s32 (*__CreateThread)(ee_thread_t *thread) = (void *)&CreateThread;
+
+    if (!(g_compat_mask & COMPAT_MODE_6)) {
+        __CreateThread = (void *)Old_CreateThread;
+    }
 
     // Allocate all threads.
     for (i = 1; i < 256; i++) {
-        CreateThread(&thread_param);
+        __CreateThread(&thread_param);
     }
 
     // Delete all the threads to create normal order.
@@ -74,7 +79,7 @@ void ResetThreadsIds()
 
     // Simulate OSDSYS/PS2LOGO order
     for (i = 0; i < 9; i++) {
-        tid = CreateThread(&thread_param);
+        tid = __CreateThread(&thread_param);
         DeleteThread(tid);
     }
 }
