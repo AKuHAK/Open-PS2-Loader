@@ -45,8 +45,8 @@ typedef struct
     int VMC_card_slot;
 } createVMCparam_t;
 
-extern void *eecore_elf;
-extern int size_eecore_elf;
+extern unsigned char eecore_elf[];
+extern unsigned int size_eecore_elf;
 
 extern unsigned char IOPRP_img[];
 extern unsigned int size_IOPRP_img;
@@ -379,7 +379,7 @@ void sysExecExit(void)
 {
     // Deinitialize without shutting down active devices.
     deinit(NO_EXCEPTION, IO_MODE_SELECTED_ALL);
-    Exit(0);
+    exit(0);
 }
 
 // Module bits
